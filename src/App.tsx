@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { AuthWrapper } from './components/AuthWrapper';
-import { DatabaseService } from './lib/supabase';
 import { useProviders, useLocations, useTasks, useWorkflows, useDashboardStats } from './hooks/useDatabase';
 import { ProviderForm } from './components/ProviderForm';
 import { LocationForm } from './components/LocationForm';
@@ -12,9 +11,7 @@ import {
   CheckSquare, 
   Plus, 
   Edit, 
-  Trash2, 
   X,
-  Building,
   Activity,
   Clock,
   TrendingUp
