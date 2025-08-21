@@ -4,14 +4,19 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('temp_supabase_url');
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || localStorage.getItem('temp_supabase_key');
 
+// NEW: add this just below the two lines above
+const supabaseSchema = (import.meta.env.VITE_DB_SCHEMA ?? 'public').trim();
+
+
 // Create Supabase client only if environment variables are available
-export const supabase = supabaseUrl && supabaseAnonKey 
+export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true
-      }
+        detectSessionInUrl: true,
+      },
+      db: { schema: supabaseSchema },
     })
   : null;
 
