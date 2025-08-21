@@ -2064,6 +2064,8 @@ const App = () => {
         </div>
       </Modal>
     </AuthWrapper>
+    <Diagnostics />
+  </>
   );
 };
 
