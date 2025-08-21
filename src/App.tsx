@@ -1869,6 +1869,7 @@ const App = () => {
           onChange={setFormData}
           onSubmit={(data) => handleFormSubmit('addProvider', data)}
           onCancel={() => closeModal('addProvider')}
+          locations={locations}
         />
       </Modal>
 
@@ -1883,6 +1884,7 @@ const App = () => {
           onChange={setFormData}
           onSubmit={(data) => handleFormSubmit('editProvider', data)}
           onCancel={() => closeModal('editProvider')}
+          locations={locations}
         />
       </Modal>
 
