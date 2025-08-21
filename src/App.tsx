@@ -1,3 +1,196 @@
+// --- place this at the very top of src/App.tsx ---
+import React from 'react';
+
+const ProviderForm: React.FC<any> = React.memo(({ data, onChange, onSubmit, onCancel, locations }) => (
+  <form onSubmit={(e) => { e.preventDefault(); onSubmit(data); }} className="space-y-4">
+    {/* ——— your exact fields ——— */}
+    {/* First/Last name */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-cream font-medium mb-2">First Name *</label>
+        <input
+          type="text"
+          value={data.first_name || ''}
+          onChange={(e) => onChange({ ...data, first_name: e.target.value })}
+          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-cream font-medium mb-2">Last Name *</label>
+        <input
+          type="text"
+          value={data.last_name || ''}
+          onChange={(e) => onChange({ ...data, last_name: e.target.value })}
+          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+          required
+        />
+      </div>
+    </div>
+
+    {/* Email */}
+    <div>
+      <label className="block text-cream font-medium mb-2">Email</label>
+      <input
+        type="email"
+        value={data.email || ''}
+        onChange={(e) => onChange({ ...data, email: e.target.value })}
+        className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+      />
+    </div>
+
+    {/* Phone + Specialty */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-cream font-medium mb-2">Phone</label>
+        <input
+          type="tel"
+          value={data.phone || ''}
+          onChange={(e) => onChange({ ...data, phone: e.target.value })}
+          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+        />
+      </div>
+      <div>
+        <label className="block text-cream font-medium mb-2">Specialty</label>
+        <input
+          type="text"
+          value={data.specialty || ''}
+          onChange={(e) => onChange({ ...data, specialty: e.target.value })}
+          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+        />
+      </div>
+    </div>
+
+    {/* License */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-cream font-medium mb-2">License Number</label>
+        <input
+          type="text"
+          value={data.license_number || ''}
+          onChange={(e) => onChange({ ...data, license_number: e.target.value })}
+          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+        />
+      </div>
+      <div>
+        <label className="block text-cream font-medium mb-2">License Expiry</label>
+        <input
+          type="date"
+          value={data.license_expiry || ''}
+          onChange={(e) => onChange({ ...data, license_expiry: e.target.value })}
+          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+        />
+      </div>
+    </div>
+
+    {/* Location */}
+    <div>
+      <label className="block text-cream font-medium mb-2">Location</label>
+      <select
+        value={data.location_id || ''}
+        onChange={(e) => onChange({ ...data, location_id: e.target.value })}
+        className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+      >
+        <option value="">Select Location</option>
+        {locations?.map((location: any) => (
+          <option key={location.id} value={location.id}>{location.name}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* Status */}
+    <div>
+      <label className="block text-cream font-medium mb-2">Status</label>
+      <select
+        value={data.status || 'pending'}
+        onChange={(e) => onChange({ ...data, status: e.target.value })}
+        className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+      >
+        <option value="pending">Pending</option>
+        <option value="active">Active</option>
+        <option value="suspended">Suspended</option>
+        <option value="expired">Expired</option>
+      </select>
+    </div>
+
+    {/* Buttons */}
+    <div className="flex justify-end space-x-4 pt-4">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="px-4 py-2 bg-navy-dark text-cream rounded-lg hover:bg-navy border border-dark-cyan/30"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="px-4 py-2 bg-goldenrod text-navy rounded-lg hover:bg-goldenrod/90 font-medium"
+      >
+        Save Provider
+      </button>
+    </div>
+  </form>
+));
+
+const LocationForm: React.FC<any> = React.memo(({ data, onChange, onSubmit, onCancel }) => (
+  <form onSubmit={(e) => { e.preventDefault(); onSubmit(data); }} className="space-y-4">
+    {/* ——— your exact fields ——— */}
+    <div>
+      <label className="block text-cream font-medium mb-2">Location Name *</label>
+      <input
+        type="text"
+        value={data.name || ''}
+        onChange={(e) => onChange({ ...data, name: e.target.value })}
+        className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+        required
+      />
+    </div>
+    <div>
+      <label className="block text-cream font-medium mb-2">Address</label>
+      <textarea
+        value={data.address || ''}
+        onChange={(e) => onChange({ ...data, address: e.target.value })}
+        className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan h-24 resize-none"
+      />
+    </div>
+    <div>
+      <label className="block text-cream font-medium mb-2">Number of Departments</label>
+      <input
+        type="number"
+        min="1"
+        value={data.departments || 1}
+        onChange={(e) => onChange({ ...data, departments: parseInt(e.target.value) || 1 })}
+        className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+      />
+    </div>
+    <div>
+      <label className="block text-cream font-medium mb-2">Status</label>
+      <select
+        value={data.status || 'active'}
+        onChange={(e) => onChange({ ...data, status: e.target.value })}
+        className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
+      >
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <div className="flex justify-end space-x-4 pt-4">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="px-4 py-2 bg-navy-dark text-cream rounded-lg hover:bg-navy border border-dark-cyan/30"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="px-4 py-2 bg-goldenrod text-navy rounded-lg hover:bg-goldenrod/90 font-medium"
+      >
+        Save Location
+      </button>
+    </div>
+  </form>
+));
 
 import React, { useState } from 'react';
 import { AuthWrapper } from './components/AuthWrapper';
@@ -1624,192 +1817,7 @@ const App = () => {
     }
   };
 
-  // Form Components
-  const ProviderForm = ({ data, onChange, onSubmit, onCancel }) => (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(data); }} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-cream font-medium mb-2">First Name *</label>
-          <input
-            type="text"
-            value={data.first_name || ''}
-            onChange={(e) => onChange({ ...data, first_name: e.target.value })}
-            className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-cream font-medium mb-2">Last Name *</label>
-          <input
-            type="text"
-            value={data.last_name || ''}
-            onChange={(e) => onChange({ ...data, last_name: e.target.value })}
-            className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-            required
-          />
-        </div>
-      </div>
-      
-      <div>
-        <label className="block text-cream font-medium mb-2">Email</label>
-        <input
-          type="email"
-          value={data.email || ''}
-          onChange={(e) => onChange({ ...data, email: e.target.value })}
-          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-cream font-medium mb-2">Phone</label>
-          <input
-            type="tel"
-            value={data.phone || ''}
-            onChange={(e) => onChange({ ...data, phone: e.target.value })}
-            className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-          />
-        </div>
-        <div>
-          <label className="block text-cream font-medium mb-2">Specialty</label>
-          <input
-            type="text"
-            value={data.specialty || ''}
-            onChange={(e) => onChange({ ...data, specialty: e.target.value })}
-            className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-cream font-medium mb-2">License Number</label>
-          <input
-            type="text"
-            value={data.license_number || ''}
-            onChange={(e) => onChange({ ...data, license_number: e.target.value })}
-            className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-          />
-        </div>
-        <div>
-          <label className="block text-cream font-medium mb-2">License Expiry</label>
-          <input
-            type="date"
-            value={data.license_expiry || ''}
-            onChange={(e) => onChange({ ...data, license_expiry: e.target.value })}
-            className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-          />
-        </div>
-      </div>
-      
-      <div>
-        <label className="block text-cream font-medium mb-2">Location</label>
-        <select
-          value={data.location_id || ''}
-          onChange={(e) => onChange({ ...data, location_id: e.target.value })}
-          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-        >
-          <option value="">Select Location</option>
-          {locations.map(location => (
-            <option key={location.id} value={location.id}>{location.name}</option>
-          ))}
-        </select>
-      </div>
-      
-      <div>
-        <label className="block text-cream font-medium mb-2">Status</label>
-        <select
-          value={data.status || 'pending'}
-          onChange={(e) => onChange({ ...data, status: e.target.value })}
-          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-        >
-          <option value="pending">Pending</option>
-          <option value="active">Active</option>
-          <option value="suspended">Suspended</option>
-          <option value="expired">Expired</option>
-        </select>
-      </div>
-      
-      <div className="flex justify-end space-x-4 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 bg-navy-dark text-cream rounded-lg hover:bg-navy border border-dark-cyan/30"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-goldenrod text-navy rounded-lg hover:bg-goldenrod/90 font-medium"
-        >
-          Save Provider
-        </button>
-      </div>
-    </form>
-  );
 
-  const LocationForm = ({ data, onChange, onSubmit, onCancel }) => (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(data); }} className="space-y-4">
-      <div>
-        <label className="block text-cream font-medium mb-2">Location Name *</label>
-        <input
-          type="text"
-          value={data.name || ''}
-          onChange={(e) => onChange({ ...data, name: e.target.value })}
-          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-          required
-        />
-      </div>
-      
-      <div>
-        <label className="block text-cream font-medium mb-2">Address</label>
-        <textarea
-          value={data.address || ''}
-          onChange={(e) => onChange({ ...data, address: e.target.value })}
-          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan h-24 resize-none"
-        />
-      </div>
-      
-      <div>
-        <label className="block text-cream font-medium mb-2">Number of Departments</label>
-        <input
-          type="number"
-          min="1"
-          value={data.departments || 1}
-          onChange={(e) => onChange({ ...data, departments: parseInt(e.target.value) || 1 })}
-          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-        />
-      </div>
-      
-      <div>
-        <label className="block text-cream font-medium mb-2">Status</label>
-        <select
-          value={data.status || 'active'}
-          onChange={(e) => onChange({ ...data, status: e.target.value })}
-          className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-        >
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
-      
-      <div className="flex justify-end space-x-4 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 bg-navy-dark text-cream rounded-lg hover:bg-navy border border-dark-cyan/30"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-goldenrod text-navy rounded-lg hover:bg-goldenrod/90 font-medium"
-        >
-          Save Location
-        </button>
-      </div>
-    </form>
-  );
 
   return (
     <AuthWrapper>
