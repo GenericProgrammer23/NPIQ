@@ -1,3 +1,58 @@
+
+import React, { useState } from 'react';
+import { AuthWrapper } from './components/AuthWrapper';
+import { DatabaseService } from './lib/supabase';
+import Diagnostics from './components/Diagnostics';
+import { useProviders, useLocations, useDashboardStats, useWorkflows, useTasks } from './hooks/useDatabase';
+import { 
+  LayoutDashboard, 
+  Users, 
+  MapPin, 
+  CheckSquare, 
+  FileText, 
+  FileImage, 
+  GitBranch, 
+  Shield, 
+  FileSearch, 
+  Settings, 
+  UserCheck,
+  Plus,
+  Search,
+  Filter,
+  Download,
+  Eye,
+  Edit,
+  MoreHorizontal,
+  Activity,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  Calendar,
+  Bell,
+  Lock,
+  Building,
+  Mail,
+  X,
+  Save,
+  Trash2,
+  ExternalLink,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Phone,
+  MapPinIcon,
+  User,
+  Briefcase,
+  Hash,
+  Calendar as CalendarIcon,
+  Badge,
+  FileCheck,
+  Upload,
+  Play,
+  Pause,
+  Target,
+  BarChart3
+} from 'lucide-react';
 // --- place this at the very top of src/App.tsx ---
 import React from 'react';
 
@@ -191,61 +246,6 @@ const LocationForm: React.FC<any> = React.memo(({ data, onChange, onSubmit, onCa
     </div>
   </form>
 ));
-
-import React, { useState } from 'react';
-import { AuthWrapper } from './components/AuthWrapper';
-import { DatabaseService } from './lib/supabase';
-import Diagnostics from './components/Diagnostics';
-import { useProviders, useLocations, useDashboardStats, useWorkflows, useTasks } from './hooks/useDatabase';
-import { 
-  LayoutDashboard, 
-  Users, 
-  MapPin, 
-  CheckSquare, 
-  FileText, 
-  FileImage, 
-  GitBranch, 
-  Shield, 
-  FileSearch, 
-  Settings, 
-  UserCheck,
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Eye,
-  Edit,
-  MoreHorizontal,
-  Activity,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Calendar,
-  Bell,
-  Lock,
-  Building,
-  Mail,
-  X,
-  Save,
-  Trash2,
-  ExternalLink,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  Phone,
-  MapPinIcon,
-  User,
-  Briefcase,
-  Hash,
-  Calendar as CalendarIcon,
-  Badge,
-  FileCheck,
-  Upload,
-  Play,
-  Pause,
-  Target,
-  BarChart3
-} from 'lucide-react';
 
 // Modal Components
 const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
