@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { AuthWrapper } from './components/AuthWrapper';
 import { DatabaseService } from './lib/supabase';
+import Diagnostics from './components/Diagnostics';
 import { useProviders, useLocations, useDashboardStats, useWorkflows, useTasks } from './hooks/useDatabase';
 import { 
   LayoutDashboard, 
