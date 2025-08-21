@@ -54,7 +54,7 @@ import {
   BarChart3
 } from 'lucide-react';
 // --- place this at the very top of src/App.tsx ---
-import React from 'react';
+
 
 const ProviderForm: React.FC<any> = React.memo(({ data, onChange, onSubmit, onCancel, locations }) => (
   <form onSubmit={(e) => { e.preventDefault(); onSubmit(data); }} className="space-y-4">
