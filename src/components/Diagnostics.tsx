@@ -72,21 +72,21 @@ export default function Diagnostics() {
         return;
       }
 
-      // 2) Org membership
+      // Org membership check (old → new)
       const { data: orgRows, error: orgErr } = await withTimeout(
-        supabase.from('org_memberships').select('org_id').eq('user_id', base.auth.userId!).limit(1)
+        supabase.from('org_members').select('organization_id').eq('user_id', base.auth.userId!).limit(1)
       );
       if (orgErr) base.org.error = orgErr.message;
-      base.org.orgId = orgRows?.[0]?.org_id;
+      base.org.orgId = orgRows?.[0]?.organization_id;
       base.org.hasOrg = !!base.org.orgId;
-
-      // 3) Providers count (scoped to org)
+      
+      // Providers count scoped by org (old → new)
       if (base.org.orgId) {
         const { count, error: provErr } = await withTimeout(
           supabase
             .from('providers')
             .select('id', { count: 'exact', head: true })
-            .eq('org_id', base.org.orgId)
+            .eq('organization_id', base.org.orgId)
         );
         if (provErr) base.providers.error = provErr.message;
         base.providers.count = typeof count === 'number' ? count : undefined;
