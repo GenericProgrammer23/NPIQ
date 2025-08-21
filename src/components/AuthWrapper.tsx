@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase, DatabaseService } from '../lib/supabase';
 import { SetupWizard } from './SetupWizard';
 import { DatabaseSetup } from './DatabaseSetup';
@@ -16,19 +16,65 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(DatabaseService.isConfigured());
   const [authError, setAuthError] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
+  // single-flight + watchdog used by init flow
+  const setupInFlight = useRef(false);
+  const initWatchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const checkSetupNeeded = async () => {
+    setLoading(true);
+    setAuthError(null);
+  
+    // 10s timeout so the UI never hard-locks
+    const timeout = (ms: number) =>
+      new Promise((_r, rej) => setTimeout(() => rej(new Error('Setup check timed out')), ms));
+  
+    try {
+      console.log('Checking setup status...');
+      // If DatabaseService.hasUserOrganizations exists, use it; otherwise default true so you can proceed
+      const hasOrgs = await Promise.race([
+        (DatabaseService && typeof DatabaseService.hasUserOrganizations === 'function')
+          ? DatabaseService.hasUserOrganizations()
+          : Promise.resolve(true),
+        timeout(10_000),
+      ]);
+  
+      console.log('Has organizations:', hasOrgs);
+      setNeedsSetup(!hasOrgs as boolean);
+    } catch (err) {
+      console.error('Failed to check setup status:', err);
+      // Show setup instead of spinning forever
+      setNeedsSetup(true);
+    } finally {
+      setLoading(false);
+      setInitializing(false);
+      if (initWatchdog.current) { clearTimeout(initWatchdog.current); initWatchdog.current = null; }
+    }
+  };
 
   useEffect(() => {
+    // Start a watchdog so the UI can never get stuck indefinitely
+    if (initWatchdog.current == null) {
+      initWatchdog.current = window.setTimeout(() => {
+        console.warn('Init watchdog fired → forcing UI out of initializing');
+        setInitializing(false);
+        setLoading(false);
+        // Don't force needsSetup true/false here; just stop the spinner
+      }, 10000); // 10s
+    }
+
     // Check if database connection is needed
     if (!DatabaseService.isConfigured()) {
       setNeedsDatabase(true);
       setLoading(false);
       setInitializing(false);
+      if (initWatchdog.current) { clearTimeout(initWatchdog.current); initWatchdog.current = null; }
       return;
     }
 
     if (!supabase) {
       setLoading(false);
       setInitializing(false);
+      if (initWatchdog.current) { clearTimeout(initWatchdog.current); initWatchdog.current = null; }
       return;
     }
 
@@ -37,31 +83,51 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
       if (error) {
         console.error('Auth session error:', error);
         setAuthError(error.message);
+        setUser(null);
+        setLoading(false);
+        setInitializing(false);
+        if (initWatchdog.current) { clearTimeout(initWatchdog.current); initWatchdog.current = null; }
       } else {
         setUser(session?.user ?? null);
         if (session?.user) {
-          checkSetupNeeded();
+          // single-flight guard
+          if (!setupInFlight.current) {
+            setupInFlight.current = true;
+            checkSetupNeeded().finally(() => { setupInFlight.current = false; });
+          }
         } else {
           setLoading(false);
           setInitializing(false);
+          if (initWatchdog.current) { clearTimeout(initWatchdog.current); initWatchdog.current = null; }
         }
       }
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('Auth state change:', _event, session?.user?.email);
       setUser(session?.user ?? null);
       setAuthError(null);
-      
+
       if (session?.user) {
-        await checkSetupNeeded();
+        if (!setupInFlight.current) {
+          setupInFlight.current = true;
+          checkSetupNeeded().finally(() => { setupInFlight.current = false; });
+        }
       } else {
         setNeedsSetup(false);
         setLoading(false);
         setInitializing(false);
+        if (initWatchdog.current) { clearTimeout(initWatchdog.current); initWatchdog.current = null; }
       }
     });
+
+    return () => {
+      subscription.unsubscribe();
+      if (initWatchdog.current) { clearTimeout(initWatchdog.current); initWatchdog.current = null; }
+    };
+  }, []);
+
 
     return () => subscription.unsubscribe();
   }, []);
