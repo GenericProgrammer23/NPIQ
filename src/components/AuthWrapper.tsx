@@ -16,34 +16,32 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(DatabaseService.isConfigured());
   const [authError, setAuthError] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
+
   // single-flight + watchdog used by init flow
   const setupInFlight = useRef(false);
   const initWatchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // --- ensures we never hard-lock on "Initializing"
   const checkSetupNeeded = async () => {
     setLoading(true);
     setAuthError(null);
-  
-    // 10s timeout so the UI never hard-locks
+
     const timeout = (ms: number) =>
       new Promise((_r, rej) => setTimeout(() => rej(new Error('Setup check timed out')), ms));
-  
+
     try {
       console.log('Checking setup status...');
-      // If DatabaseService.hasUserOrganizations exists, use it; otherwise default true so you can proceed
       const hasOrgs = await Promise.race([
         (DatabaseService && typeof DatabaseService.hasUserOrganizations === 'function')
           ? DatabaseService.hasUserOrganizations()
           : Promise.resolve(true),
         timeout(10_000),
       ]);
-  
       console.log('Has organizations:', hasOrgs);
       setNeedsSetup(!hasOrgs as boolean);
     } catch (err) {
       console.error('Failed to check setup status:', err);
-      // Show setup instead of spinning forever
-      setNeedsSetup(true);
+      setNeedsSetup(true); // prefer showing setup over spinning forever
     } finally {
       setLoading(false);
       setInitializing(false);
@@ -52,17 +50,16 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // Start a watchdog so the UI can never get stuck indefinitely
+    // global watchdog: force-exit "Initializing" after 10s no matter what
     if (initWatchdog.current == null) {
-      initWatchdog.current = window.setTimeout(() => {
-        console.warn('Init watchdog fired → forcing UI out of initializing');
+      initWatchdog.current = setTimeout(() => {
+        console.warn('Init watchdog fired – forcing UI out of initializing');
         setInitializing(false);
         setLoading(false);
-        // Don't force needsSetup true/false here; just stop the spinner
-      }, 10000); // 10s
+      }, 10_000);
     }
 
-    // Check if database connection is needed
+    // database configured?
     if (!DatabaseService.isConfigured()) {
       setNeedsDatabase(true);
       setLoading(false);
@@ -78,7 +75,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
       return;
     }
 
-    // Get initial session
+    // initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error('Auth session error:', error);
@@ -90,7 +87,6 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
       } else {
         setUser(session?.user ?? null);
         if (session?.user) {
-          // single-flight guard
           if (!setupInFlight.current) {
             setupInFlight.current = true;
             checkSetupNeeded().finally(() => { setupInFlight.current = false; });
@@ -103,7 +99,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
       }
     });
 
-    // Listen for auth changes
+    // auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log('Auth state change:', _event, session?.user?.email);
       setUser(session?.user ?? null);
@@ -128,56 +124,29 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     };
   }, []);
 
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkSetupNeeded = async () => {
-    setLoading(true);
-    try {
-      console.log('Checking setup status...');
-      const hasOrgs = await DatabaseService.hasUserOrganizations();
-      console.log('Has organizations:', hasOrgs);
-      setNeedsSetup(!hasOrgs);
-    } catch (error) {
-      console.error('Failed to check setup status:', error);
-      setNeedsSetup(true);
-    } finally {
-      setLoading(false);
-      setInitializing(false);
-    }
-  };
-
   const handleSignIn = async (email: string, password: string) => {
     if (!supabase) return;
-    
     setLoading(true);
     setAuthError(null);
     console.log('Attempting sign in for:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    
     if (error) {
       console.error('Sign in error:', error);
       setAuthError(error.message);
       setLoading(false);
     }
-    // Don't set loading to false here - let the auth state change handle it
   };
 
   const handleSignUp = async (email: string, password: string) => {
     if (!supabase) return;
-    
     setLoading(true);
     setAuthError(null);
     console.log('Attempting sign up for:', email);
-    const { error } = await supabase.auth.signUp({ 
-      email, 
+    const { error } = await supabase.auth.signUp({
+      email,
       password,
-      options: {
-        emailRedirectTo: window.location.origin
-      }
+      options: { emailRedirectTo: window.location.origin }
     });
-    
     if (error) {
       console.error('Sign up error:', error);
       setAuthError(error.message);
@@ -192,7 +161,6 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     if (!supabase) return;
     setLoading(true);
     await supabase.auth.signOut();
-    // Auth state change will handle the rest
   };
 
   const handleSetupComplete = () => {
@@ -203,18 +171,16 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const handleDatabaseSetupComplete = () => {
     setNeedsDatabase(false);
     setIsOnline(true);
-    window.location.reload(); // Reload to reinitialize with new database connection
+    window.location.reload(); // reinitialize with new database connection
   };
 
-  // Show loading state
+  // Loading / initializing gate
   if (initializing || (loading && !authError)) {
     return (
       <div className="min-h-screen bg-navy flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-goldenrod mx-auto mb-4"></div>
-          <p className="text-cream">
-            {initializing ? 'Initializing...' : 'Loading...'}
-          </p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-goldenrod mx-auto mb-4" />
+          <p className="text-cream">{initializing ? 'Initializing...' : 'Loading...'}</p>
           <p className="text-cream/60 text-sm mt-2">
             {user ? 'Setting up your workspace...' : 'Connecting to database...'}
           </p>
@@ -223,15 +189,14 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     );
   }
 
-  // Show database setup if Supabase not configured
+  // DB setup screen
   if (needsDatabase) {
     return <DatabaseSetup onComplete={handleDatabaseSetupComplete} />;
   }
 
-  // Show offline/local mode banner but still allow app usage
   const showOfflineBanner = !isOnline;
 
-  // Show setup wizard if user is authenticated but needs setup
+  // Setup wizard
   if (user && needsSetup) {
     return (
       <div className="min-h-screen bg-navy">
@@ -250,7 +215,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     );
   }
 
-  // Show auth form if not authenticated
+  // Auth form
   if (!user) {
     return (
       <div className="min-h-screen bg-navy">
@@ -269,7 +234,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     );
   }
 
-  // Show main app with online indicator
+  // Main app
   return (
     <div className="min-h-screen bg-navy">
       {isOnline ? (
@@ -279,10 +244,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
               <Wifi className="h-4 w-4 text-dark-cyan mr-2" />
               <span className="text-dark-cyan text-sm">Connected to Supabase</span>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="text-cream/70 hover:text-cream text-sm"
-            >
+            <button onClick={handleSignOut} className="text-cream/70 hover:text-cream text-sm">
               Sign Out
             </button>
           </div>
@@ -294,10 +256,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
               <WifiOff className="h-4 w-4 text-goldenrod mr-2" />
               <span className="text-goldenrod text-sm">Running in Local Mode</span>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="text-cream/70 hover:text-cream text-sm"
-            >
+            <button onClick={handleSignOut} className="text-cream/70 hover:text-cream text-sm">
               Sign Out
             </button>
           </div>
@@ -323,14 +282,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSignIn, onSignUp, error }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
-
     setLoading(true);
     try {
-      if (isSignUp) {
-        await onSignUp(email, password);
-      } else {
-        await onSignIn(email, password);
-      }
+      if (isSignUp) await onSignUp(email, password);
+      else await onSignIn(email, password);
     } finally {
       setLoading(false);
     }
@@ -363,7 +318,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSignIn, onSignUp, error }) => {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-cream font-medium mb-2">Password</label>
             <input
@@ -382,7 +337,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSignIn, onSignUp, error }) => {
             className="w-full bg-goldenrod hover:bg-goldenrod/90 disabled:bg-goldenrod/50 text-navy px-4 py-3 rounded-lg font-medium flex items-center justify-center"
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-navy mr-2"></div>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-navy mr-2" />
             ) : (
               <LogIn className="h-5 w-5 mr-2" />
             )}
