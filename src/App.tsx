@@ -107,16 +107,14 @@ const ProviderForm: React.FC<any> = React.memo(({ data, onChange, onSubmit, onCa
       </div>
       <div>
         <label className="block text-cream font-medium mb-2">Specialty</label>
-        <select
+        <input
+          type="text"
           value={data.specialty || ''}
           onChange={(e) => onChange({ ...data, specialty: e.target.value })}
           className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream focus:outline-none focus:border-dark-cyan"
-        >
-          <option value="">Select specialty</option>
-          <option value="PT">PT</option>
-          <option value="OT">OT</option>
-        </select>
+        />
       </div>
+    </div>
 
     {/* License */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
