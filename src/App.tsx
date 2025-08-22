@@ -55,6 +55,22 @@ import {
 } from 'lucide-react';
 // --- place this at the very top of src/App.tsx ---
 
+  const PageHeader: React.FC<{
+    title: string;
+    subtitle?: string;
+    right?: React.ReactNode;
+  }> = ({ title, subtitle, right }) => (
+    <div className="rounded-lg bg-navy-dark px-6 py-4 mb-6 border border-black/5 shadow-sm">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-cream">{title}</h1>
+          {subtitle && <p className="text-cream/70 mt-1">{subtitle}</p>}
+        </div>
+        {right}
+      </div>
+    </div>
+  );
+
 
 const ProviderForm: React.FC<any> = React.memo(({ data, onChange, onSubmit, onCancel, locations }) => (
   <form onSubmit={(e) => { e.preventDefault(); onSubmit(data); }} className="space-y-4">
@@ -550,11 +566,21 @@ const App = () => {
 
   const renderProviders = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-cream">Providers</h1>
-          <p className="text-cream/70 mt-1">Manage healthcare providers and credentials</p>
-        </div>
+      <PageHeader
+        title="Providers"
+        subtitle="Manage healthcare providers and credentials"
+        right={
+          <button
+            onClick={() => openModal('addProvider')}
+            className="bg-goldenrod hover:bg-goldenrod/90 text-cream px-4 py-2 rounded-lg font-medium flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Provider
+          </button>
+        }
+      />
+
+
         <button 
           onClick={() => openModal('addProvider')}
           className="bg-goldenrod hover:bg-goldenrod/90 text-navy px-4 py-2 rounded-lg font-medium flex items-center"
@@ -691,11 +717,21 @@ const App = () => {
 
   const renderLocations = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-cream">Locations</h1>
-          <p className="text-cream/70 mt-1">Manage healthcare facility locations</p>
-        </div>
+      <PageHeader
+        title="Locations"
+        subtitle="Manage healthcare facility locations and their credentialing status"
+        right={
+          <button
+            onClick={() => openModal('addLocation')}
+            className="bg-goldenrod hover:bg-goldenrod/90 text-cream px-4 py-2 rounded-lg font-medium flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Location
+          </button>
+        }
+      />
+
+
         <button 
           onClick={() => openModal('addLocation')}
           className="bg-goldenrod hover:bg-goldenrod/90 text-navy px-4 py-2 rounded-lg font-medium flex items-center"
@@ -1875,11 +1911,11 @@ const App = () => {
     <AuthWrapper>
       <div className="min-h-screen bg-navy flex">
         {/* Sidebar */}
-        <div className="w-64 bg-navy-dark border-r border-dark-cyan/20 flex flex-col">
+        <div className="w-64 bg-sidebar border-r border-dark-cyan/20 flex flex-col">
           {/* Logo */}
           <div className="p-6 border-b border-dark-cyan/20">
-            <h1 className="text-2xl font-bold text-cream">NPIQ</h1>
-            <p className="text-cream/60 text-sm mt-1">Healthcare Credentialing</p>
+            <h1 className="text-2xl font-bold text-white">NPIQ</h1>
+            <p className="text-white/70 text-sm mt-1">Healthcare Credentialing</p>
           </div>
 
           {/* Navigation */}
@@ -1888,12 +1924,16 @@ const App = () => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`relative w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === item.id
                     ? 'bg-dark-cyan text-white'
-                    : 'text-cream/70 hover:text-cream hover:bg-navy-light'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
+                {/* gold selection bar on active */}
+                {activeTab === item.id && (
+                  <span className="absolute left-0 top-0 h-full w-1 bg-goldenrod rounded-r" />
+                )}
                 <item.icon className="h-4 w-4 mr-3" />
                 {item.label}
               </button>
