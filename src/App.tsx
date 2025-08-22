@@ -635,7 +635,10 @@ const App = () => {
               </tr>
             </thead>
             <tbody>
-              {providers.filter(p => providersTab === 'active' ? p.status === 'active' : p.status !== 'active').map((provider) => (
+              {filteredProviders
+                .filter(p => providersTab === 'active' ? p.status === 'active' : p.status !== 'active')
+                .map((provider) => (
+
                 <tr key={provider.id} className="border-b border-dark-cyan/10 hover:bg-dark-cyan/5">
                   <td className="py-4 px-6">
                     <div className="flex items-center">
@@ -649,7 +652,7 @@ const App = () => {
                     </div>
                   </td>
                   <td className="py-4 px-6 text-cream/80">{provider.specialty || 'Not specified'}</td>
-                  <td className="py-4 px-6 text-cream/80">{provider.location?.name || 'Not assigned'}</td>
+                  <td className="py-4 px-6 text-cream/80">{locationNameById.get(provider.location_id) || 'Not assigned'}</td>
                   <td className="py-4 px-6 text-cream/80">NPI-{Math.floor(Math.random() * 1000000)}</td>
                   <td className="py-4 px-6">{getStatusBadge(provider.status)}</td>
                   <td className="py-4 px-6 text-cream/80">{new Date(provider.created_at).toLocaleDateString()}</td>
