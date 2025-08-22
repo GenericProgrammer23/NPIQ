@@ -596,7 +596,15 @@ const App = () => {
             <option key={location.id} value={location.id}>{location.name}</option>
           ))}
         </select>
-
+        <button
+          type="button"
+          onClick={() => { setQ(''); setFilterSpecialty(''); setFilterLocation(''); }}
+          disabled={!q && !filterSpecialty && !filterLocation}
+          className="px-4 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream hover:bg-navy disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Clear filters"
+        >
+          Clear filters
+        </button>
       </div>
 
       {/* Provider Tabs */}
