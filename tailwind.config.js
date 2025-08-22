@@ -4,9 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: '#134e4a',        // teal-900  (deep teal)
-        'navy-light': '#115e59',// teal-800
-        'navy-dark': '#0f766e', // teal-700
+        navy: '#1B3B4A',
+        'navy-light': '#2A4A5A',
+        'navy-dark': '#15323E',
+        'dark-cyan': '#007E7D',
         goldenrod: '#E3A72F',
         cream: '#F4EDE4',
       },
