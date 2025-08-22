@@ -4,10 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: '#1f2937',        // slate-800  (new base page background)
-        'navy-light': '#334155',// slate-700  (cards/strips slightly lighter)
-        'navy-dark': '#0f172a', // slate-900  (headers/bars)
-        'dark-cyan': '#007E7D',
+        navy: '#134e4a',        // teal-900  (deep teal)
+        'navy-light': '#115e59',// teal-800
+        'navy-dark': '#0f766e', // teal-700
         goldenrod: '#E3A72F',
         cream: '#F4EDE4',
       },
