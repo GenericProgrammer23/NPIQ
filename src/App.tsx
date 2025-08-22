@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AuthWrapper } from './components/AuthWrapper';
 import { DatabaseService } from './lib/supabase';
 import Diagnostics from './components/Diagnostics';
@@ -286,7 +286,11 @@ const App = () => {
   const [tasksTab, setTasksTab] = useState('pending-provider');
   const [providersTab, setProvidersTab] = useState('active');
   const [workflowsTab, setWorkflowsTab] = useState('provider');
-  
+  // Filters for Providers tab
+  const [q, setQ] = useState<string>('');            // search text
+  const [filterSpecialty, setFilterSpecialty] = useState<string>(''); // "PT" | "OT" | ""
+  const [filterLocation, setFilterLocation] = useState<string>('');   // location_id or ""
+
   // Modal states
   const [modals, setModals] = useState({
     addProvider: false,
@@ -304,7 +308,7 @@ const App = () => {
     addUser: false,
     editUser: false
   });
-
+  
   const [selectedItem, setSelectedItem] = useState(null);
   const [formData, setFormData] = useState({});
   
@@ -314,6 +318,27 @@ const App = () => {
   const { workflows, loading: workflowsLoading, createWorkflow } = useWorkflows();
   const { tasks, loading: tasksLoading, createTask, updateTask } = useTasks();
   const { stats, loading: statsLoading } = useDashboardStats();
+  const locationNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const loc of locations || []) m.set(loc.id, loc.name || '');
+    return m;
+  }, [locations]);
+  
+  const filteredProviders = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return (providers || []).filter((p: any) => {
+      if (filterSpecialty && p.specialty !== filterSpecialty) return false;
+      if (filterLocation && p.location_id !== filterLocation) return false;
+  
+      if (!needle) return true;
+      const locName = locationNameById.get(p.location_id) ?? '';
+      const hay = [
+        p.first_name, p.last_name, p.email, p.phone,
+        p.license_number, p.specialty, locName
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [providers, q, filterSpecialty, filterLocation, locationNameById]);
 
   const isOnline = DatabaseService.isConfigured();
 
@@ -545,22 +570,33 @@ const App = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-cream/50" />
           <input
             type="text"
-            placeholder="Search providers..."
-            className="w-full pl-10 pr-4 py-2 bg-navy-light border border-dark-cyan/30 rounded-lg text-cream placeholder-cream/50 focus:outline-none focus:border-dark-cyan"
+            placeholder="Search providers…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="w-full px-3 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream placeholder-cream/50 focus:outline-none focus:border-dark-cyan"
           />
         </div>
-        <select className="bg-navy-light border border-dark-cyan/30 px-4 py-2 rounded-lg text-cream">
+        <select
+          className="bg-navy-light border border-dark-cyan/30 px-4 py-2 rounded-lg text-cream"
+          value={filterSpecialty}
+          onChange={(e) => setFilterSpecialty(e.target.value)}
+        >
           <option value="">All Specialties</option>
-          <option value="cardiology">Cardiology</option>
-          <option value="neurology">Neurology</option>
-          <option value="orthopedics">Orthopedics</option>
+          <option value="PT">PT</option>
+          <option value="OT">OT</option>
         </select>
-        <select className="bg-navy-light border border-dark-cyan/30 px-4 py-2 rounded-lg text-cream">
+
+        <select
+          className="bg-navy-light border border-dark-cyan/30 px-4 py-2 rounded-lg text-cream"
+          value={filterLocation}
+          onChange={(e) => setFilterLocation(e.target.value)}
+        >
           <option value="">All Locations</option>
-          {locations.map(location => (
+          {locations?.map(location => (
             <option key={location.id} value={location.id}>{location.name}</option>
           ))}
         </select>
+
       </div>
 
       {/* Provider Tabs */}
