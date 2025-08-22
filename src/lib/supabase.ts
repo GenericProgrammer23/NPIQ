@@ -250,11 +250,7 @@ export class DatabaseService {
     if (!supabase) return [];
     let query = supabase
       .from('providers')
-      .select(`
-        *,
-        organization:organizations(*),
-        location:locations(*)
-      `)
+      .select(`*`)
       .order('last_name');
 
     if (organizationId) {
@@ -288,11 +284,7 @@ export class DatabaseService {
     const { data, error } = await supabase
       .from('providers')
       .insert(provider)
-      .select(`
-        *,
-        organization:organizations(*),
-        location:locations(*)
-      `)
+      .select(`*`)
       .single();
 
     if (error) throw error;
@@ -305,11 +297,7 @@ export class DatabaseService {
       .from('providers')
       .update(updates)
       .eq('id', id)
-      .select(`
-        *,
-        organization:organizations(*),
-        location:locations(*)
-      `)
+      .select(`*`)
       .single();
 
     if (error) throw error;
