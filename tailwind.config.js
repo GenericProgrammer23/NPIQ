@@ -4,12 +4,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: '#1f2937',        // slate-800  (new base page background)
-        'navy-light': '#334155',// slate-700  (cards/strips slightly lighter)
-        'navy-dark': '#0f172a', // slate-900  (headers/bars)
+        navy: '#f8fafc',         // page background ≈ slate-50
+        'navy-light': '#ffffff', // cards / panels
+        'navy-dark': '#f1f5f9',  // headers / strips ≈ slate-100
         'dark-cyan': '#007E7D',
         goldenrod: '#E3A72F',
-        cream: '#F4EDE4',
+        cream: '#0f172a',
       },
     },
   },
