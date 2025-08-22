@@ -7,7 +7,7 @@ export default {
         // Light theme surfaces (so the app isn't stark white)
         navy: '#f3f4f6',         // page background (slate-100)
         'navy-light': '#ffffff', // cards/panels
-        'navy-dark': '#eef2f7',  // light strips/dividers
+        'navy-dark': '#15323E',  // light strips/dividers
 
         // Keep your accents
         'dark-cyan': '#007E7D',
