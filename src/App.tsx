@@ -573,7 +573,7 @@ const App = () => {
             placeholder="Search providers…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="w-full pl-10 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream placeholder-cream/50 focus:outline-none focus:border-dark-cyan"
+            className="w-full pl-8 py-2 bg-navy-dark border border-dark-cyan/30 rounded-lg text-cream placeholder-cream/50 focus:outline-none focus:border-dark-cyan"
           />
         </div>
         <select
