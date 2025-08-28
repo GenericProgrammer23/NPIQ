@@ -136,29 +136,45 @@ const App = () => {
   };
 
   const handleFormSubmit = async (modalName, data) => {
-  try {
-    switch (modalName) {
-      case 'addProvider': {
-        // Drop any stray nested location payload
-        const { location, name, ...clean } = data;
-        await createProvider(clean);
-        break;
-      }
-      case 'editProvider':
-        await updateProvider(selectedItem.id, data);
-        break;
-      case 'addLocation':
-        await createLocation(data);
-        break;
-      case 'addWorkflow':
-        await createWorkflow(data);
-        break;
-      case 'addTask':
-        await createTask(data);
-        break;
-      case 'editTask':
-        await updateTask(selectedItem.id, data);
-        break;
+    try {
+      switch (modalName) {
+        case 'addProvider': {
+          // Accept either { location_id } or { location: { id, name } } from the form
+          const { location, location_name, ...rest } = data;
+          const payload = {
+            ...rest,
+            location_id:
+              data.location_id ??
+              (location && (location.id || location.value)) ??
+              null,
+          };
+          await createProvider(payload);
+          break;
+        }
+        case 'editProvider': {
+          const { location, location_name, ...rest } = data;
+          const payload = {
+            ...rest,
+            location_id:
+              rest.location_id ??
+              (location && (location.id || location.value)) ??
+              null,
+          };
+          await updateProvider(selectedItem.id, payload);
+          break;
+        }
+        case 'addLocation':
+          await createLocation(data);
+          break;
+        case 'addWorkflow':
+          await createWorkflow(data);
+          break;
+        case 'addTask':
+          await createTask(data);
+          break;
+        case 'editTask':
+          await updateTask(selectedItem.id, data);
+          break;
     }
     closeModal(modalName);
   } catch (error) {
