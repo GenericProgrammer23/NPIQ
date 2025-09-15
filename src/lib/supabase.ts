@@ -285,9 +285,15 @@ export class DatabaseService {
       }
     }
     
+    // Ensure location_id is properly handled - it can be null
+    const providerData = {
+      ...provider,
+      location_id: provider.location_id || null
+    };
+    
     const { data, error } = await supabase
       .from('providers')
-      .insert(provider)
+      .insert(providerData)
       .select(`
         *,
         organization:organizations(*),

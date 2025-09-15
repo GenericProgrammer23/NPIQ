@@ -26,6 +26,11 @@ export function useProviders(organizationId?: string) {
 
   const createProvider = async (provider: Omit<Provider, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Ensure location_id is properly set (can be null)
+      const providerData = {
+        ...provider,
+        location_id: provider.location_id || null
+      };
       const newProvider = await DatabaseService.createProvider(provider);
       setProviders(prev => [...prev, newProvider]);
       return newProvider;
