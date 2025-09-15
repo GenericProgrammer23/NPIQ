@@ -115,7 +115,6 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       await DatabaseService.createProvider({
         ...providerData,
         organization_id: createdOrganizationId,
-        location_id: null, // Explicitly set location_id as null since we're not selecting one in setup
         status: 'pending'
       });
       
