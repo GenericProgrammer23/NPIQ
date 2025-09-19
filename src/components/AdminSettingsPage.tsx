@@ -8,6 +8,7 @@ interface CustomField {
   label: string;
   type: 'text' | 'number' | 'date' | 'email' | 'tel';
   required: boolean;
+  table_name: string;
   created_at: string;
 }
 
@@ -22,7 +23,8 @@ export const AdminSettingsPage: React.FC = () => {
     name: '',
     label: '',
     type: 'text' as const,
-    required: false
+    required: false,
+    table_name: 'providers' as const
   });
 
   useEffect(() => {
@@ -32,14 +34,12 @@ export const AdminSettingsPage: React.FC = () => {
   const loadCustomFields = async () => {
     try {
       setLoading(true);
-      // Load custom fields from a configuration table
       const { data, error } = await supabase
-        .from('custom_provider_fields')
+        .from('custom_fields')
         .select('*')
         .order('created_at');
 
       if (error) {
-        // Handle table not found errors gracefully
         if (error.code === 'PGRST205' || error.code === '42P01') {
           console.info('Custom fields table not yet created, starting with empty fields');
           setCustomFields([]);
@@ -82,41 +82,45 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setLoading(true);
 
-      // First, ensure the custom fields table exists
-      await createCustomFieldsTableIfNotExists();
-
-      // Add the field configuration
-      const { data: fieldData, error: fieldError } = await supabase
-        .from('custom_provider_fields')
-        .insert({
-          name: formData.name.toLowerCase().replace(/\s+/g, '_'),
-          label: formData.label,
-          type: formData.type,
-          required: formData.required
-        })
-        .select()
-        .single();
-
-      if (fieldError) throw fieldError;
-
-      // Add the actual column to the providers table
+      const columnName = formData.name.toLowerCase().replace(/\s+/g, '_');
       const columnType = getPostgresType(formData.type);
-      const { error: alterError } = await supabase.rpc('add_provider_column', {
-        p_column_name: formData.name.toLowerCase().replace(/\s+/g, '_'),
+
+      // Add the actual column to the target table
+      const { error: alterError } = await supabase.rpc('add_custom_column', {
+        p_table_name: formData.table_name,
+        p_column_name: columnName,
         p_column_type: columnType,
         p_is_required: formData.required
       });
 
-      if (alterError) {
-        // If column addition fails, remove the field configuration
-        await supabase.from('custom_provider_fields').delete().eq('id', fieldData.id);
-        throw alterError;
+      if (alterError) throw alterError;
+
+      // Add the field configuration
+      const { data: fieldData, error: fieldError } = await supabase
+        .from('custom_fields')
+        .insert({
+          name: columnName,
+          label: formData.label,
+          type: formData.type,
+          required: formData.required,
+          table_name: formData.table_name
+        })
+        .select()
+        .single();
+
+      if (fieldError) {
+        // If field config fails, try to remove the column
+        await supabase.rpc('drop_custom_column', {
+          p_table_name: formData.table_name,
+          p_column_name: columnName
+        });
+        throw fieldError;
       }
 
       setCustomFields(prev => [...prev, fieldData]);
       setShowAddForm(false);
-      setFormData({ name: '', label: '', type: 'text', required: false });
-      showMessage('Field added successfully! Please refresh the page to see changes.', 'success');
+      setFormData({ name: '', label: '', type: 'text', required: false, table_name: 'providers' });
+      showMessage('Field added successfully! Please refresh the page to see changes in forms.', 'success');
 
     } catch (err) {
       console.error('Failed to add field:', err);
@@ -134,8 +138,9 @@ export const AdminSettingsPage: React.FC = () => {
     try {
       setLoading(true);
 
-      // Remove the column from the providers table
-      const { error: alterError } = await supabase.rpc('drop_provider_column', {
+      // Remove the column from the target table
+      const { error: alterError } = await supabase.rpc('drop_custom_column', {
+        p_table_name: field.table_name,
         p_column_name: field.name
       });
 
@@ -143,7 +148,7 @@ export const AdminSettingsPage: React.FC = () => {
 
       // Remove the field configuration
       const { error: deleteError } = await supabase
-        .from('custom_provider_fields')
+        .from('custom_fields')
         .delete()
         .eq('id', field.id);
 
@@ -160,13 +165,6 @@ export const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  const createCustomFieldsTableIfNotExists = async () => {
-    const { error } = await supabase.rpc('create_custom_fields_table');
-    if (error && !error.message.includes('already exists')) {
-      throw error;
-    }
-  };
-
   const getPostgresType = (type: string): string => {
     switch (type) {
       case 'number': return 'integer';
@@ -177,6 +175,24 @@ export const AdminSettingsPage: React.FC = () => {
       default: return 'text';
     }
   };
+
+  const getTableDisplayName = (tableName: string): string => {
+    switch (tableName) {
+      case 'providers': return 'Providers';
+      case 'locations': return 'Locations';
+      case 'workflows': return 'Workflows';
+      case 'tasks': return 'Tasks';
+      default: return tableName;
+    }
+  };
+
+  const groupedFields = customFields.reduce((acc, field) => {
+    if (!acc[field.table_name]) {
+      acc[field.table_name] = [];
+    }
+    acc[field.table_name].push(field);
+    return acc;
+  }, {} as Record<string, CustomField[]>);
 
   if (loading && customFields.length === 0) {
     return (
@@ -224,65 +240,79 @@ export const AdminSettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Custom Fields List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
-        <div className="p-6 border-b border-navy/10 dark:border-gray-600">
-          <h2 className="text-xl font-semibold text-navy dark:text-white flex items-center">
-            <Database className="h-5 w-5 mr-2" />
-            Custom Provider Fields
-          </h2>
-          <p className="text-navy/60 dark:text-gray-400 mt-1">
-            Add custom fields to the provider database table
-          </p>
-        </div>
-
-        {customFields.length === 0 ? (
-          <div className="p-8 text-center">
-            <Settings className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No custom fields</h3>
-            <p className="text-navy/60 dark:text-gray-400">
-              Get started by adding your first custom field to the provider table
-            </p>
+      {/* Custom Fields by Table */}
+      <div className="space-y-6">
+        {Object.keys(groupedFields).length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
+            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+              <h2 className="text-xl font-semibold text-navy dark:text-white flex items-center">
+                <Database className="h-5 w-5 mr-2" />
+                Custom Fields
+              </h2>
+              <p className="text-navy/60 dark:text-gray-400 mt-1">
+                Add custom fields to database tables
+              </p>
+            </div>
+            <div className="p-8 text-center">
+              <Settings className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No custom fields</h3>
+              <p className="text-navy/60 dark:text-gray-400">
+                Get started by adding your first custom field to any table
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10 dark:divide-gray-600">
-            {customFields.map((field) => (
-              <div key={field.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-lg font-semibold text-navy dark:text-white">{field.label}</h3>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                        {field.type}
-                      </span>
-                      {field.required && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                          Required
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="text-sm text-navy/70 dark:text-gray-300">
-                      <span className="font-medium">Database Column:</span> {field.name}
-                    </div>
-                    <div className="text-sm text-navy/50 dark:text-gray-400">
-                      Added {new Date(field.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDeleteField(field)}
-                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                      title="Delete Field"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+          Object.entries(groupedFields).map(([tableName, fields]) => (
+            <div key={tableName} className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
+              <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+                <h2 className="text-xl font-semibold text-navy dark:text-white flex items-center">
+                  <Database className="h-5 w-5 mr-2" />
+                  {getTableDisplayName(tableName)} Custom Fields
+                </h2>
+                <p className="text-navy/60 dark:text-gray-400 mt-1">
+                  Custom fields added to the {tableName} table
+                </p>
               </div>
-            ))}
-          </div>
+              <div className="divide-y divide-navy/10 dark:divide-gray-600">
+                {fields.map((field) => (
+                  <div key={field.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-2">
+                          <h3 className="text-lg font-semibold text-navy dark:text-white">{field.label}</h3>
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            {field.type}
+                          </span>
+                          {field.required && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                              Required
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="text-sm text-navy/70 dark:text-gray-300">
+                          <span className="font-medium">Database Column:</span> {field.name}
+                        </div>
+                        <div className="text-sm text-navy/50 dark:text-gray-400">
+                          Added {new Date(field.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleDeleteField(field)}
+                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title="Delete Field"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
         )}
       </div>
 
@@ -293,11 +323,25 @@ export const AdminSettingsPage: React.FC = () => {
             <div className="p-6 border-b border-navy/10 dark:border-gray-600">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Add Custom Field</h2>
               <p className="text-navy/60 dark:text-gray-400 text-sm mt-1">
-                This will add a new column to the providers table
+                This will add a new column to the selected table
               </p>
             </div>
             
             <form onSubmit={handleAddField} className="p-6 space-y-4">
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Table *</label>
+                <select
+                  value={formData.table_name}
+                  onChange={(e) => setFormData({ ...formData, table_name: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                >
+                  <option value="providers">Providers</option>
+                  <option value="locations">Locations</option>
+                  <option value="workflows">Workflows</option>
+                  <option value="tasks">Tasks</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Field Name *</label>
                 <input
