@@ -245,6 +245,22 @@ export class DatabaseService {
     return data;
   }
 
+  static async updateLocation(id: string, updates: Partial<Location>): Promise<Location> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('locations')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        organization:organizations(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   // Providers
   static async getProviders(organizationId?: string): Promise<Provider[]> {
     if (!supabase) return [];

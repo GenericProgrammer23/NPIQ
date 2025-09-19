@@ -332,12 +332,15 @@ export const ProvidersPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">Specialty</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.specialty}
                     onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                     className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  />
+                  >
+                    <option value="">Select Specialty</option>
+                    <option value="Physical Therapy">Physical Therapy</option>
+                    <option value="Occupational Therapy">Occupational Therapy</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">Location</label>
@@ -467,12 +470,15 @@ export const ProvidersPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">Specialty</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.specialty}
                     onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                     className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  />
+                  >
+                    <option value="">Select Specialty</option>
+                    <option value="Physical Therapy">Physical Therapy</option>
+                    <option value="Occupational Therapy">Occupational Therapy</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">Location</label>

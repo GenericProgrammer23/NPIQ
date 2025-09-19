@@ -121,15 +121,15 @@ export const TasksPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-navy mb-2">Tasks</h1>
-          <p className="text-navy/70">Manage workflow tasks and assignments</p>
+          <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Tasks</h1>
+          <p className="text-navy/70 dark:text-gray-300">Manage workflow tasks and assignments</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="bg-goldenrod hover:bg-goldenrod/90 text-navy px-4 py-2 rounded-lg font-medium flex items-center"
+          className="bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy px-4 py-2 rounded-lg font-medium flex items-center"
         >
           <Plus className="h-5 w-5 mr-2" />
           Create Task
@@ -137,26 +137,26 @@ export const TasksPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-navy/10 p-4 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-gray-400" />
               <input
                 type="text"
                 placeholder="Search tasks..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-navy/50" />
+            <Filter className="h-4 w-4 text-navy/50 dark:text-gray-400" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -167,7 +167,7 @@ export const TasksPage: React.FC = () => {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
             >
               <option value="all">All Priority</option>
               <option value="urgent">Urgent</option>
@@ -180,12 +180,12 @@ export const TasksPage: React.FC = () => {
       </div>
 
       {/* Tasks List */}
-      <div className="bg-white rounded-lg border border-navy/10">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
         {filteredTasks.length === 0 ? (
           <div className="p-8 text-center">
-            <CheckSquare className="h-12 w-12 text-navy/30 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-navy mb-2">No tasks found</h3>
-            <p className="text-navy/60">
+            <CheckSquare className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No tasks found</h3>
+            <p className="text-navy/60 dark:text-gray-400">
               {tasks.length === 0 
                 ? "Get started by creating your first task"
                 : "Try adjusting your search or filter criteria"
@@ -193,13 +193,13 @@ export const TasksPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10">
+          <div className="divide-y divide-navy/10 dark:divide-gray-600">
             {filteredTasks.map((task) => (
-              <div key={task.id} className="p-6 hover:bg-navy/5 transition-colors">
+              <div key={task.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-lg font-semibold text-navy">{task.title}</h3>
+                      <h3 className="text-lg font-semibold text-navy dark:text-white">{task.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(task.status)}`}>
                         {task.status.replace('_', ' ')}
                       </span>
@@ -215,10 +215,10 @@ export const TasksPage: React.FC = () => {
                     </div>
                     
                     {task.description && (
-                      <p className="text-navy/70 mb-3">{task.description}</p>
+                      <p className="text-navy/70 dark:text-gray-300 mb-3">{task.description}</p>
                     )}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-navy/70">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-navy/70 dark:text-gray-300">
                       {task.workflow && (
                         <div className="flex items-center">
                           <CheckSquare className="h-4 w-4 mr-2" />
@@ -244,7 +244,7 @@ export const TasksPage: React.FC = () => {
                     <select
                       value={task.status}
                       onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                      className="px-3 py-1 border border-navy/20 rounded text-sm focus:outline-none focus:border-dark-cyan"
+                      className="px-3 py-1 border border-navy/20 dark:border-gray-600 rounded text-sm focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                     >
                       <option value="pending">Pending</option>
                       <option value="in_progress">In Progress</option>
@@ -262,41 +262,41 @@ export const TasksPage: React.FC = () => {
       {/* Add Task Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-navy/10">
-              <h2 className="text-xl font-semibold text-navy">Create New Task</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+              <h2 className="text-xl font-semibold text-navy dark:text-white">Create New Task</h2>
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-navy font-medium mb-2">Task Title *</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">Task Title *</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                   placeholder="e.g., Review license documentation"
                 />
               </div>
 
               <div>
-                <label className="block text-navy font-medium mb-2">Description</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-gray-700 text-navy dark:text-white"
                   placeholder="Describe the task details..."
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-navy font-medium mb-2">Workflow</label>
+                  <label className="block text-navy dark:text-white font-medium mb-2">Workflow</label>
                   <select
                     value={formData.workflow_id}
                     onChange={(e) => setFormData({ ...formData, workflow_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                   >
                     <option value="">No workflow</option>
                     {workflows.map((workflow) => (
@@ -307,11 +307,11 @@ export const TasksPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-navy font-medium mb-2">Provider</label>
+                  <label className="block text-navy dark:text-white font-medium mb-2">Provider</label>
                   <select
                     value={formData.provider_id}
                     onChange={(e) => setFormData({ ...formData, provider_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                   >
                     <option value="">No provider</option>
                     {providers.map((provider) => (
@@ -325,11 +325,11 @@ export const TasksPage: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-navy font-medium mb-2">Status</label>
+                  <label className="block text-navy dark:text-white font-medium mb-2">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                   >
                     <option value="pending">Pending</option>
                     <option value="in_progress">In Progress</option>
@@ -338,11 +338,11 @@ export const TasksPage: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-navy font-medium mb-2">Priority</label>
+                  <label className="block text-navy dark:text-white font-medium mb-2">Priority</label>
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -353,12 +353,12 @@ export const TasksPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-navy font-medium mb-2">Due Date</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">Due Date</label>
                 <input
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                 />
               </div>
 
@@ -366,13 +366,13 @@ export const TasksPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-navy border border-navy/20 rounded-lg hover:bg-navy/5"
+                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy rounded-lg font-medium"
+                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy rounded-lg font-medium"
                 >
                   Create Task
                 </button>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, MapPin, Workflow, CheckSquare, Wifi, WifiOff, Building } from 'lucide-react';
+import { Home, Users, MapPin, Workflow, CheckSquare, Wifi, WifiOff, Building, Settings } from 'lucide-react';
 
 interface SidebarProps {
   currentPage: string;
@@ -14,6 +14,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isO
     { id: 'locations', label: 'Locations', icon: MapPin },
     { id: 'workflows', label: 'Workflows', icon: Workflow },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+    { id: 'admin', label: 'Admin Settings', icon: Settings },
   ];
 
   return (

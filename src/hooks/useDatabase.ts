@@ -106,11 +106,23 @@ export function useLocations(organizationId?: string) {
     }
   };
 
+  const updateLocation = async (id: string, updates: Partial<Location>) => {
+    try {
+      const updatedLocation = await DatabaseService.updateLocation(id, updates);
+      setLocations(prev => prev.map(l => l.id === id ? updatedLocation : l));
+      return updatedLocation;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update location');
+      throw err;
+    }
+  };
+
   return {
     locations,
     loading,
     error,
     createLocation,
+    updateLocation,
     refetch: () => {
       setLoading(true);
       DatabaseService.getLocations(organizationId)

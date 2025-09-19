@@ -90,15 +90,15 @@ export const WorkflowsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-navy mb-2">Workflows</h1>
-          <p className="text-navy/70">Manage credentialing and compliance workflows</p>
+          <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Workflows</h1>
+          <p className="text-navy/70 dark:text-gray-300">Manage credentialing and compliance workflows</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="bg-goldenrod hover:bg-goldenrod/90 text-navy px-4 py-2 rounded-lg font-medium flex items-center"
+          className="bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy px-4 py-2 rounded-lg font-medium flex items-center"
         >
           <Plus className="h-5 w-5 mr-2" />
           Create Workflow
@@ -106,17 +106,17 @@ export const WorkflowsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-navy/10 p-4 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-gray-400" />
               <input
                 type="text"
                 placeholder="Search workflows..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
               />
             </div>
           </div>
@@ -124,7 +124,7 @@ export const WorkflowsPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -136,12 +136,12 @@ export const WorkflowsPage: React.FC = () => {
       </div>
 
       {/* Workflows List */}
-      <div className="bg-white rounded-lg border border-navy/10">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
         {filteredWorkflows.length === 0 ? (
           <div className="p-8 text-center">
-            <Workflow className="h-12 w-12 text-navy/30 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-navy mb-2">No workflows found</h3>
-            <p className="text-navy/60">
+            <Workflow className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No workflows found</h3>
+            <p className="text-navy/60 dark:text-gray-400">
               {workflows.length === 0 
                 ? "Get started by creating your first workflow"
                 : "Try adjusting your search or filter criteria"
@@ -149,13 +149,13 @@ export const WorkflowsPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10">
+          <div className="divide-y divide-navy/10 dark:divide-gray-600">
             {filteredWorkflows.map((workflow) => (
-              <div key={workflow.id} className="p-6 hover:bg-navy/5 transition-colors">
+              <div key={workflow.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-lg font-semibold text-navy">{workflow.name}</h3>
+                      <h3 className="text-lg font-semibold text-navy dark:text-white">{workflow.name}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(workflow.status)}`}>
                         {workflow.status}
                       </span>
@@ -165,10 +165,10 @@ export const WorkflowsPage: React.FC = () => {
                     </div>
                     
                     {workflow.description && (
-                      <p className="text-navy/70 mb-2">{workflow.description}</p>
+                      <p className="text-navy/70 dark:text-gray-300 mb-2">{workflow.description}</p>
                     )}
                     
-                    <div className="text-sm text-navy/50">
+                    <div className="text-sm text-navy/50 dark:text-gray-400">
                       {workflow.steps.length} steps • Created {new Date(workflow.created_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -185,10 +185,10 @@ export const WorkflowsPage: React.FC = () => {
                       </button>
                     )}
                     <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" />
                     </button>
                     <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" />
                     </button>
                   </div>
                 </div>
@@ -201,40 +201,40 @@ export const WorkflowsPage: React.FC = () => {
       {/* Add Workflow Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-md">
-            <div className="p-6 border-b border-navy/10">
-              <h2 className="text-xl font-semibold text-navy">Create New Workflow</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+              <h2 className="text-xl font-semibold text-navy dark:text-white">Create New Workflow</h2>
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-navy font-medium mb-2">Workflow Name *</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">Workflow Name *</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                   placeholder="e.g., New Provider Credentialing"
                 />
               </div>
 
               <div>
-                <label className="block text-navy font-medium mb-2">Description</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-gray-700 text-navy dark:text-white"
                   placeholder="Describe the workflow purpose and process..."
                 />
               </div>
 
               <div>
-                <label className="block text-navy font-medium mb-2">Type</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">Type</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                 >
                   <option value="credentialing">Credentialing</option>
                   <option value="renewal">Renewal</option>
@@ -243,11 +243,11 @@ export const WorkflowsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-navy font-medium mb-2">Status</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">Status</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 rounded-lg focus:outline-none focus:border-dark-cyan"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                 >
                   <option value="draft">Draft</option>
                   <option value="active">Active</option>
@@ -258,13 +258,13 @@ export const WorkflowsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-navy border border-navy/20 rounded-lg hover:bg-navy/5"
+                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy rounded-lg font-medium"
+                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy rounded-lg font-medium"
                 >
                   Create Workflow
                 </button>
