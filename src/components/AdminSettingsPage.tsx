@@ -102,9 +102,9 @@ export const AdminSettingsPage: React.FC = () => {
       // Add the actual column to the providers table
       const columnType = getPostgresType(formData.type);
       const { error: alterError } = await supabase.rpc('add_provider_column', {
-        column_name: formData.name.toLowerCase().replace(/\s+/g, '_'),
-        column_type: columnType,
-        is_required: formData.required
+        p_column_name: formData.name.toLowerCase().replace(/\s+/g, '_'),
+        p_column_type: columnType,
+        p_is_required: formData.required
       });
 
       if (alterError) {
@@ -136,7 +136,7 @@ export const AdminSettingsPage: React.FC = () => {
 
       // Remove the column from the providers table
       const { error: alterError } = await supabase.rpc('drop_provider_column', {
-        column_name: field.name
+        p_column_name: field.name
       });
 
       if (alterError) throw alterError;
