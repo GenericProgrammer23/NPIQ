@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Supabase configuration
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('temp_supabase_url');
@@ -9,16 +9,25 @@ const supabaseSchema = (import.meta.env.VITE_DB_SCHEMA ?? 'public').trim();
 
 
 // Create Supabase client only if environment variables are available
-export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-      },
-      db: { schema: supabaseSchema },
-    })
-  : null;
+let supabase: SupabaseClient | null = null;
+
+try {
+  supabase = supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
+        db: { schema: supabaseSchema },
+      })
+    : null;
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  supabase = null;
+}
+
+export { supabase };
 
 // Database types
 export interface Organization {
