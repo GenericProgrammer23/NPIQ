@@ -5,6 +5,7 @@ import { Dashboard } from './components/Dashboard';
 import { ProvidersPage } from './components/ProvidersPage';
 import { LocationsPage } from './components/LocationsPage';
 import { WorkflowsPage } from './components/WorkflowsPage';
+import { SubflowsPage } from './components/SubflowsPage';
 import { TasksPage } from './components/TasksPage';
 import { AdminSettingsPage } from './components/AdminSettingsPage';
 import { Sidebar } from './components/Sidebar';
@@ -33,6 +34,8 @@ function App() {
         return <LocationsPage initialFilter={pageFilter} />;
       case 'workflows':
         return <WorkflowsPage initialFilter={pageFilter} />;
+      case 'subflows':
+        return <SubflowsPage initialFilter={pageFilter} />;
       case 'tasks':
         return <TasksPage initialFilter={pageFilter} />;
       case 'admin':
