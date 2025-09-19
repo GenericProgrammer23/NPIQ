@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTasks, useWorkflows, useProviders } from '../hooks/useDatabase';
+import { useTasks, useWorkflows, useProviders, useSubflows } from '../hooks/useDatabase';
 import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -10,6 +10,7 @@ interface TasksPageProps {
 export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   const { tasks, loading, error, createTask, updateTask } = useTasks();
   const { workflows } = useWorkflows();
+  const { subflows } = useSubflows();
   const { providers } = useProviders();
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +22,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
     title: '',
     description: '',
     workflow_id: '',
+    subflow_id: '',
     provider_id: '',
     status: 'pending' as const,
     priority: 'medium' as const,
@@ -72,6 +74,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
       const taskData = {
         ...formData,
         workflow_id: formData.workflow_id || null,
+        subflow_id: formData.subflow_id || null,
         provider_id: formData.provider_id || null,
         due_date: formData.due_date || null,
         assigned_to: formData.assigned_to || null,
@@ -84,6 +87,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         title: '',
         description: '',
         workflow_id: '',
+        subflow_id: '',
         provider_id: '',
         status: 'pending',
         priority: 'medium',
@@ -327,7 +331,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                       {task.workflow && (
                         <div className="flex items-center">
                           <CheckSquare className="h-4 w-4 mr-2" />
-                          {task.workflow.name}
+                          {task.subflow ? `${task.workflow.name} > ${task.subflow.name}` : task.workflow.name}
                         </div>
                       )}
                       {task.provider && (
@@ -400,7 +404,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   <label className="block text-navy dark:text-white font-medium mb-2">Workflow</label>
                   <select
                     value={formData.workflow_id}
-                    onChange={(e) => setFormData({ ...formData, workflow_id: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, workflow_id: e.target.value, subflow_id: '' })}
                     className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                   >
                     <option value="">No workflow</option>
@@ -411,6 +415,27 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-navy dark:text-white font-medium mb-2">Subflow</label>
+                  <select
+                    value={formData.subflow_id}
+                    onChange={(e) => setFormData({ ...formData, subflow_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    disabled={!formData.workflow_id}
+                  >
+                    <option value="">No subflow</option>
+                    {subflows
+                      .filter(subflow => subflow.workflow_id === formData.workflow_id)
+                      .map((subflow) => (
+                        <option key={subflow.id} value={subflow.id}>
+                          {subflow.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">Provider</label>
                   <select

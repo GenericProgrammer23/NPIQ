@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useWorkflows } from '../hooks/useDatabase';
-import { Workflow, Plus, Search, Edit, Eye, Play, Archive } from 'lucide-react';
+import { useWorkflows, useSubflows, useProviders } from '../hooks/useDatabase';
+import { Workflow, Plus, Search, Edit, Eye, Play, Archive, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { Subflow } from '../lib/supabase';
 
 interface WorkflowsPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -9,7 +10,9 @@ interface WorkflowsPageProps {
 
 export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) => {
   const { workflows, loading, error, createWorkflow } = useWorkflows();
+  const { providers } = useProviders();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [customFields, setCustomFields] = useState<any[]>([]);
@@ -22,6 +25,9 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
     steps: [] as any[]
   });
   const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+
+  // Get subflows for selected workflow
+  const { subflows, updateSubflow, emitTasksForSubflow } = useSubflows(selectedWorkflow || undefined);
 
   // Handle initial filter from dashboard
   React.useEffect(() => {
@@ -138,6 +144,64 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
             required={field.required}
           />
         );
+    }
+  };
+
+  const handleViewWorkflow = (workflowId: string) => {
+    setSelectedWorkflow(selectedWorkflow === workflowId ? null : workflowId);
+  };
+
+  const getSubflowStatusIcon = (status: string) => {
+    switch (status) {
+      case 'complete': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
+      case 'not_started': return <AlertCircle className="h-4 w-4 text-gray-400" />;
+      default: return <AlertCircle className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  const checkPrerequisites = (subflow: Subflow): boolean => {
+    // Simple prerequisite checking - in practice you'd parse the prerequisites string
+    if (subflow.prerequisites.includes('Provider Baseline')) {
+      const baselineSubflow = subflows.find(s => s.name === 'Provider Baseline');
+      return baselineSubflow?.status === 'complete';
+    }
+    if (subflow.prerequisites.includes('provider')) {
+      // Check if we have a provider with basic info
+      return providers.length > 0 && providers.some(p => p.first_name && p.last_name && p.specialty);
+    }
+    return true;
+  };
+
+  const checkDependencies = (subflow: Subflow): boolean => {
+    if (!subflow.dependencies) return true;
+    
+    // Simple dependency checking
+    if (subflow.dependencies.includes('Provider Baseline Complete')) {
+      const baselineSubflow = subflows.find(s => s.name === 'Provider Baseline');
+      return baselineSubflow?.status === 'complete';
+    }
+    if (subflow.dependencies.includes('AHCCCS Complete')) {
+      const ahcccsSubflow = subflows.find(s => s.name === 'AHCCCS Enrollment');
+      return ahcccsSubflow?.status === 'complete';
+    }
+    return true;
+  };
+
+  const handleStartSubflow = async (subflowId: string) => {
+    try {
+      const providerId = providers.length > 0 ? providers[0].id : undefined;
+      await emitTasksForSubflow(subflowId, providerId);
+    } catch (err) {
+      console.error('Failed to start subflow:', err);
+    }
+  };
+
+  const handleCompleteSubflow = async (subflowId: string) => {
+    try {
+      await updateSubflow(subflowId, { status: 'complete' });
+    } catch (err) {
+      console.error('Failed to complete subflow:', err);
     }
   };
 
@@ -290,13 +354,95 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                       </button>
                     )}
                     <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
-                      <Eye className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" />
+                      <Eye 
+                        className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" 
+                        onClick={() => handleViewWorkflow(workflow.id)}
+                      />
                     </button>
                     <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
                       <Edit className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" />
                     </button>
                   </div>
                 </div>
+
+                {/* Subflows Section */}
+                {selectedWorkflow === workflow.id && (
+                  <div className="mt-6 border-t border-navy/10 dark:border-gray-600 pt-6">
+                    <h4 className="text-lg font-semibold text-navy dark:text-white mb-4">Subflows</h4>
+                    <div className="space-y-4">
+                      {subflows.map((subflow) => {
+                        const prereqsMet = checkPrerequisites(subflow);
+                        const depsMet = checkDependencies(subflow);
+                        const canStart = prereqsMet && depsMet && subflow.status === 'not_started';
+                        const canComplete = subflow.status === 'in_progress';
+
+                        return (
+                          <div key={subflow.id} className="bg-navy/5 dark:bg-gray-700 rounded-lg p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  {getSubflowStatusIcon(subflow.status)}
+                                  <h5 className="font-semibold text-navy dark:text-white">{subflow.name}</h5>
+                                  <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                                    {subflow.status.replace('_', ' ')}
+                                  </span>
+                                </div>
+                                
+                                {subflow.purpose && (
+                                  <p className="text-sm text-navy/70 dark:text-gray-300 mb-2">{subflow.purpose}</p>
+                                )}
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-navy/60 dark:text-gray-400">
+                                  <div>
+                                    <span className="font-medium">Prerequisites: </span>
+                                    <span className={prereqsMet ? 'text-green-600' : 'text-red-600'}>
+                                      {prereqsMet ? '✓' : '✗'} {subflow.prerequisites || 'None'}
+                                    </span>
+                                  </div>
+                                  {subflow.dependencies && (
+                                    <div>
+                                      <span className="font-medium">Dependencies: </span>
+                                      <span className={depsMet ? 'text-green-600' : 'text-red-600'}>
+                                        {depsMet ? '✓' : '✗'} {subflow.dependencies}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <span className="font-medium">Exit Condition: </span>
+                                    {subflow.exit_condition || 'All tasks completed'}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Tasks: </span>
+                                    {subflow.tasks?.length || 0} tasks
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 ml-4">
+                                {canStart && (
+                                  <button
+                                    onClick={() => handleStartSubflow(subflow.id)}
+                                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                  >
+                                    Start
+                                  </button>
+                                )}
+                                {canComplete && (
+                                  <button
+                                    onClick={() => handleCompleteSubflow(subflow.id)}
+                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                                  >
+                                    Complete
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
