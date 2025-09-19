@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTasks, useWorkflows, useProviders, useSubflows } from '../hooks/useDatabase';
-import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle } from 'lucide-react';
+import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface TasksPageProps {
@@ -165,6 +165,29 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
       });
     } catch (err) {
       console.error('Failed to update task:', err);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      if (supabase) {
+        const { error } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('id', taskId);
+        
+        if (error) throw error;
+        
+        // Refresh tasks list
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+      alert('Failed to delete task. Please try again.');
     }
   };
 
@@ -368,6 +391,13 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                       <option value="completed">Completed</option>
                       <option value="rejected">Rejected</option>
                     </select>
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      title="Delete Task"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>

@@ -24,9 +24,9 @@ export const AdminSettingsPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     label: '',
-    type: 'text' as const,
+    type: 'text' as 'text' | 'number' | 'date' | 'email' | 'tel' | 'file',
     required: false,
-    table_name: 'providers' as const
+    table_name: 'providers' as 'providers' | 'locations' | 'workflows' | 'tasks'
   });
 
   useEffect(() => {
@@ -334,6 +334,8 @@ export const AdminSettingsPage: React.FC = () => {
       case 'email':
       case 'tel':
       case 'text':
+      case 'file':
+        return 'text'; // Store file paths as text
       default: return 'text';
     }
   };

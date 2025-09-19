@@ -19,7 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isO
   ];
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-navy dark:bg-navy border-r border-navy-light dark:border-dark-cyan/30 z-40">
+    <div className="fixed left-0 top-0 h-full w-64 bg-sidebar-navy border-r border-navy-light dark:border-dark-cyan/30 z-40">
       <div className="p-6">
         <div className="flex items-center mb-8">
           <Building className="h-8 w-8 text-goldenrod mr-3" />
