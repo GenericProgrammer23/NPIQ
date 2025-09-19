@@ -379,19 +379,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                       {provider.phone && (
                         <div className="flex items-center">
                           <Phone className="h-4 w-4 mr-2" />
-                          {formatters.phone(provider.phone)}
-                        </div>
-                      )}
-                      {provider.provider_npi && (
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">NPI:</span>
-                          {provider.provider_npi}
-                        </div>
-                      )}
-                      {provider.caqh && (
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">CAQH:</span>
-                          {provider.caqh}
+                          {provider.phone}
                         </div>
                       )}
                       {provider.location && (
@@ -416,13 +404,6 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => handleShowDocuments(provider.id)}
-                      className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
-                      title="View Documents"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </button>
                     <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
                       <Eye className="h-4 w-4" />
                     </button>
@@ -487,9 +468,110 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => {
+                      const formatted = formatters.phone(e.target.value);
+                      setFormData({ ...formData, phone: formatted });
+                    }}
                     className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                    placeholder="123-456-7890"
                   />
+                </div>
+                <div>
+                  <label className="block text-navy dark:text-white font-medium mb-2">NPI Number</label>
+                  <input
+                    type="text"
+                    value={formData.npi}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setFormData({ ...formData, npi: cleaned });
+                    }}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                    placeholder="1234567890"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-navy dark:text-white font-medium mb-2">CAQH Number</label>
+                  <input
+                    type="text"
+                    value={formData.caqh}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/\D/g, '');
+                      setFormData({ ...formData, caqh: cleaned });
+                    }}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                    placeholder="123456"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-dark-cyan/30 pt-4">
+                  Address Information
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-navy dark:text-white font-medium mb-2">Address Line 1</label>
+                    <input
+                      type="text"
+                      value={formData.address_line1}
+                      onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
+                      className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                      placeholder="123 Main Street"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-navy dark:text-white font-medium mb-2">Address Line 2</label>
+                    <input
+                      type="text"
+                      value={formData.address_line2}
+                      onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
+                      className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                      placeholder="Suite 100 (optional)"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-navy dark:text-white font-medium mb-2">City</label>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                        placeholder="Phoenix"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-navy dark:text-white font-medium mb-2">State</label>
+                      <select
+                        value={formData.state}
+                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                        className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                      >
+                        <option value="">Select State</option>
+                        <option value="AZ">Arizona</option>
+                        <option value="CA">California</option>
+                        <option value="TX">Texas</option>
+                        <option value="FL">Florida</option>
+                        <option value="NY">New York</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-navy dark:text-white font-medium mb-2">ZIP Code</label>
+                      <input
+                        type="text"
+                        value={formData.zip}
+                        onChange={(e) => {
+                          const cleaned = e.target.value.replace(/\D/g, '').slice(0, 5);
+                          setFormData({ ...formData, zip: cleaned });
+                        }}
+                        className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                        placeholder="85001"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
