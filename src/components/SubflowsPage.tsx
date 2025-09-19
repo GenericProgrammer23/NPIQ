@@ -248,11 +248,41 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
       case 'location_field':
         const locationField = availableFields.locationFields.find(f => f.name === value);
         return `Location has ${locationField?.label || value}`;
-      case 'task_complete':
-        const task = availableFields.tasks.find(t => t.id === value);
-        return `Task completed: ${task?.title || value}`;
       case 'subflow_complete':
-        return `Subflow completed: ${value}`;
+        return `${value} completed`;
+      case 'provider_status':
+        return `Provider becomes ${value.charAt(0).toUpperCase() + value.slice(1)}`;
+      case 'external_approval':
+        const approvalLabels: { [key: string]: string } = {
+          ahcccs: 'AHCCCS Approval',
+          medicare: 'Medicare Approval',
+          ptpn: 'PTPN Approval',
+          license_verified: 'License Verification'
+        };
+        return `${approvalLabels[value] || value} Received`;
+      case 'application_approved':
+        const appLabels: { [key: string]: string } = {
+          ahcccs: 'AHCCCS',
+          medicare: 'Medicare',
+          ptpn: 'PTPN',
+          medicaid: 'Medicaid'
+        };
+        return `${appLabels[value] || value} Application Approved`;
+      case 'document_verified':
+        const docLabels: { [key: string]: string } = {
+          license: 'License',
+          background_check: 'Background Check',
+          malpractice: 'Malpractice Insurance',
+          education: 'Education Credentials'
+        };
+        return `${docLabels[value] || value} Verified`;
+      case 'provider_milestone':
+        const milestoneLabels: { [key: string]: string } = {
+          baseline_complete: 'Provider Baseline Complete',
+          enrollment_complete: 'All Enrollments Complete',
+          ready_to_practice: 'Ready to Practice'
+        };
+        return milestoneLabels[value] || value;
       default:
         return condition;
     }
@@ -439,26 +469,20 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                       {subflow.dependencies && (
                         <div>
                           <h6 className="font-medium text-navy dark:text-white mb-1">Dependencies</h6>
+                          <div className="space-y-1">
+                            {(() => {
+                              try {
+                                const deps = JSON.parse(subflow.dependencies);
+                                return Array.isArray(deps) && deps.length > 0 
+                                  ? deps.map((dep, idx) => (
+                                      <div key={idx} className="text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded">
                                         {formatConditionDisplay(dep)}
-                                {subflows
-                                  .filter(s => s.workflow_id === formData.workflow_id && s.id !== editingSubflow?.id)
-                                  .map(subflow => (
+                                      </div>
                                     ))
-                                    {subflow.name} completed
+                                  : <p className="text-navy/70 dark:text-gray-300">None</p>;
                               } catch {
                                 return <p className="text-navy/70 dark:text-gray-300">{subflow.dependencies}</p>;
                               }
-                              <optgroup label="Provider Status Changes">
-                                <option value="provider_status|active">Provider becomes Active</option>
-                                <option value="provider_status|approved">Provider gets Approved</option>
-                                <option value="provider_status|credentialed">Provider gets Credentialed</option>
-                              </optgroup>
-                              <optgroup label="External Approvals">
-                                <option value="external_approval|ahcccs">AHCCCS Approval Received</option>
-                                <option value="external_approval|medicare">Medicare Approval Received</option>
-                                <option value="external_approval|ptpn">PTPN Approval Received</option>
-                                <option value="external_approval|license_verified">License Verification Complete</option>
-                              </optgroup>
                             })()}
                           </div>
                         </div>

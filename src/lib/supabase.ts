@@ -501,7 +501,7 @@ export class DatabaseService {
     try {
       const { data: subflow } = await supabase
         .from('subflows')
-        .select('prerequisites, dependencies')
+        .select('prerequisites, dependencies, workflow_id')
         .eq('id', subflowId)
         .single();
 
@@ -540,6 +540,18 @@ export class DatabaseService {
             .single();
           
           if (!provider?.location || !provider.location[field]) return false;
+        }
+        
+        if (type === 'subflow_complete') {
+          // Check if the prerequisite subflow is complete for this workflow
+          const { data: prereqSubflow } = await supabase
+            .from('subflows')
+            .select('status')
+            .eq('workflow_id', subflow.workflow_id)
+            .eq('name', field)
+            .single();
+          
+          if (!prereqSubflow || prereqSubflow.status !== 'complete') return false;
         }
       }
 
