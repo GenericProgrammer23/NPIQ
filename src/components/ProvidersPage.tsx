@@ -118,6 +118,13 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         specialty: '',
         license_number: '',
         license_expiry: '',
+        npi: '',
+        caqh: '',
+        address_line1: '',
+        address_line2: '',
+        city: '',
+        state: '',
+        zip: '',
         location_id: '',
         status: 'pending'
       });
@@ -174,6 +181,13 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         specialty: '',
         license_number: '',
         license_expiry: '',
+        npi: '',
+        caqh: '',
+        address_line1: '',
+        address_line2: '',
+        city: '',
+        state: '',
+        zip: '',
         location_id: '',
         status: 'pending'
       });
