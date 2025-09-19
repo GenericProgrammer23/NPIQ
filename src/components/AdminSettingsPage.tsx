@@ -170,59 +170,6 @@ export const AdminSettingsPage: React.FC = () => {
       setLoading(false);
     }
   };
-          p_table_name: formData.table_name,
-          p_column_name: columnName
-        });
-        throw fieldError;
-      }
-
-      setCustomFields(prev => [...prev, fieldData]);
-      setShowAddForm(false);
-      setFormData({ name: '', label: '', type: 'text', required: false, table_name: 'providers' });
-      showMessage('Field added successfully! Please refresh the page to see changes in forms.', 'success');
-
-    } catch (err) {
-      console.error('Failed to add field:', err);
-      showMessage(err instanceof Error ? err.message : 'Failed to add field', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteField = async (field: CustomField) => {
-    if (!confirm(`Are you sure you want to delete the field "${field.label}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Remove the column from the target table
-      const { error: alterError } = await supabase.rpc('drop_custom_column', {
-        p_table_name: field.table_name,
-        p_column_name: field.name
-      });
-
-      if (alterError) throw alterError;
-
-      // Remove the field configuration
-      const { error: deleteError } = await supabase
-        .from('custom_fields')
-        .delete()
-        .eq('id', field.id);
-
-      if (deleteError) throw deleteError;
-
-      setCustomFields(prev => prev.filter(f => f.id !== field.id));
-      showMessage('Field deleted successfully! Please refresh the page to see changes.', 'success');
-
-    } catch (err) {
-      console.error('Failed to delete field:', err);
-      showMessage(err instanceof Error ? err.message : 'Failed to delete field', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getPostgresType = (type: string): string => {
     switch (type) {
