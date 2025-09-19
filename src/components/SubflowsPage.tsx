@@ -21,11 +21,20 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
     workflow_id: '',
     name: '',
     purpose: '',
-    prerequisites: '',
-    dependencies: '',
-    exit_condition: '',
+    prerequisites: [] as string[],
+    dependencies: [] as string[],
+    exit_condition: [] as string[],
     status: 'not_started' as const,
     order_index: 0
+  });
+  const [availableFields, setAvailableFields] = useState<{
+    providerFields: Array<{name: string, label: string}>,
+    locationFields: Array<{name: string, label: string}>,
+    tasks: Array<{id: string, title: string}>
+  }>({
+    providerFields: [],
+    locationFields: [],
+    tasks: []
   });
 
   // Handle initial filter from dashboard
@@ -41,18 +50,81 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
     }
   }, [initialFilter]);
 
+  // Load available fields for configuration
+  React.useEffect(() => {
+    loadAvailableFields();
+  }, []);
+
+  const loadAvailableFields = async () => {
+    if (!supabase) return;
+    
+    try {
+      // Get provider fields (core + custom)
+      const providerFields = [
+        { name: 'first_name', label: 'First Name' },
+        { name: 'last_name', label: 'Last Name' },
+        { name: 'email', label: 'Email' },
+        { name: 'phone', label: 'Phone' },
+        { name: 'specialty', label: 'Specialty' },
+        { name: 'license_number', label: 'License Number' },
+        { name: 'license_expiry', label: 'License Expiry' },
+        { name: 'status', label: 'Status' }
+      ];
+      
+      // Get location fields (core + custom)
+      const locationFields = [
+        { name: 'name', label: 'Location Name' },
+        { name: 'address', label: 'Address' },
+        { name: 'departments', label: 'Departments' },
+        { name: 'status', label: 'Status' }
+      ];
+      
+      // Get custom fields for providers
+      const { data: providerCustomFields } = await supabase
+        .from('custom_fields')
+        .select('name, label')
+        .eq('table_name', 'providers');
+      
+      // Get custom fields for locations
+      const { data: locationCustomFields } = await supabase
+        .from('custom_fields')
+        .select('name, label')
+        .eq('table_name', 'locations');
+      
+      // Get available tasks
+      const { data: tasks } = await supabase
+        .from('tasks')
+        .select('id, title')
+        .limit(50);
+      
+      setAvailableFields({
+        providerFields: [...providerFields, ...(providerCustomFields || [])],
+        locationFields: [...locationFields, ...(locationCustomFields || [])],
+        tasks: tasks || []
+      });
+    } catch (err) {
+      console.error('Failed to load available fields:', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createSubflow(formData);
+      const subflowData = {
+        ...formData,
+        prerequisites: JSON.stringify(formData.prerequisites),
+        dependencies: JSON.stringify(formData.dependencies),
+        exit_condition: JSON.stringify(formData.exit_condition)
+      };
+      await createSubflow(subflowData);
       setShowAddForm(false);
       setFormData({
         workflow_id: '',
         name: '',
         purpose: '',
-        prerequisites: '',
-        dependencies: '',
-        exit_condition: '',
+        prerequisites: [],
+        dependencies: [],
+        exit_condition: [],
         status: 'not_started',
         order_index: 0
       });
@@ -63,13 +135,23 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
   const handleEdit = (subflow: Subflow) => {
     setEditingSubflow(subflow);
+    
+    // Parse JSON strings back to arrays
+    const parseJsonField = (field: string) => {
+      try {
+        return JSON.parse(field);
+      } catch {
+        return field ? [field] : [];
+      }
+    };
+    
     setFormData({
       workflow_id: subflow.workflow_id,
       name: subflow.name,
       purpose: subflow.purpose || '',
-      prerequisites: subflow.prerequisites,
-      dependencies: subflow.dependencies,
-      exit_condition: subflow.exit_condition,
+      prerequisites: parseJsonField(subflow.prerequisites),
+      dependencies: parseJsonField(subflow.dependencies),
+      exit_condition: parseJsonField(subflow.exit_condition),
       status: subflow.status,
       order_index: subflow.order_index
     });
@@ -81,21 +163,97 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
     if (!editingSubflow) return;
     
     try {
-      await updateSubflow(editingSubflow.id, formData);
+      const updateData = {
+        ...formData,
+        prerequisites: JSON.stringify(formData.prerequisites),
+        dependencies: JSON.stringify(formData.dependencies),
+        exit_condition: JSON.stringify(formData.exit_condition)
+      };
+      await updateSubflow(editingSubflow.id, updateData);
       setShowEditForm(false);
       setEditingSubflow(null);
       setFormData({
         workflow_id: '',
         name: '',
         purpose: '',
-        prerequisites: '',
-        dependencies: '',
-        exit_condition: '',
+        prerequisites: [],
+        dependencies: [],
+        exit_condition: [],
         status: 'not_started',
         order_index: 0
       });
     } catch (err) {
       console.error('Failed to update subflow:', err);
+    }
+  };
+
+  const addPrerequisite = (type: string, value: string) => {
+    const prerequisite = `${type}:${value}`;
+    if (!formData.prerequisites.includes(prerequisite)) {
+      setFormData({
+        ...formData,
+        prerequisites: [...formData.prerequisites, prerequisite]
+      });
+    }
+  };
+
+  const removePrerequisite = (prerequisite: string) => {
+    setFormData({
+      ...formData,
+      prerequisites: formData.prerequisites.filter(p => p !== prerequisite)
+    });
+  };
+
+  const addDependency = (type: string, value: string) => {
+    const dependency = `${type}:${value}`;
+    if (!formData.dependencies.includes(dependency)) {
+      setFormData({
+        ...formData,
+        dependencies: [...formData.dependencies, dependency]
+      });
+    }
+  };
+
+  const removeDependency = (dependency: string) => {
+    setFormData({
+      ...formData,
+      dependencies: formData.dependencies.filter(d => d !== dependency)
+    });
+  };
+
+  const addExitCondition = (type: string, value: string) => {
+    const condition = `${type}:${value}`;
+    if (!formData.exit_condition.includes(condition)) {
+      setFormData({
+        ...formData,
+        exit_condition: [...formData.exit_condition, condition]
+      });
+    }
+  };
+
+  const removeExitCondition = (condition: string) => {
+    setFormData({
+      ...formData,
+      exit_condition: formData.exit_condition.filter(c => c !== condition)
+    });
+  };
+
+  const formatConditionDisplay = (condition: string) => {
+    const [type, value] = condition.split(':');
+    switch (type) {
+      case 'provider_field':
+        const providerField = availableFields.providerFields.find(f => f.name === value);
+        return `Provider has ${providerField?.label || value}`;
+      case 'location_field':
+        const locationField = availableFields.locationFields.find(f => f.name === value);
+        return `Location has ${locationField?.label || value}`;
+      case 'task_complete':
+        const task = availableFields.tasks.find(t => t.id === value);
+        return `Task completed: ${task?.title || value}`;
+      case 'subflow_complete':
+        return `Subflow completed: ${value}`;
+      default:
+        return condition;
     }
   };
 
@@ -259,19 +417,64 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
                         <h6 className="font-medium text-navy dark:text-white mb-1">Prerequisites</h6>
-                        <p className="text-navy/70 dark:text-gray-300">{subflow.prerequisites || 'None'}</p>
+                        <div className="space-y-1">
+                          {(() => {
+                            try {
+                              const prereqs = JSON.parse(subflow.prerequisites);
+                              return Array.isArray(prereqs) && prereqs.length > 0 
+                                ? prereqs.map((prereq, idx) => (
+                                    <div key={idx} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                      {formatConditionDisplay(prereq)}
+                                    </div>
+                                  ))
+                                : <p className="text-navy/70 dark:text-gray-300">None</p>;
+                            } catch {
+                              return <p className="text-navy/70 dark:text-gray-300">{subflow.prerequisites || 'None'}</p>;
+                            }
+                          })()}
+                        </div>
                       </div>
                       
                       {subflow.dependencies && (
                         <div>
                           <h6 className="font-medium text-navy dark:text-white mb-1">Dependencies</h6>
-                          <p className="text-navy/70 dark:text-gray-300">{subflow.dependencies}</p>
+                          <div className="space-y-1">
+                            {(() => {
+                              try {
+                                const deps = JSON.parse(subflow.dependencies);
+                                return Array.isArray(deps) && deps.length > 0 
+                                  ? deps.map((dep, idx) => (
+                                      <div key={idx} className="text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded">
+                                        {formatConditionDisplay(dep)}
+                                      </div>
+                                    ))
+                                  : <p className="text-navy/70 dark:text-gray-300">None</p>;
+                              } catch {
+                                return <p className="text-navy/70 dark:text-gray-300">{subflow.dependencies}</p>;
+                              }
+                            })()}
+                          </div>
                         </div>
                       )}
                       
                       <div>
                         <h6 className="font-medium text-navy dark:text-white mb-1">Exit Condition</h6>
-                        <p className="text-navy/70 dark:text-gray-300">{subflow.exit_condition || 'All tasks completed'}</p>
+                        <div className="space-y-1">
+                          {(() => {
+                            try {
+                              const conditions = JSON.parse(subflow.exit_condition);
+                              return Array.isArray(conditions) && conditions.length > 0 
+                                ? conditions.map((condition, idx) => (
+                                    <div key={idx} className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
+                                      {formatConditionDisplay(condition)}
+                                    </div>
+                                  ))
+                                : <p className="text-navy/70 dark:text-gray-300">All tasks completed</p>;
+                            } catch {
+                              return <p className="text-navy/70 dark:text-gray-300">{subflow.exit_condition || 'All tasks completed'}</p>;
+                            }
+                          })()}
+                        </div>
                       </div>
                     </div>
 
