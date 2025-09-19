@@ -629,19 +629,25 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                       }}
                     >
                       <option value="">Add dependency...</option>
-                      <optgroup label="Task Completion">
-                        {availableFields.tasks.map(task => (
-                          <option key={task.id} value={`task_complete|${task.id}`}>
-                            Task completed: {task.title}
+                      <optgroup label="Other Subflows">
+                        {subflows
+                          .filter(s => s.workflow_id === formData.workflow_id && s.id !== editingSubflow?.id)
+                          .map(subflow => (
+                          <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
+                            {subflow.name} completed
                           </option>
                         ))}
                       </optgroup>
-                      <optgroup label="Other Subflows">
-                        {subflows.filter(s => s.id !== editingSubflow?.id).map(subflow => (
-                          <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
-                            Subflow completed: {subflow.name}
-                          </option>
-                        ))}
+                      <optgroup label="Provider Status Changes">
+                        <option value="provider_status|active">Provider becomes Active</option>
+                        <option value="provider_status|approved">Provider gets Approved</option>
+                        <option value="provider_status|credentialed">Provider gets Credentialed</option>
+                      </optgroup>
+                      <optgroup label="External Approvals">
+                        <option value="external_approval|ahcccs">AHCCCS Approval Received</option>
+                        <option value="external_approval|medicare">Medicare Approval Received</option>
+                        <option value="external_approval|ptpn">PTPN Approval Received</option>
+                        <option value="external_approval|license_verified">License Verification Complete</option>
                       </optgroup>
                     </select>
                   </div>
@@ -867,19 +873,25 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                       }}
                     >
                       <option value="">Add dependency...</option>
-                      <optgroup label="Task Completion">
-                        {availableFields.tasks.map(task => (
-                          <option key={task.id} value={`task_complete|${task.id}`}>
-                            Task completed: {task.title}
+                      <optgroup label="Other Subflows">
+                        {subflows
+                          .filter(s => s.workflow_id === formData.workflow_id && s.id !== editingSubflow?.id)
+                          .map(subflow => (
+                          <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
+                            {subflow.name} completed
                           </option>
                         ))}
                       </optgroup>
-                      <optgroup label="Other Subflows">
-                        {subflows.filter(s => s.id !== editingSubflow?.id).map(subflow => (
-                          <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
-                            Subflow completed: {subflow.name}
-                          </option>
-                        ))}
+                      <optgroup label="Provider Status Changes">
+                        <option value="provider_status|active">Provider becomes Active</option>
+                        <option value="provider_status|approved">Provider gets Approved</option>
+                        <option value="provider_status|credentialed">Provider gets Credentialed</option>
+                      </optgroup>
+                      <optgroup label="External Approvals">
+                        <option value="external_approval|ahcccs">AHCCCS Approval Received</option>
+                        <option value="external_approval|medicare">Medicare Approval Received</option>
+                        <option value="external_approval|ptpn">PTPN Approval Received</option>
+                        <option value="external_approval|license_verified">License Verification Complete</option>
                       </optgroup>
                     </select>
                   </div>
