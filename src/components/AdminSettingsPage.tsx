@@ -39,19 +39,16 @@ export const AdminSettingsPage: React.FC = () => {
         .select('*')
         .order('created_at');
 
-      if (error) {
-        if (error.code === 'PGRST205' || error.code === '42P01') {
-          console.info('Custom fields table not yet created, starting with empty fields');
-          setCustomFields([]);
-          return;
-        }
+      if (error && error.code !== 'PGRST116') {
+        console.error('Failed to load custom fields:', error);
         throw error;
       }
 
       setCustomFields(data || []);
     } catch (err) {
       console.error('Failed to load custom fields:', err);
-      setError('Failed to load custom fields. Please try again.');
+      // Don't show error if table doesn't exist yet
+      setCustomFields([]);
     } finally {
       setLoading(false);
     }
@@ -110,7 +107,69 @@ export const AdminSettingsPage: React.FC = () => {
 
       if (fieldError) {
         // If field config fails, try to remove the column
-        await supabase.rpc('drop_custom_column', {
+        try {
+          await supabase.rpc('drop_custom_column', {
+            p_table_name: formData.table_name,
+            p_column_name: columnName
+          });
+        } catch (cleanupError) {
+          console.error('Failed to cleanup column after error:', cleanupError);
+        }
+        throw fieldError;
+      }
+
+      setCustomFields(prev => [...prev, fieldData]);
+      setShowAddForm(false);
+      setFormData({ name: '', label: '', type: 'text', required: false, table_name: 'providers' });
+      showMessage('Field added successfully! The new field will appear in forms immediately.', 'success');
+
+    } catch (err) {
+      console.error('Failed to add field:', err);
+      showMessage(err instanceof Error ? err.message : 'Failed to add field', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteField = async (field: CustomField) => {
+    if (!confirm(`Are you sure you want to delete the field "${field.label}"? This will permanently remove the column and all its data. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Remove the column from the target table
+      const { error: alterError } = await supabase.rpc('drop_custom_column', {
+        p_table_name: field.table_name,
+        p_column_name: field.name
+      });
+
+      if (alterError) throw alterError;
+
+      // Remove the field configuration
+      const { error: deleteError } = await supabase
+        .from('custom_fields')
+        .delete()
+        .eq('id', field.id);
+
+      if (deleteError) {
+        // If config deletion fails, we should probably leave the column
+        console.error('Failed to delete field config, but column was removed:', deleteError);
+        showMessage('Column was removed but configuration cleanup failed. Please refresh the page.', 'error');
+        return;
+      }
+
+      setCustomFields(prev => prev.filter(f => f.id !== field.id));
+      showMessage('Field deleted successfully! The field has been removed from all forms.', 'success');
+
+    } catch (err) {
+      console.error('Failed to delete field:', err);
+      showMessage(err instanceof Error ? err.message : 'Failed to delete field', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
           p_table_name: formData.table_name,
           p_column_name: columnName
         });
