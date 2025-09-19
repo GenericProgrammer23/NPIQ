@@ -4,7 +4,7 @@ import { Users, Plus, Search, Filter, Edit, Eye, MapPin, Mail, Phone } from 'luc
 import { Provider } from '../lib/supabase';
 
 export const ProvidersPage: React.FC = () => {
-  const { providers, loading, error, createProvider } = useProviders();
+  const { providers, loading, error, createProvider, updateProvider } = useProviders();
   const { locations } = useLocations();
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
