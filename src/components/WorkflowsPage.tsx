@@ -320,11 +320,11 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Workflows</h1>
-          <p className="text-navy/70 dark:text-gray-300">Manage credentialing and compliance workflows</p>
+          <p className="text-navy/70 dark:text-cream/70">Manage credentialing and compliance workflows</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -336,17 +336,17 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-4 mb-6">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-cream/50" />
               <input
                 type="text"
                 placeholder="Search workflows..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
               />
             </div>
           </div>
@@ -354,7 +354,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+              className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -366,12 +366,12 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
       </div>
 
       {/* Workflows List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30">
         {filteredWorkflows.length === 0 ? (
           <div className="p-8 text-center">
-            <Workflow className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+            <Workflow className="h-12 w-12 text-navy/30 dark:text-cream/30 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No workflows found</h3>
-            <p className="text-navy/60 dark:text-gray-400">
+            <p className="text-navy/60 dark:text-cream/60">
               {workflows.length === 0 
                 ? "Get started by creating your first workflow"
                 : "Try adjusting your search or filter criteria"
@@ -379,9 +379,9 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10 dark:divide-gray-600">
+          <div className="divide-y divide-navy/10 dark:divide-dark-cyan/20">
             {filteredWorkflows.map((workflow) => (
-              <div key={workflow.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
+              <div key={workflow.id} className="p-6 hover:bg-navy/5 dark:hover:bg-navy-dark/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-2">
@@ -395,10 +395,10 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                     </div>
                     
                     {workflow.description && (
-                      <p className="text-navy/70 dark:text-gray-300 mb-2">{workflow.description}</p>
+                      <p className="text-navy/70 dark:text-cream/70 mb-2">{workflow.description}</p>
                     )}
                     
-                    <div className="text-sm text-navy/50 dark:text-gray-400">
+                    <div className="text-sm text-navy/50 dark:text-cream/50">
                       {workflow.steps.length} steps • Created {new Date(workflow.created_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -424,14 +424,14 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                       onClick={() => handleEdit(workflow)}
                       className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors"
                     >
-                      <Edit className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" />
+                      <Edit className="h-4 w-4 dark:text-cream/60 dark:hover:text-cream" />
                     </button>
                   </div>
                 </div>
 
                 {/* Subflows Section */}
                 {selectedWorkflow === workflow.id && (
-                  <div className="mt-6 border-t border-navy/10 dark:border-gray-600 pt-6">
+                  <div className="mt-6 border-t border-navy/10 dark:border-dark-cyan/20 pt-6">
                     <h4 className="text-lg font-semibold text-navy dark:text-white mb-4">Subflows</h4>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {subflows.map((subflow) => {
@@ -441,13 +441,13 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                         const canComplete = subflow.status === 'in_progress';
 
                         return (
-                          <div key={subflow.id} className="bg-white dark:bg-gray-700 border border-navy/20 dark:border-gray-600 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                          <div key={subflow.id} className="bg-white dark:bg-navy-dark border border-navy/20 dark:border-dark-cyan/30 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-3">
                                   {getSubflowStatusIcon(subflow.status)}
                                   <h5 className="text-lg font-semibold text-navy dark:text-white">{subflow.name}</h5>
-                                  <span className="text-xs px-2 py-1 rounded-full bg-navy/10 dark:bg-gray-600 text-navy dark:text-gray-300 font-medium">
+                                  <span className="text-xs px-2 py-1 rounded-full bg-navy/10 dark:bg-navy-light text-navy dark:text-cream font-medium">
                                     {subflow.status.replace('_', ' ')}
                                   </span>
                                 </div>
@@ -455,7 +455,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                                 {subflow.purpose && (
                                   <div className="mb-4">
                                     <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Purpose</h6>
-                                    <p className="text-sm text-navy/70 dark:text-gray-300">{subflow.purpose}</p>
+                                    <p className="text-sm text-navy/70 dark:text-cream/70">{subflow.purpose}</p>
                                   </div>
                                 )}
                                 
@@ -468,7 +468,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                                       }`}>
                                         {prereqsMet ? '✓' : '✗'}
                                       </span>
-                                      <span className="text-sm text-navy/70 dark:text-gray-300">
+                                      <span className="text-sm text-navy/70 dark:text-cream/70">
                                         {subflow.prerequisites || 'None'}
                                       </span>
                                     </div>
@@ -483,7 +483,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                                         }`}>
                                           {depsMet ? '✓' : '✗'}
                                         </span>
-                                        <span className="text-sm text-navy/70 dark:text-gray-300">
+                                        <span className="text-sm text-navy/70 dark:text-cream/70">
                                           {subflow.dependencies}
                                         </span>
                                       </div>
@@ -492,7 +492,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                                   
                                   <div>
                                     <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Exit Condition</h6>
-                                    <span className="text-sm text-navy/70 dark:text-gray-300">
+                                    <span className="text-sm text-navy/70 dark:text-cream/70">
                                       {subflow.exit_condition || 'All tasks completed'}
                                     </span>
                                   </div>
@@ -500,7 +500,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                                   <div>
                                     <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Tasks</h6>
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm text-navy/70 dark:text-gray-300">
+                                      <span className="text-sm text-navy/70 dark:text-cream/70">
                                         {subflow.tasks?.length || 0} tasks
                                       </span>
                                       {subflow.tasks && subflow.tasks.length > 0 && (
@@ -540,12 +540,12 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                             
                             {/* Task List for In Progress Subflows */}
                             {subflow.status === 'in_progress' && subflow.tasks && subflow.tasks.length > 0 && (
-                              <div className="mt-4 pt-4 border-t border-navy/10 dark:border-gray-600">
+                              <div className="mt-4 pt-4 border-t border-navy/10 dark:border-dark-cyan/20">
                                 <h6 className="text-sm font-medium text-navy dark:text-white mb-2">Active Tasks</h6>
                                 <div className="space-y-2">
                                   {subflow.tasks.slice(0, 3).map((task: any) => (
                                     <div key={task.id} className="flex items-center justify-between text-sm">
-                                      <span className="text-navy/70 dark:text-gray-300">{task.title}</span>
+                                      <span className="text-navy/70 dark:text-cream/70">{task.title}</span>
                                       <span className={`px-2 py-1 rounded-full text-xs ${
                                         task.status === 'completed' 
                                           ? 'bg-green-100 text-green-700' 
@@ -558,7 +558,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                                     </div>
                                   ))}
                                   {subflow.tasks.length > 3 && (
-                                    <div className="text-xs text-navy/50 dark:text-gray-400">
+                                    <div className="text-xs text-navy/50 dark:text-cream/50">
                                       +{subflow.tasks.length - 3} more tasks
                                     </div>
                                   )}
@@ -575,7 +575,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                             <CheckSquare className="h-12 w-12 mx-auto" />
                           </div>
                           <h6 className="text-lg font-medium text-navy dark:text-white mb-2">No subflows defined</h6>
-                          <p className="text-navy/60 dark:text-gray-400">
+                          <p className="text-navy/60 dark:text-cream/60">
                             This workflow doesn't have any subflows configured yet.
                           </p>
                         </div>
@@ -592,8 +592,8 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
       {/* Add Workflow Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Create New Workflow</h2>
             </div>
             
@@ -605,7 +605,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="e.g., New Provider Credentialing"
                 />
               </div>
@@ -615,7 +615,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="Describe the workflow purpose and process..."
                 />
               </div>
@@ -625,7 +625,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="credentialing">Credentialing</option>
                   <option value="renewal">Renewal</option>
@@ -638,7 +638,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="draft">Draft</option>
                   <option value="active">Active</option>
@@ -668,7 +668,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>
@@ -687,8 +687,8 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
       {/* Edit Workflow Modal */}
       {showEditForm && editingWorkflow && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Workflow</h2>
             </div>
             
@@ -700,7 +700,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="e.g., New Provider Credentialing"
                 />
               </div>
@@ -710,7 +710,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="Describe the workflow purpose and process..."
                 />
               </div>
@@ -720,7 +720,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="credentialing">Credentialing</option>
                   <option value="renewal">Renewal</option>
@@ -733,7 +733,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="draft">Draft</option>
                   <option value="active">Active</option>
@@ -767,7 +767,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                     setShowEditForm(false);
                     setEditingWorkflow(null);
                   }}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>

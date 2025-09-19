@@ -187,7 +187,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             type="number"
             value={value}
             onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
-            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             required={field.required}
           />
         );
@@ -197,7 +197,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             type="date"
             value={value}
             onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
-            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             required={field.required}
           />
         );
@@ -207,7 +207,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             type="email"
             value={value}
             onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
-            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             required={field.required}
           />
         );
@@ -217,7 +217,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             type="tel"
             value={value}
             onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
-            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             required={field.required}
           />
         );
@@ -227,7 +227,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             type="text"
             value={value}
             onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
-            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             required={field.required}
           />
         );
@@ -236,7 +236,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
 
   if (loading) {
     return (
-      <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
         <div className="animate-pulse">
           <div className="h-8 bg-navy/10 dark:bg-gray-700 rounded w-64 mb-6"></div>
           <div className="space-y-4">
@@ -251,7 +251,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
 
   if (error) {
     return (
-      <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p className="text-red-800 dark:text-red-400">Error loading providers: {error}</p>
         </div>
@@ -260,11 +260,11 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Providers</h1>
-          <p className="text-navy/70 dark:text-gray-300">Manage healthcare providers and their credentials</p>
+          <p className="text-navy/70 dark:text-cream/70">Manage healthcare providers and their credentials</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -276,26 +276,26 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-4 mb-6">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-cream/50" />
               <input
                 type="text"
                 placeholder="Search providers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-navy/50 dark:text-gray-400" />
+            <Filter className="h-4 w-4 text-navy/50 dark:text-cream/50" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+              className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -308,12 +308,12 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
       </div>
 
       {/* Providers List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30">
         {filteredProviders.length === 0 ? (
           <div className="p-8 text-center">
-            <Users className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+            <Users className="h-12 w-12 text-navy/30 dark:text-cream/30 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No providers found</h3>
-            <p className="text-navy/60 dark:text-gray-400">
+            <p className="text-navy/60 dark:text-cream/60">
               {providers.length === 0 
                 ? "Get started by adding your first provider"
                 : "Try adjusting your search or filter criteria"
@@ -321,9 +321,9 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10 dark:divide-gray-600">
+          <div className="divide-y divide-navy/10 dark:divide-dark-cyan/20">
             {filteredProviders.map((provider) => (
-              <div key={provider.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
+              <div key={provider.id} className="p-6 hover:bg-navy/5 dark:hover:bg-navy-dark/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-2">
@@ -335,7 +335,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                       </span>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-navy/70 dark:text-gray-300">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-navy/70 dark:text-cream/70">
                       {provider.specialty && (
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-2" />
@@ -381,7 +381,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     </button>
                     <button 
                       onClick={() => handleEdit(provider)}
-                      className="p-2 text-navy/60 dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -396,8 +396,8 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
       {/* Add Provider Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Add New Provider</h2>
             </div>
             
@@ -410,7 +410,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     required
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
                 <div>
@@ -420,7 +420,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     required
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -432,7 +432,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
                 <div>
@@ -441,7 +441,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -452,7 +452,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   <select
                     value={formData.specialty}
                     onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="">Select Specialty</option>
                     <option value="Physical Therapy">Physical Therapy</option>
@@ -464,7 +464,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   <select
                     value={formData.location_id}
                     onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="">No location assigned</option>
                     {locations.map((location) => (
@@ -483,7 +483,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="text"
                     value={formData.license_number}
                     onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
                 <div>
@@ -492,7 +492,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="date"
                     value={formData.license_expiry}
                     onChange={(e) => setFormData({ ...formData, license_expiry: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -502,7 +502,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="pending">Pending</option>
                   <option value="active">Active</option>
@@ -534,7 +534,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>
@@ -553,8 +553,8 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
       {/* Edit Provider Modal */}
       {showEditForm && editingProvider && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Provider</h2>
             </div>
             
@@ -567,7 +567,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     required
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
                 <div>
@@ -577,7 +577,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     required
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -589,7 +589,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
                 <div>
@@ -598,7 +598,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -609,7 +609,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   <select
                     value={formData.specialty}
                     onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="">Select Specialty</option>
                     <option value="Physical Therapy">Physical Therapy</option>
@@ -621,7 +621,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   <select
                     value={formData.location_id}
                     onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="">No location assigned</option>
                     {locations.map((location) => (
@@ -640,7 +640,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="text"
                     value={formData.license_number}
                     onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
                 <div>
@@ -649,7 +649,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     type="date"
                     value={formData.license_expiry}
                     onChange={(e) => setFormData({ ...formData, license_expiry: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -659,7 +659,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="pending">Pending</option>
                   <option value="active">Active</option>
@@ -694,7 +694,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                     setShowEditForm(false);
                     setEditingProvider(null);
                   }}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>
