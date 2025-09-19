@@ -363,7 +363,7 @@ export const AdminSettingsPage: React.FC = () => {
 
   if (loading && customFields.length === 0) {
     return (
-      <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
         <div className="animate-pulse">
           <div className="h-8 bg-navy/10 dark:bg-gray-700 rounded w-64 mb-6"></div>
           <div className="space-y-4">
@@ -377,11 +377,11 @@ export const AdminSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Admin Settings</h1>
-          <p className="text-navy/70 dark:text-gray-300">Manage custom fields and system configuration</p>
+          <p className="text-navy/70 dark:text-cream/70">Manage custom fields and system configuration</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -394,14 +394,14 @@ export const AdminSettingsPage: React.FC = () => {
 
       {/* Messages */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center">
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-600/30 rounded-lg flex items-center">
           <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
           <span className="text-red-800 dark:text-red-400">{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center">
+        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-600/30 rounded-lg flex items-center">
           <CheckCircle className="h-5 w-5 text-green-400 mr-3" />
           <span className="text-green-800 dark:text-green-400">{success}</span>
         </div>
@@ -410,39 +410,39 @@ export const AdminSettingsPage: React.FC = () => {
       {/* Custom Fields by Table */}
       <div className="space-y-6">
         {Object.keys(groupedFields).length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white flex items-center">
                 <Database className="h-5 w-5 mr-2" />
                 Custom Fields
               </h2>
-              <p className="text-navy/60 dark:text-gray-400 mt-1">
+              <p className="text-navy/60 dark:text-cream/60 mt-1">
                 Add custom fields to database tables
               </p>
             </div>
             <div className="p-8 text-center">
-              <Settings className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+              <Settings className="h-12 w-12 text-navy/30 dark:text-cream/30 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No custom fields</h3>
-              <p className="text-navy/60 dark:text-gray-400">
+              <p className="text-navy/60 dark:text-cream/60">
                 Get started by adding your first custom field to any table
               </p>
             </div>
           </div>
         ) : (
           Object.entries(groupedFields).map(([tableName, fields]) => (
-            <div key={tableName} className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
-              <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+            <div key={tableName} className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30">
+              <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
                 <h2 className="text-xl font-semibold text-navy dark:text-white flex items-center">
                   <Database className="h-5 w-5 mr-2" />
                   {getTableDisplayName(tableName)} Custom Fields
                 </h2>
-                <p className="text-navy/60 dark:text-gray-400 mt-1">
+                <p className="text-navy/60 dark:text-cream/60 mt-1">
                   Custom fields added to the {tableName} table
                 </p>
               </div>
-              <div className="divide-y divide-navy/10 dark:divide-gray-600">
+              <div className="divide-y divide-navy/10 dark:divide-dark-cyan/20">
                 {fields.map((field) => (
-                  <div key={field.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
+                  <div key={field.id} className="p-6 hover:bg-navy/5 dark:hover:bg-navy-dark/50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-4 mb-2">
@@ -462,11 +462,11 @@ export const AdminSettingsPage: React.FC = () => {
                           )}
                         </div>
                         
-                        <div className="text-sm text-navy/70 dark:text-gray-300">
+                        <div className="text-sm text-navy/70 dark:text-cream/70">
                           <span className="font-medium">Database Column:</span> {field.name}
                         </div>
                         {!(field as any).is_core && (
-                          <div className="text-sm text-navy/50 dark:text-gray-400">
+                          <div className="text-sm text-navy/50 dark:text-cream/50">
                             Added {new Date(field.created_at).toLocaleDateString()}
                           </div>
                         )}
@@ -486,7 +486,7 @@ export const AdminSettingsPage: React.FC = () => {
                           onClick={() => handleDeleteField(field)}
                           className={`p-2 rounded-lg transition-colors ${
                             (field as any).is_core 
-                              ? 'text-gray-400 cursor-not-allowed' 
+                              ? 'text-cream/40 cursor-not-allowed' 
                               : 'text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
                           }`}
                           title="Delete Field"
@@ -507,10 +507,10 @@ export const AdminSettingsPage: React.FC = () => {
       {/* Add Field Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Add Custom Field</h2>
-              <p className="text-navy/60 dark:text-gray-400 text-sm mt-1">
+              <p className="text-navy/60 dark:text-cream/60 text-sm mt-1">
                 This will add a new column to the selected table
               </p>
             </div>
@@ -521,7 +521,7 @@ export const AdminSettingsPage: React.FC = () => {
                 <select
                   value={formData.table_name}
                   onChange={(e) => setFormData({ ...formData, table_name: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="providers">Providers</option>
                   <option value="locations">Locations</option>
@@ -537,10 +537,10 @@ export const AdminSettingsPage: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="e.g., NPI Number"
                 />
-                <p className="text-xs text-navy/50 dark:text-gray-400 mt-1">
+                <p className="text-xs text-navy/50 dark:text-cream/50 mt-1">
                   Database column: {formData.name.toLowerCase().replace(/\s+/g, '_') || 'field_name'}
                 </p>
               </div>
@@ -552,7 +552,7 @@ export const AdminSettingsPage: React.FC = () => {
                   required
                   value={formData.label}
                   onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="e.g., NPI Number"
                 />
               </div>
@@ -562,7 +562,7 @@ export const AdminSettingsPage: React.FC = () => {
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="text">Text</option>
                   <option value="number">Number</option>
@@ -596,7 +596,7 @@ export const AdminSettingsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>
@@ -616,10 +616,10 @@ export const AdminSettingsPage: React.FC = () => {
       {/* Edit Field Modal */}
       {showEditForm && editingField && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Custom Field</h2>
-              <p className="text-navy/60 dark:text-gray-400 text-sm mt-1">
+              <p className="text-navy/60 dark:text-cream/60 text-sm mt-1">
                 Update field properties (column name cannot be changed)
               </p>
             </div>
@@ -631,9 +631,9 @@ export const AdminSettingsPage: React.FC = () => {
                   type="text"
                   value={formData.name}
                   disabled
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg bg-gray-100 dark:bg-navy-dark text-gray-500 dark:text-cream/50"
                 />
-                <p className="text-xs text-navy/50 dark:text-gray-400 mt-1">
+                <p className="text-xs text-navy/50 dark:text-cream/50 mt-1">
                   Column name cannot be changed after creation
                 </p>
               </div>
@@ -645,7 +645,7 @@ export const AdminSettingsPage: React.FC = () => {
                   required
                   value={formData.label}
                   onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 />
               </div>
 
@@ -654,7 +654,7 @@ export const AdminSettingsPage: React.FC = () => {
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="text">Text</option>
                   <option value="number">Number</option>
@@ -684,7 +684,7 @@ export const AdminSettingsPage: React.FC = () => {
                     setShowEditForm(false);
                     setEditingField(null);
                   }}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>
