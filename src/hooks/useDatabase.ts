@@ -308,11 +308,22 @@ export function useWorkflows(organizationId?: string) {
     }
   };
 
+  const updateWorkflow = async (id: string, updates: Partial<Workflow>) => {
+    try {
+      const updatedWorkflow = await DatabaseService.updateWorkflow(id, updates);
+      setWorkflows(prev => prev.map(w => w.id === id ? updatedWorkflow : w));
+      return updatedWorkflow;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update workflow');
+      throw err;
+    }
+  };
   return {
     workflows,
     loading,
     error,
     createWorkflow,
+    updateWorkflow,
     refetch: () => {
       setLoading(true);
       DatabaseService.getWorkflows(organizationId)

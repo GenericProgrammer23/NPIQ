@@ -416,6 +416,22 @@ export class DatabaseService {
     return data;
   }
 
+  static async updateWorkflow(id: string, updates: Partial<Workflow>): Promise<Workflow> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('workflows')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        organization:organizations(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   // Subflows
   static async getSubflows(workflowId?: string): Promise<Subflow[]> {
     if (!supabase) return [];

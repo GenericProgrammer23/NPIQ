@@ -12,6 +12,8 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
   const { workflows, loading, error, createWorkflow } = useWorkflows();
   const { providers } = useProviders();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingWorkflow, setEditingWorkflow] = useState<any>(null);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -87,6 +89,65 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
       setCustomFieldData({});
     } catch (err) {
       console.error('Failed to create workflow:', err);
+    }
+  };
+
+  const handleEdit = (workflow: any) => {
+    setEditingWorkflow(workflow);
+    setFormData({
+      name: workflow.name,
+      description: workflow.description || '',
+      type: workflow.type,
+      status: workflow.status,
+      steps: workflow.steps || []
+    });
+    
+    // Load custom field values for editing
+    const customData: Record<string, any> = {};
+    customFields.forEach(field => {
+      customData[field.name] = (workflow as any)[field.name] || '';
+    });
+    setCustomFieldData(customData);
+    
+    setShowEditForm(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingWorkflow) return;
+    
+    try {
+      const updateData = {
+        ...formData,
+        ...customFieldData // Include custom field data
+      };
+      
+      // We need to add updateWorkflow to the hook
+      // For now, we'll use the supabase client directly
+      if (supabase) {
+        const { error } = await supabase
+          .from('workflows')
+          .update(updateData)
+          .eq('id', editingWorkflow.id);
+        
+        if (error) throw error;
+        
+        // Refresh the page to show updated data
+        window.location.reload();
+      }
+      
+      setShowEditForm(false);
+      setEditingWorkflow(null);
+      setFormData({
+        name: '',
+        description: '',
+        type: 'credentialing',
+        status: 'draft',
+        steps: []
+      });
+      setCustomFieldData({});
+    } catch (err) {
+      console.error('Failed to update workflow:', err);
     }
   };
 
@@ -359,6 +420,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                         onClick={() => handleViewWorkflow(workflow.id)}
                       />
                     </button>
+                      onClick={() => handleEdit(workflow)}
                     <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
                       <Edit className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" />
                     </button>
@@ -613,6 +675,105 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                   className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy rounded-lg font-medium"
                 >
                   Create Workflow
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Workflow Modal */}
+      {showEditForm && editingWorkflow && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+              <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Workflow</h2>
+            </div>
+            
+            <form onSubmit={handleUpdate} className="p-6 space-y-4">
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Workflow Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  placeholder="e.g., New Provider Credentialing"
+                />
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  placeholder="Describe the workflow purpose and process..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Type</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                >
+                  <option value="credentialing">Credentialing</option>
+                  <option value="renewal">Renewal</option>
+                  <option value="compliance">Compliance</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+
+              {/* Custom Fields */}
+              {customFields.length > 0 && (
+                <>
+                  <div className="col-span-2">
+                    <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-gray-600 pt-4">
+                      Additional Information
+                    </h3>
+                  </div>
+                  {customFields.map((field) => (
+                    <div key={field.id}>
+                      <label className="block text-navy dark:text-white font-medium mb-2">
+                        {field.label} {field.required && '*'}
+                      </label>
+                      {renderCustomField(field)}
+                    </div>
+                  ))}
+                </>
+              )}
+
+              <div className="flex justify-end gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingWorkflow(null);
+                  }}
+                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy rounded-lg font-medium"
+                >
+                  Update Workflow
                 </button>
               </div>
             </form>
