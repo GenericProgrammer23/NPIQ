@@ -272,7 +272,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
                     <div className="flex items-center gap-4 mb-2">
                       <h3 className="text-lg font-semibold text-navy dark:text-white">{location.name}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(location.status)}`}>
-                        {location.status}
+                        {location.status.charAt(0).toUpperCase() + location.status.slice(1)}
                       </span>
                     </div>
                     

@@ -235,7 +235,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                       {getStatusIcon(subflow.status)}
                       <h3 className="text-lg font-semibold text-navy dark:text-white">{subflow.name}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(subflow.status)}`}>
-                        {subflow.status.replace('_', ' ')}
+                        {subflow.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </span>
                       <span className="text-xs px-2 py-1 rounded-full bg-navy/10 dark:bg-gray-600 text-navy dark:text-gray-300">
                         Order: {subflow.order_index}

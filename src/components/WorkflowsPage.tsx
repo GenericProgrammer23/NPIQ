@@ -387,10 +387,10 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                     <div className="flex items-center gap-4 mb-2">
                       <h3 className="text-lg font-semibold text-navy dark:text-white">{workflow.name}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(workflow.status)}`}>
-                        {workflow.status}
+                        {workflow.status.charAt(0).toUpperCase() + workflow.status.slice(1)}
                       </span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getTypeColor(workflow.type)}`}>
-                        {workflow.type}
+                        {workflow.type.charAt(0).toUpperCase() + workflow.type.slice(1)}
                       </span>
                     </div>
                     
@@ -420,8 +420,10 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                         onClick={() => handleViewWorkflow(workflow.id)}
                       />
                     </button>
+                    <button 
                       onClick={() => handleEdit(workflow)}
-                    <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
+                      className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors"
+                    >
                       <Edit className="h-4 w-4 dark:text-gray-400 dark:hover:text-white" />
                     </button>
                   </div>

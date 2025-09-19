@@ -331,7 +331,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                         {provider.first_name} {provider.last_name}
                       </h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(provider.status)}`}>
-                        {provider.status}
+                        {provider.status.charAt(0).toUpperCase() + provider.status.slice(1)}
                       </span>
                     </div>
                     

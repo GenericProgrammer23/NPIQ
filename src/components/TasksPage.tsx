@@ -310,10 +310,10 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                     <div className="flex items-center gap-4 mb-2">
                       <h3 className="text-lg font-semibold text-navy dark:text-white">{task.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(task.status)}`}>
-                        {task.status.replace('_', ' ')}
+                        {task.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
+                        {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                       </span>
                       {task.due_date && isOverdue(task.due_date) && task.status !== 'completed' && (
                         <span className="flex items-center text-red-600 text-xs">
