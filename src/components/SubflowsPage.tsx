@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSubflows, useWorkflows } from '../hooks/useDatabase';
 import { GitBranch, Plus, Search, Filter, Edit, Eye, Play, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Subflow } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 interface SubflowsPageProps {
   initialFilter?: { type: string; value: string } | null;
