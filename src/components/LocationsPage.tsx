@@ -3,7 +3,11 @@ import { useLocations } from '../hooks/useDatabase';
 import { MapPin, Plus, Search, Edit, Eye, Building } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-export const LocationsPage: React.FC = () => {
+interface LocationsPageProps {
+  initialFilter?: { type: string; value: string } | null;
+}
+
+export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) => {
   const { locations, loading, error, createLocation, updateLocation } = useLocations();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -18,6 +22,15 @@ export const LocationsPage: React.FC = () => {
     status: 'active' as const
   });
   const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+
+  // Handle initial filter from dashboard
+  React.useEffect(() => {
+    if (initialFilter) {
+      if (initialFilter.type === 'action' && initialFilter.value === 'add') {
+        setShowAddForm(true);
+      }
+    }
+  }, [initialFilter]);
 
   // Load custom fields on component mount
   React.useEffect(() => {

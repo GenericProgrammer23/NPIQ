@@ -4,7 +4,11 @@ import { Users, Plus, Search, Filter, Edit, Eye, MapPin, Mail, Phone } from 'luc
 import { Provider } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 
-export const ProvidersPage: React.FC = () => {
+interface ProvidersPageProps {
+  initialFilter?: { type: string; value: string } | null;
+}
+
+export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) => {
   const { providers, loading, error, createProvider, updateProvider } = useProviders();
   const { locations } = useLocations();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -27,6 +31,17 @@ export const ProvidersPage: React.FC = () => {
 
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
+
+  // Handle initial filter from dashboard
+  React.useEffect(() => {
+    if (initialFilter) {
+      if (initialFilter.type === 'action' && initialFilter.value === 'add') {
+        setShowAddForm(true);
+      } else if (initialFilter.type === 'status') {
+        setStatusFilter(initialFilter.value);
+      }
+    }
+  }, [initialFilter]);
 
   // Load custom fields on component mount
   React.useEffect(() => {

@@ -16,23 +16,29 @@ import { useProviders } from './hooks/useDatabase';
 
 function App() {
   const [currentPage, setCurrentPage] = React.useState('dashboard');
+  const [pageFilter, setPageFilter] = React.useState<{ type: string; value: string } | null>(null);
   const [isOnline] = React.useState(DatabaseService.isConfigured());
   const { providers } = useProviders();
+
+  const handlePageChange = (page: string, filter?: { type: string; value: string }) => {
+    setCurrentPage(page);
+    setPageFilter(filter || null);
+  };
 
   const renderPage = () => {
     switch (currentPage) {
       case 'providers':
-        return <ProvidersPage />;
+        return <ProvidersPage initialFilter={pageFilter} />;
       case 'locations':
-        return <LocationsPage />;
+        return <LocationsPage initialFilter={pageFilter} />;
       case 'workflows':
-        return <WorkflowsPage />;
+        return <WorkflowsPage initialFilter={pageFilter} />;
       case 'tasks':
-        return <TasksPage />;
+        return <TasksPage initialFilter={pageFilter} />;
       case 'admin':
         return <AdminSettingsPage />;
       default:
-        return <Dashboard />;
+        return <Dashboard onPageChange={handlePageChange} />;
     }
   };
 
@@ -42,7 +48,7 @@ function App() {
         <div className="min-h-screen bg-cream dark:bg-gray-900 transition-colors">
           <Sidebar 
             currentPage={currentPage} 
-            onPageChange={setCurrentPage}
+            onPageChange={(page) => handlePageChange(page)}
             isOnline={isOnline}
           />
           <main className="ml-64 transition-all">

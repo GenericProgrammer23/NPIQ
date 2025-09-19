@@ -3,7 +3,11 @@ import { useTasks, useWorkflows, useProviders } from '../hooks/useDatabase';
 import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-export const TasksPage: React.FC = () => {
+interface TasksPageProps {
+  initialFilter?: { type: string; value: string } | null;
+}
+
+export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   const { tasks, loading, error, createTask, updateTask } = useTasks();
   const { workflows } = useWorkflows();
   const { providers } = useProviders();
@@ -24,6 +28,17 @@ export const TasksPage: React.FC = () => {
     assigned_to: ''
   });
   const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+
+  // Handle initial filter from dashboard
+  React.useEffect(() => {
+    if (initialFilter) {
+      if (initialFilter.type === 'action' && initialFilter.value === 'add') {
+        setShowAddForm(true);
+      } else if (initialFilter.type === 'status') {
+        setStatusFilter(initialFilter.value);
+      }
+    }
+  }, [initialFilter]);
 
   // Load custom fields on component mount
   React.useEffect(() => {

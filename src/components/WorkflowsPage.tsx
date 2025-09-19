@@ -3,7 +3,11 @@ import { useWorkflows } from '../hooks/useDatabase';
 import { Workflow, Plus, Search, Edit, Eye, Play, Archive } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-export const WorkflowsPage: React.FC = () => {
+interface WorkflowsPageProps {
+  initialFilter?: { type: string; value: string } | null;
+}
+
+export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) => {
   const { workflows, loading, error, createWorkflow } = useWorkflows();
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,6 +22,17 @@ export const WorkflowsPage: React.FC = () => {
     steps: [] as any[]
   });
   const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+
+  // Handle initial filter from dashboard
+  React.useEffect(() => {
+    if (initialFilter) {
+      if (initialFilter.type === 'action' && initialFilter.value === 'add') {
+        setShowAddForm(true);
+      } else if (initialFilter.type === 'status') {
+        setStatusFilter(initialFilter.value);
+      }
+    }
+  }, [initialFilter]);
 
   // Load custom fields on component mount
   React.useEffect(() => {
