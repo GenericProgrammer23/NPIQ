@@ -319,7 +319,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
   if (loading) {
     return (
-      <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
         <div className="animate-pulse">
           <div className="h-8 bg-navy/10 dark:bg-gray-700 rounded w-64 mb-6"></div>
           <div className="space-y-4">
@@ -334,7 +334,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
   if (error) {
     return (
-      <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p className="text-red-800 dark:text-red-400">Error loading subflows: {error}</p>
         </div>
@@ -343,11 +343,11 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Subflows</h1>
-          <p className="text-navy/70 dark:text-gray-300">Manage workflow subflows and their configurations</p>
+          <p className="text-navy/70 dark:text-cream/70">Manage workflow subflows and their configurations</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -359,26 +359,26 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-4 mb-6">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-cream/50" />
               <input
                 type="text"
                 placeholder="Search subflows..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-navy/50 dark:text-gray-400" />
+            <Filter className="h-4 w-4 text-navy/50 dark:text-cream/50" />
             <select
               value={workflowFilter}
               onChange={(e) => setWorkflowFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+              className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             >
               <option value="all">All Workflows</option>
               {workflows.map((workflow) => (
@@ -390,7 +390,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+              className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             >
               <option value="all">All Status</option>
               <option value="not_started">Not Started</option>
@@ -402,12 +402,12 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
       </div>
 
       {/* Subflows List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30">
         {filteredSubflows.length === 0 ? (
           <div className="p-8 text-center">
-            <GitBranch className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+            <GitBranch className="h-12 w-12 text-navy/30 dark:text-cream/30 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No subflows found</h3>
-            <p className="text-navy/60 dark:text-gray-400">
+            <p className="text-navy/60 dark:text-cream/60">
               {subflows.length === 0 
                 ? "Get started by creating your first subflow"
                 : "Try adjusting your search or filter criteria"
@@ -415,9 +415,9 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10 dark:divide-gray-600">
+          <div className="divide-y divide-navy/10 dark:divide-dark-cyan/20">
             {filteredSubflows.map((subflow) => (
-              <div key={subflow.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
+              <div key={subflow.id} className="p-6 hover:bg-navy/5 dark:hover:bg-navy-dark/50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-3">
@@ -426,14 +426,14 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(subflow.status)}`}>
                         {subflow.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </span>
-                      <span className="text-xs px-2 py-1 rounded-full bg-navy/10 dark:bg-gray-600 text-navy dark:text-gray-300">
+                      <span className="text-xs px-2 py-1 rounded-full bg-navy/10 dark:bg-navy-light text-navy dark:text-cream">
                         Order: {subflow.order_index}
                       </span>
                     </div>
                     
                     {subflow.workflow && (
                       <div className="mb-3">
-                        <span className="text-sm font-medium text-navy/70 dark:text-gray-400">Workflow: </span>
+                        <span className="text-sm font-medium text-navy/70 dark:text-cream/70">Workflow: </span>
                         <span className="text-sm text-navy dark:text-white">{subflow.workflow.name}</span>
                       </div>
                     )}
@@ -441,7 +441,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                     {subflow.purpose && (
                       <div className="mb-3">
                         <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Purpose</h6>
-                        <p className="text-sm text-navy/70 dark:text-gray-300">{subflow.purpose}</p>
+                        <p className="text-sm text-navy/70 dark:text-cream/70">{subflow.purpose}</p>
                       </div>
                     )}
                     
@@ -458,9 +458,9 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                                       {formatConditionDisplay(prereq)}
                                     </div>
                                   ))
-                                : <p className="text-navy/70 dark:text-gray-300">None</p>;
+                                : <p className="text-navy/70 dark:text-cream/70">None</p>;
                             } catch {
-                              return <p className="text-navy/70 dark:text-gray-300">{subflow.prerequisites || 'None'}</p>;
+                              return <p className="text-navy/70 dark:text-cream/70">{subflow.prerequisites || 'None'}</p>;
                             }
                           })()}
                         </div>
@@ -479,9 +479,9 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                                         {formatConditionDisplay(dep)}
                                       </div>
                                     ))
-                                  : <p className="text-navy/70 dark:text-gray-300">None</p>;
+                                  : <p className="text-navy/70 dark:text-cream/70">None</p>;
                               } catch {
-                                return <p className="text-navy/70 dark:text-gray-300">{subflow.dependencies}</p>;
+                                return <p className="text-navy/70 dark:text-cream/70">{subflow.dependencies}</p>;
                               }
                             })()}
                           </div>
@@ -500,9 +500,9 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                                       {formatConditionDisplay(condition)}
                                     </div>
                                   ))
-                                : <p className="text-navy/70 dark:text-gray-300">All tasks completed</p>;
+                                : <p className="text-navy/70 dark:text-cream/70">All tasks completed</p>;
                             } catch {
-                              return <p className="text-navy/70 dark:text-gray-300">{subflow.exit_condition || 'All tasks completed'}</p>;
+                              return <p className="text-navy/70 dark:text-cream/70">{subflow.exit_condition || 'All tasks completed'}</p>;
                             }
                           })()}
                         </div>
@@ -510,7 +510,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                     </div>
 
                     {subflow.tasks && subflow.tasks.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-navy/10 dark:border-gray-600">
+                      <div className="mt-4 pt-4 border-t border-navy/10 dark:border-dark-cyan/20">
                         <h6 className="text-sm font-medium text-navy dark:text-white mb-2">
                           Tasks ({subflow.tasks.length})
                         </h6>
@@ -530,12 +530,12 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   </div>
                   
                   <div className="flex items-center gap-2 ml-4">
-                    <button className="p-2 text-navy/60 dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                    <button className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors">
                       <Eye className="h-4 w-4" />
                     </button>
                     <button 
                       onClick={() => handleEdit(subflow)}
-                      className="p-2 text-navy/60 dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -550,8 +550,8 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
       {/* Add Subflow Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Create New Subflow</h2>
             </div>
             
@@ -562,7 +562,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   required
                   value={formData.workflow_id}
                   onChange={(e) => setFormData({ ...formData, workflow_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="">Select Workflow</option>
                   {workflows.map((workflow) => (
@@ -580,7 +580,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="e.g., Provider Baseline"
                 />
               </div>
@@ -591,7 +591,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   type="text"
                   value={formData.purpose}
                   onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="One sentence describing the purpose"
                 />
               </div>
@@ -601,7 +601,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
-                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                       onChange={(e) => {
                         const [type, value] = e.target.value.split('|');
                         if (type && value) {
@@ -649,7 +649,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
-                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                       onChange={(e) => {
                         const [type, value] = e.target.value.split('|');
                         if (type && value) {
@@ -697,7 +697,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
-                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                       onChange={(e) => {
                         const [type, value] = e.target.value.split('|');
                         if (type && value) {
@@ -746,7 +746,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="not_started">Not Started</option>
                     <option value="in_progress">In Progress</option>
@@ -760,7 +760,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                     min="0"
                     value={formData.order_index}
                     onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -769,7 +769,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>
@@ -788,8 +788,8 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
       {/* Edit Subflow Modal */}
       {showEditForm && editingSubflow && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Subflow</h2>
             </div>
             
@@ -800,7 +800,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   required
                   value={formData.workflow_id}
                   onChange={(e) => setFormData({ ...formData, workflow_id: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 >
                   <option value="">Select Workflow</option>
                   {workflows.map((workflow) => (
@@ -818,7 +818,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="e.g., Provider Baseline"
                 />
               </div>
@@ -829,7 +829,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   type="text"
                   value={formData.purpose}
                   onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="One sentence describing the purpose"
                 />
               </div>
@@ -839,7 +839,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
-                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                       onChange={(e) => {
                         const [type, value] = e.target.value.split('|');
                         if (type && value) {
@@ -887,7 +887,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
-                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                       onChange={(e) => {
                         const [type, value] = e.target.value.split('|');
                         if (type && value) {
@@ -935,7 +935,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
-                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                       onChange={(e) => {
                         const [type, value] = e.target.value.split('|');
                         if (type && value) {
@@ -984,7 +984,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="not_started">Not Started</option>
                     <option value="in_progress">In Progress</option>
@@ -998,7 +998,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                     min="0"
                     value={formData.order_index}
                     onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   />
                 </div>
               </div>
@@ -1010,7 +1010,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                     setShowEditForm(false);
                     setEditingSubflow(null);
                   }}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>

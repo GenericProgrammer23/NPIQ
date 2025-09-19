@@ -230,11 +230,11 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Tasks</h1>
-          <p className="text-navy/70 dark:text-gray-300">Manage workflow tasks and assignments</p>
+          <p className="text-navy/70 dark:text-cream/70">Manage workflow tasks and assignments</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -246,26 +246,26 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-4 mb-6">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-cream/50" />
               <input
                 type="text"
                 placeholder="Search tasks..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-navy/50 dark:text-gray-400" />
+            <Filter className="h-4 w-4 text-navy/50 dark:text-cream/50" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+              className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -276,7 +276,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+              className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
             >
               <option value="all">All Priority</option>
               <option value="urgent">Urgent</option>
@@ -289,12 +289,12 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
       </div>
 
       {/* Tasks List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30">
         {filteredTasks.length === 0 ? (
           <div className="p-8 text-center">
-            <CheckSquare className="h-12 w-12 text-navy/30 dark:text-gray-500 mx-auto mb-4" />
+            <CheckSquare className="h-12 w-12 text-navy/30 dark:text-cream/30 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No tasks found</h3>
-            <p className="text-navy/60 dark:text-gray-400">
+            <p className="text-navy/60 dark:text-cream/60">
               {tasks.length === 0 
                 ? "Get started by creating your first task"
                 : "Try adjusting your search or filter criteria"
@@ -302,9 +302,9 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10 dark:divide-gray-600">
+          <div className="divide-y divide-navy/10 dark:divide-dark-cyan/20">
             {filteredTasks.map((task) => (
-              <div key={task.id} className="p-6 hover:bg-navy/5 dark:hover:bg-gray-700 transition-colors">
+              <div key={task.id} className="p-6 hover:bg-navy/5 dark:hover:bg-navy-dark/50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-2">
@@ -324,18 +324,18 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                     </div>
                     
                     {task.description && (
-                      <p className="text-navy/70 dark:text-gray-300 mb-3">{task.description}</p>
+                      <p className="text-navy/70 dark:text-cream/70 mb-3">{task.description}</p>
                     )}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-navy/70 dark:text-gray-300">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-navy/70 dark:text-cream/70">
                       {task.workflow && (
                         <div className="flex items-center">
                           <CheckSquare className="h-4 w-4 mr-2" />
-                          <span className="text-navy/70 dark:text-gray-300">
+                          <span className="text-navy/70 dark:text-cream/70">
                             {task.workflow.name}
                             {task.subflow && (
                               <>
-                                <span className="mx-2 text-navy/40 dark:text-gray-500">→</span>
+                                <span className="mx-2 text-navy/40 dark:text-cream/40">→</span>
                                 <span className="font-medium text-navy dark:text-white">{task.subflow.name}</span>
                               </>
                             )}
@@ -361,7 +361,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                     <select
                       value={task.status}
                       onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                      className="px-3 py-1 border border-navy/20 dark:border-gray-600 rounded text-sm focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      className="px-3 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-sm focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                     >
                       <option value="pending">Pending</option>
                       <option value="in_progress">In Progress</option>
@@ -379,8 +379,8 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
       {/* Add Task Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Create New Task</h2>
             </div>
             
@@ -392,7 +392,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="e.g., Review license documentation"
                 />
               </div>
@@ -402,7 +402,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan h-20 resize-none bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   placeholder="Describe the task details..."
                 />
               </div>
@@ -413,7 +413,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   <select
                     value={formData.workflow_id}
                     onChange={(e) => setFormData({ ...formData, workflow_id: e.target.value, subflow_id: '' })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="">No workflow</option>
                     {workflows.map((workflow) => (
@@ -428,7 +428,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   <select
                     value={formData.subflow_id}
                     onChange={(e) => setFormData({ ...formData, subflow_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                     disabled={!formData.workflow_id}
                   >
                     <option value="">No subflow</option>
@@ -449,7 +449,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   <select
                     value={formData.provider_id}
                     onChange={(e) => setFormData({ ...formData, provider_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="">No provider</option>
                     {providers.map((provider) => (
@@ -467,7 +467,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="pending">Pending</option>
                     <option value="in_progress">In Progress</option>
@@ -480,7 +480,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -496,7 +496,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                 />
               </div>
 
@@ -504,7 +504,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
               {customFields.length > 0 && (
                 <>
                   <div className="col-span-2">
-                    <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-gray-600 pt-4">
+                    <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-dark-cyan/20 pt-4">
                       Additional Information
                     </h3>
                   </div>
@@ -523,7 +523,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                  className="px-4 py-2 text-navy dark:text-cream border border-navy/20 dark:border-dark-cyan/30 rounded-lg hover:bg-navy/5 dark:hover:bg-navy-dark/50"
                 >
                   Cancel
                 </button>
