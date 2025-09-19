@@ -436,6 +436,11 @@ export const ProvidersPage: React.FC = () => {
                     required
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">Email</label>
@@ -456,7 +461,7 @@ export const ProvidersPage: React.FC = () => {
                   />
                 </div>
               </div>
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">Specialty</label>
@@ -483,7 +488,7 @@ export const ProvidersPage: React.FC = () => {
                   </select>
                 </div>
               </div>
-                  />
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-navy dark:text-white font-medium mb-2">License Number</label>
@@ -504,7 +509,7 @@ export const ProvidersPage: React.FC = () => {
                   />
                 </div>
               </div>
-                </div>
+
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Status</label>
                 <select
@@ -518,7 +523,7 @@ export const ProvidersPage: React.FC = () => {
                   <option value="suspended">Suspended</option>
                 </select>
               </div>
-              </div>
+
               <div className="flex justify-end gap-4 pt-4">
                 <button
                   type="button"
