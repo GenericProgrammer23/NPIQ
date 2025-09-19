@@ -2,7 +2,11 @@ import React from 'react';
 import { useDashboardStats } from '../hooks/useDatabase';
 import { Users, MapPin, Workflow, CheckSquare, Plus, TrendingUp } from 'lucide-react';
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onPageChange: (page: string, filter?: { type: string; value: string }) => void;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
   const { stats, loading, error } = useDashboardStats();
 
   if (loading) {
@@ -40,7 +44,8 @@ export const Dashboard: React.FC = () => {
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200'
+      borderColor: 'border-blue-200',
+      onClick: () => onPageChange('providers')
     },
     {
       title: 'Active Workflows',
@@ -48,7 +53,8 @@ export const Dashboard: React.FC = () => {
       icon: Workflow,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      borderColor: 'border-green-200'
+      borderColor: 'border-green-200',
+      onClick: () => onPageChange('workflows', { type: 'status', value: 'active' })
     },
     {
       title: 'Completed Tasks',
@@ -56,7 +62,8 @@ export const Dashboard: React.FC = () => {
       icon: CheckSquare,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200'
+      borderColor: 'border-purple-200',
+      onClick: () => onPageChange('tasks', { type: 'status', value: 'completed' })
     },
     {
       title: 'Pending Tasks',
@@ -64,7 +71,8 @@ export const Dashboard: React.FC = () => {
       icon: TrendingUp,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200'
+      borderColor: 'border-orange-200',
+      onClick: () => onPageChange('tasks', { type: 'status', value: 'pending' })
     }
   ];
 
@@ -80,7 +88,8 @@ export const Dashboard: React.FC = () => {
         {statCards.map((stat) => (
           <div
             key={stat.title}
-            className={`${stat.bgColor} dark:bg-gray-800 ${stat.borderColor} dark:border-gray-600 border rounded-lg p-6 hover:shadow-md transition-shadow`}
+            className={`${stat.bgColor} dark:bg-gray-800 ${stat.borderColor} dark:border-gray-600 border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer`}
+            onClick={stat.onClick}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -97,21 +106,33 @@ export const Dashboard: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-6">
         <h2 className="text-xl font-semibold text-navy dark:text-white mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+          <button 
+            onClick={() => onPageChange('providers', { type: 'action', value: 'add' })}
+            className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group"
+          >
             <Plus className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Provider</span>
           </button>
-          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+          <button 
+            onClick={() => onPageChange('locations', { type: 'action', value: 'add' })}
+            className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group"
+          >
             <MapPin className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Location</span>
           </button>
-          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+          <button 
+            onClick={() => onPageChange('workflows', { type: 'action', value: 'add' })}
+            className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group"
+          >
             <Workflow className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Create Workflow</span>
           </button>
-          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+          <button 
+            onClick={() => onPageChange('tasks', { type: 'action', value: 'add' })}
+            className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group"
+          >
             <CheckSquare className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Assign Task</span>
+            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Create Task</span>
           </button>
         </div>
       </div>
@@ -120,21 +141,34 @@ export const Dashboard: React.FC = () => {
       <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-6">
         <h2 className="text-xl font-semibold text-navy dark:text-white mb-4">Recent Activity</h2>
         <div className="space-y-3">
-          <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-            <span className="text-navy dark:text-white">New provider application submitted</span>
-            <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">2 hours ago</span>
-          </div>
-          <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-            <span className="text-navy dark:text-white">Credentialing workflow updated</span>
-            <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">4 hours ago</span>
-          </div>
-          <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
-            <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-            <span className="text-navy dark:text-white">License verification pending</span>
-            <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">1 day ago</span>
-          </div>
+          {stats.totalProviders > 0 ? (
+            <>
+              <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <span className="text-navy dark:text-white">System initialized with {stats.totalProviders} providers</span>
+                <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">Today</span>
+              </div>
+              {stats.activeWorkflows > 0 && (
+                <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                  <span className="text-navy dark:text-white">{stats.activeWorkflows} active workflows running</span>
+                  <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">Today</span>
+                </div>
+              )}
+              {stats.pendingTasks > 0 && (
+                <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                  <span className="text-navy dark:text-white">{stats.pendingTasks} tasks awaiting attention</span>
+                  <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">Today</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-2 h-2 bg-gray-400 rounded-full mx-auto mb-3"></div>
+              <span className="text-navy/60 dark:text-gray-400">No recent activity. Start by adding providers and creating workflows.</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
