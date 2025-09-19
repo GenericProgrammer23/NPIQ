@@ -498,16 +498,40 @@ export class DatabaseService {
 
       if (!subflow) return false;
 
-      // Simple prerequisite checking - in a real system you'd parse the prerequisites string
-      // For now, we'll assume prerequisites are met if the provider has basic info
-      if (providerId && subflow.prerequisites.includes('provider')) {
-        const { data: provider } = await supabase
-          .from('providers')
-          .select('first_name, last_name, specialty')
-          .eq('id', providerId)
-          .single();
+      // Parse prerequisites from JSON
+      let prerequisites: string[] = [];
+      try {
+        prerequisites = JSON.parse(subflow.prerequisites);
+      } catch {
+        // Fallback for old string format
+        prerequisites = subflow.prerequisites ? [subflow.prerequisites] : [];
+      }
 
-        return !!(provider?.first_name && provider?.last_name && provider?.specialty);
+      if (!Array.isArray(prerequisites)) return true;
+
+      // Check each prerequisite
+      for (const prereq of prerequisites) {
+        const [type, field] = prereq.split(':');
+        
+        if (type === 'provider_field' && providerId) {
+          const { data: provider } = await supabase
+            .from('providers')
+            .select(field)
+            .eq('id', providerId)
+            .single();
+          
+          if (!provider || !provider[field]) return false;
+        }
+        
+        if (type === 'location_field' && providerId) {
+          const { data: provider } = await supabase
+            .from('providers')
+            .select('location:locations(*)')
+            .eq('id', providerId)
+            .single();
+          
+          if (!provider?.location || !provider.location[field]) return false;
+        }
       }
 
       return true;
