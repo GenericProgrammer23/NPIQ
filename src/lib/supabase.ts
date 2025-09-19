@@ -307,9 +307,16 @@ export class DatabaseService {
 
   static async updateProvider(id: string, updates: Partial<Provider>): Promise<Provider> {
     if (!supabase) throw new Error('Supabase not configured');
+    
+    // Ensure location_id is properly handled - it can be null
+    const updateData = {
+      ...updates,
+      location_id: updates.location_id || null
+    };
+    
     const { data, error } = await supabase
       .from('providers')
-      .update(updates)
+      .update(updateData)
       .eq('id', id)
       .select(`
         *,

@@ -69,10 +69,10 @@ export const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-cream dark:bg-gray-900 min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-navy mb-2">Dashboard</h1>
-        <p className="text-navy/70">Overview of your healthcare credentialing system</p>
+        <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Dashboard</h1>
+        <p className="text-navy/70 dark:text-gray-300">Overview of your healthcare credentialing system</p>
       </div>
 
       {/* Stats Grid */}
@@ -80,12 +80,12 @@ export const Dashboard: React.FC = () => {
         {statCards.map((stat) => (
           <div
             key={stat.title}
-            className={`${stat.bgColor} ${stat.borderColor} border rounded-lg p-6 hover:shadow-md transition-shadow`}
+            className={`${stat.bgColor} dark:bg-gray-800 ${stat.borderColor} dark:border-gray-600 border rounded-lg p-6 hover:shadow-md transition-shadow`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-navy/70 mb-1">{stat.title}</p>
-                <p className="text-2xl font-bold text-navy">{stat.value}</p>
+                <p className="text-sm font-medium text-navy/70 dark:text-gray-400 mb-1">{stat.title}</p>
+                <p className="text-2xl font-bold text-navy dark:text-white">{stat.value}</p>
               </div>
               <stat.icon className={`h-8 w-8 ${stat.color}`} />
             </div>
@@ -94,46 +94,46 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg border border-navy/10 p-6">
-        <h2 className="text-xl font-semibold text-navy mb-4">Quick Actions</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-6">
+        <h2 className="text-xl font-semibold text-navy dark:text-white mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="flex items-center p-4 bg-navy/5 hover:bg-navy/10 rounded-lg transition-colors group">
-            <Plus className="h-5 w-5 text-navy mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy group-hover:text-dark-cyan font-medium">Add Provider</span>
+          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+            <Plus className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
+            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Provider</span>
           </button>
-          <button className="flex items-center p-4 bg-navy/5 hover:bg-navy/10 rounded-lg transition-colors group">
-            <MapPin className="h-5 w-5 text-navy mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy group-hover:text-dark-cyan font-medium">Add Location</span>
+          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+            <MapPin className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
+            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Location</span>
           </button>
-          <button className="flex items-center p-4 bg-navy/5 hover:bg-navy/10 rounded-lg transition-colors group">
-            <Workflow className="h-5 w-5 text-navy mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy group-hover:text-dark-cyan font-medium">Create Workflow</span>
+          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+            <Workflow className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
+            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Create Workflow</span>
           </button>
-          <button className="flex items-center p-4 bg-navy/5 hover:bg-navy/10 rounded-lg transition-colors group">
-            <CheckSquare className="h-5 w-5 text-navy mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy group-hover:text-dark-cyan font-medium">Assign Task</span>
+          <button className="flex items-center p-4 bg-navy/5 dark:bg-gray-700 hover:bg-navy/10 dark:hover:bg-gray-600 rounded-lg transition-colors group">
+            <CheckSquare className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
+            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Assign Task</span>
           </button>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="mt-8 bg-white rounded-lg border border-navy/10 p-6">
-        <h2 className="text-xl font-semibold text-navy mb-4">Recent Activity</h2>
+      <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-600 p-6">
+        <h2 className="text-xl font-semibold text-navy dark:text-white mb-4">Recent Activity</h2>
         <div className="space-y-3">
-          <div className="flex items-center p-3 bg-navy/5 rounded-lg">
+          <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-            <span className="text-navy">New provider application submitted</span>
-            <span className="text-navy/50 text-sm ml-auto">2 hours ago</span>
+            <span className="text-navy dark:text-white">New provider application submitted</span>
+            <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">2 hours ago</span>
           </div>
-          <div className="flex items-center p-3 bg-navy/5 rounded-lg">
+          <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
             <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-            <span className="text-navy">Credentialing workflow updated</span>
-            <span className="text-navy/50 text-sm ml-auto">4 hours ago</span>
+            <span className="text-navy dark:text-white">Credentialing workflow updated</span>
+            <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">4 hours ago</span>
           </div>
-          <div className="flex items-center p-3 bg-navy/5 rounded-lg">
+          <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
             <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-            <span className="text-navy">License verification pending</span>
-            <span className="text-navy/50 text-sm ml-auto">1 day ago</span>
+            <span className="text-navy dark:text-white">License verification pending</span>
+            <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">1 day ago</span>
           </div>
         </div>
       </div>

@@ -42,6 +42,11 @@ export function useProviders(organizationId?: string) {
 
   const updateProvider = async (id: string, updates: Partial<Provider>) => {
     try {
+      // Ensure location_id is properly handled
+      const updateData = {
+        ...updates,
+        location_id: updates.location_id || null
+      };
       const updatedProvider = await DatabaseService.updateProvider(id, updates);
       setProviders(prev => prev.map(p => p.id === id ? updatedProvider : p));
       return updatedProvider;
