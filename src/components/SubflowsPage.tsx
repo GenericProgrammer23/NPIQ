@@ -567,37 +567,146 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Prerequisites *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.prerequisites}
-                  onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  placeholder="e.g., required provider info present"
-                />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      onChange={(e) => {
+                        const [type, value] = e.target.value.split('|');
+                        if (type && value) {
+                          addPrerequisite(type, value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Add prerequisite...</option>
+                      <optgroup label="Provider Fields">
+                        {availableFields.providerFields.map(field => (
+                          <option key={field.name} value={`provider_field|${field.name}`}>
+                            Provider has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Location Fields">
+                        {availableFields.locationFields.map(field => (
+                          <option key={field.name} value={`location_field|${field.name}`}>
+                            Location has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.prerequisites.map((prereq, index) => (
+                      <div key={index} className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+                        {formatConditionDisplay(prereq)}
+                        <button
+                          type="button"
+                          onClick={() => removePrerequisite(prereq)}
+                          className="ml-1 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Dependencies</label>
-                <input
-                  type="text"
-                  value={formData.dependencies}
-                  onChange={(e) => setFormData({ ...formData, dependencies: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  placeholder="e.g., If location.state == AZ then depends on AHCCCS Complete"
-                />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      onChange={(e) => {
+                        const [type, value] = e.target.value.split('|');
+                        if (type && value) {
+                          addDependency(type, value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Add dependency...</option>
+                      <optgroup label="Task Completion">
+                        {availableFields.tasks.map(task => (
+                          <option key={task.id} value={`task_complete|${task.id}`}>
+                            Task completed: {task.title}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Other Subflows">
+                        {subflows.filter(s => s.id !== editingSubflow?.id).map(subflow => (
+                          <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
+                            Subflow completed: {subflow.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.dependencies.map((dep, index) => (
+                      <div key={index} className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 rounded text-sm">
+                        {formatConditionDisplay(dep)}
+                        <button
+                          type="button"
+                          onClick={() => removeDependency(dep)}
+                          className="ml-1 text-orange-600 hover:text-orange-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Exit Condition *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.exit_condition}
-                  onChange={(e) => setFormData({ ...formData, exit_condition: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  placeholder="e.g., approval captured"
-                />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      onChange={(e) => {
+                        const [type, value] = e.target.value.split('|');
+                        if (type && value) {
+                          addExitCondition(type, value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Add exit condition...</option>
+                      <optgroup label="Task Completion">
+                        {availableFields.tasks.map(task => (
+                          <option key={task.id} value={`task_complete|${task.id}`}>
+                            Task completed: {task.title}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Provider Fields">
+                        {availableFields.providerFields.map(field => (
+                          <option key={field.name} value={`provider_field|${field.name}`}>
+                            Provider has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.exit_condition.map((condition, index) => (
+                      <div key={index} className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                        {formatConditionDisplay(condition)}
+                        <button
+                          type="button"
+                          onClick={() => removeExitCondition(condition)}
+                          className="ml-1 text-green-600 hover:text-green-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -696,37 +805,146 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Prerequisites *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.prerequisites}
-                  onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  placeholder="e.g., required provider info present"
-                />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      onChange={(e) => {
+                        const [type, value] = e.target.value.split('|');
+                        if (type && value) {
+                          addPrerequisite(type, value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Add prerequisite...</option>
+                      <optgroup label="Provider Fields">
+                        {availableFields.providerFields.map(field => (
+                          <option key={field.name} value={`provider_field|${field.name}`}>
+                            Provider has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Location Fields">
+                        {availableFields.locationFields.map(field => (
+                          <option key={field.name} value={`location_field|${field.name}`}>
+                            Location has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.prerequisites.map((prereq, index) => (
+                      <div key={index} className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+                        {formatConditionDisplay(prereq)}
+                        <button
+                          type="button"
+                          onClick={() => removePrerequisite(prereq)}
+                          className="ml-1 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Dependencies</label>
-                <input
-                  type="text"
-                  value={formData.dependencies}
-                  onChange={(e) => setFormData({ ...formData, dependencies: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  placeholder="e.g., If location.state == AZ then depends on AHCCCS Complete"
-                />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      onChange={(e) => {
+                        const [type, value] = e.target.value.split('|');
+                        if (type && value) {
+                          addDependency(type, value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Add dependency...</option>
+                      <optgroup label="Task Completion">
+                        {availableFields.tasks.map(task => (
+                          <option key={task.id} value={`task_complete|${task.id}`}>
+                            Task completed: {task.title}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Other Subflows">
+                        {subflows.filter(s => s.id !== editingSubflow?.id).map(subflow => (
+                          <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
+                            Subflow completed: {subflow.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.dependencies.map((dep, index) => (
+                      <div key={index} className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 rounded text-sm">
+                        {formatConditionDisplay(dep)}
+                        <button
+                          type="button"
+                          onClick={() => removeDependency(dep)}
+                          className="ml-1 text-orange-600 hover:text-orange-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block text-navy dark:text-white font-medium mb-2">Exit Condition *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.exit_condition}
-                  onChange={(e) => setFormData({ ...formData, exit_condition: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
-                  placeholder="e.g., approval captured"
-                />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      className="px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                      onChange={(e) => {
+                        const [type, value] = e.target.value.split('|');
+                        if (type && value) {
+                          addExitCondition(type, value);
+                          e.target.value = '';
+                        }
+                      }}
+                    >
+                      <option value="">Add exit condition...</option>
+                      <optgroup label="Task Completion">
+                        {availableFields.tasks.map(task => (
+                          <option key={task.id} value={`task_complete|${task.id}`}>
+                            Task completed: {task.title}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Provider Fields">
+                        {availableFields.providerFields.map(field => (
+                          <option key={field.name} value={`provider_field|${field.name}`}>
+                            Provider has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.exit_condition.map((condition, index) => (
+                      <div key={index} className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
+                        {formatConditionDisplay(condition)}
+                        <button
+                          type="button"
+                          onClick={() => removeExitCondition(condition)}
+                          className="ml-1 text-green-600 hover:text-green-800"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
