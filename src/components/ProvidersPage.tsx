@@ -118,13 +118,6 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         specialty: '',
         license_number: '',
         license_expiry: '',
-        npi: '',
-        caqh: '',
-        address_line1: '',
-        address_line2: '',
-        city: '',
-        state: '',
-        zip: '',
         location_id: '',
         status: 'pending'
       });
@@ -181,13 +174,6 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         specialty: '',
         license_number: '',
         license_expiry: '',
-        npi: '',
-        caqh: '',
-        address_line1: '',
-        address_line2: '',
-        city: '',
-        state: '',
-        zip: '',
         location_id: '',
         status: 'pending'
       });
@@ -393,7 +379,19 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                       {provider.phone && (
                         <div className="flex items-center">
                           <Phone className="h-4 w-4 mr-2" />
-                          {provider.phone}
+                          {formatters.phone(provider.phone)}
+                        </div>
+                      )}
+                      {provider.provider_npi && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">NPI:</span>
+                          {provider.provider_npi}
+                        </div>
+                      )}
+                      {provider.caqh && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">CAQH:</span>
+                          {provider.caqh}
                         </div>
                       )}
                       {provider.location && (
@@ -418,6 +416,13 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => handleShowDocuments(provider.id)}
+                      className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
+                      title="View Documents"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </button>
                     <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
                       <Eye className="h-4 w-4" />
                     </button>
