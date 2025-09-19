@@ -32,6 +32,7 @@ export const ProvidersPage: React.FC = () => {
         ...formData,
         organization_id: 'current-org-id', // This will be resolved by the service
         location_id: formData.location_id || null, // Properly handle optional location
+        license_expiry: formData.license_expiry || null, // Convert empty string to null
       });
       setShowAddForm(false);
       setFormData({
@@ -74,6 +75,7 @@ export const ProvidersPage: React.FC = () => {
       await updateProvider(editingProvider.id, {
         ...formData,
         location_id: formData.location_id || null,
+        license_expiry: formData.license_expiry || null, // Convert empty string to null
       });
       setShowEditForm(false);
       setEditingProvider(null);
