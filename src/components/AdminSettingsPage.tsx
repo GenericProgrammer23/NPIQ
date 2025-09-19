@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
+import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2, Edit } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface CustomField {
@@ -18,6 +18,8 @@ export const AdminSettingsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingField, setEditingField] = useState<CustomField | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -52,6 +54,103 @@ export const AdminSettingsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadAllTableFields = async () => {
+    if (!supabase) return;
+    
+    try {
+      const tables = ['providers', 'locations', 'workflows', 'tasks'];
+      const allFields: CustomField[] = [];
+      
+      for (const tableName of tables) {
+        // Get columns from information_schema
+        const { data: columns, error: columnsError } = await supabase
+          .rpc('get_table_columns', { table_name: tableName });
+        
+        if (columnsError) {
+          console.error(`Failed to get columns for ${tableName}:`, columnsError);
+          continue;
+        }
+        
+        // Get custom field definitions
+        const { data: customFieldDefs, error: customError } = await supabase
+          .from('custom_fields')
+          .select('*')
+          .eq('table_name', tableName);
+        
+        if (customError && customError.code !== 'PGRST116') {
+          console.error(`Failed to get custom fields for ${tableName}:`, customError);
+          continue;
+        }
+        
+        // Combine core fields and custom fields
+        const coreFields = getCoreFields(tableName);
+        const customFields = customFieldDefs || [];
+        
+        // Add core fields as read-only
+        coreFields.forEach(field => {
+          allFields.push({
+            id: `core_${tableName}_${field.name}`,
+            name: field.name,
+            label: field.label,
+            type: field.type,
+            required: field.required,
+            table_name: tableName,
+            created_at: '',
+            is_core: true
+          } as CustomField & { is_core: boolean });
+        });
+        
+        // Add custom fields
+        customFields.forEach(field => {
+          allFields.push({
+            ...field,
+            is_core: false
+          } as CustomField & { is_core: boolean });
+        });
+      }
+      
+      setCustomFields(allFields);
+    } catch (err) {
+      console.error('Failed to load all table fields:', err);
+    }
+  };
+
+  const getCoreFields = (tableName: string) => {
+    const coreFieldsMap: Record<string, Array<{name: string, label: string, type: string, required: boolean}>> = {
+      providers: [
+        { name: 'first_name', label: 'First Name', type: 'text', required: true },
+        { name: 'last_name', label: 'Last Name', type: 'text', required: true },
+        { name: 'email', label: 'Email', type: 'email', required: false },
+        { name: 'phone', label: 'Phone', type: 'tel', required: false },
+        { name: 'specialty', label: 'Specialty', type: 'text', required: false },
+        { name: 'license_number', label: 'License Number', type: 'text', required: false },
+        { name: 'license_expiry', label: 'License Expiry', type: 'date', required: false },
+        { name: 'status', label: 'Status', type: 'text', required: true }
+      ],
+      locations: [
+        { name: 'name', label: 'Location Name', type: 'text', required: true },
+        { name: 'address', label: 'Address', type: 'text', required: false },
+        { name: 'departments', label: 'Departments', type: 'number', required: false },
+        { name: 'status', label: 'Status', type: 'text', required: true }
+      ],
+      workflows: [
+        { name: 'name', label: 'Workflow Name', type: 'text', required: true },
+        { name: 'description', label: 'Description', type: 'text', required: false },
+        { name: 'type', label: 'Type', type: 'text', required: true },
+        { name: 'status', label: 'Status', type: 'text', required: true }
+      ],
+      tasks: [
+        { name: 'title', label: 'Task Title', type: 'text', required: true },
+        { name: 'description', label: 'Description', type: 'text', required: false },
+        { name: 'status', label: 'Status', type: 'text', required: true },
+        { name: 'priority', label: 'Priority', type: 'text', required: true },
+        { name: 'due_date', label: 'Due Date', type: 'date', required: false }
+      ]
+    };
+    
+    return coreFieldsMap[tableName] || [];
   };
 
   const showMessage = (message: string, type: 'success' | 'error') => {
@@ -118,7 +217,7 @@ export const AdminSettingsPage: React.FC = () => {
         throw fieldError;
       }
 
-      setCustomFields(prev => [...prev, fieldData]);
+      setCustomFields(prev => [...prev, { ...fieldData, is_core: false } as CustomField & { is_core: boolean }]);
       setShowAddForm(false);
       setFormData({ name: '', label: '', type: 'text', required: false, table_name: 'providers' });
       showMessage('Field added successfully! The new field will appear in forms immediately.', 'success');
@@ -131,7 +230,66 @@ export const AdminSettingsPage: React.FC = () => {
     }
   };
 
+  const handleEditField = (field: CustomField & { is_core?: boolean }) => {
+    if (field.is_core) {
+      showMessage('Core fields cannot be edited', 'error');
+      return;
+    }
+    
+    setEditingField(field);
+    setFormData({
+      name: field.name,
+      label: field.label,
+      type: field.type,
+      required: field.required,
+      table_name: field.table_name
+    });
+    setShowEditForm(true);
+  };
+
+  const handleUpdateField = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingField) return;
+    
+    try {
+      setLoading(true);
+
+      // Update the field configuration
+      const { data: fieldData, error: fieldError } = await supabase
+        .from('custom_fields')
+        .update({
+          label: formData.label,
+          type: formData.type,
+          required: formData.required
+        })
+        .eq('id', editingField.id)
+        .select()
+        .single();
+
+      if (fieldError) throw fieldError;
+
+      setCustomFields(prev => prev.map(f => 
+        f.id === editingField.id ? { ...fieldData, is_core: false } as CustomField & { is_core: boolean } : f
+      ));
+      setShowEditForm(false);
+      setEditingField(null);
+      setFormData({ name: '', label: '', type: 'text', required: false, table_name: 'providers' });
+      showMessage('Field updated successfully!', 'success');
+
+    } catch (err) {
+      console.error('Failed to update field:', err);
+      showMessage(err instanceof Error ? err.message : 'Failed to update field', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteField = async (field: CustomField) => {
+    if ((field as any).is_core) {
+      showMessage('Core fields cannot be deleted', 'error');
+      return;
+    }
+    
     if (!confirm(`Are you sure you want to delete the field "${field.label}"? This will permanently remove the column and all its data. This action cannot be undone.`)) {
       return;
     }
@@ -198,7 +356,12 @@ export const AdminSettingsPage: React.FC = () => {
     }
     acc[field.table_name].push(field);
     return acc;
-  }, {} as Record<string, CustomField[]>);
+  }, {} as Record<string, (CustomField & { is_core?: boolean })[]>);
+
+  // Load all fields including core fields on mount
+  React.useEffect(() => {
+    loadAllTableFields();
+  }, []);
 
   if (loading && customFields.length === 0) {
     return (
@@ -289,6 +452,11 @@ export const AdminSettingsPage: React.FC = () => {
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                             {field.type}
                           </span>
+                          {(field as any).is_core && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                              Core Field
+                            </span>
+                          )}
                           {field.required && (
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
                               Required
@@ -299,16 +467,32 @@ export const AdminSettingsPage: React.FC = () => {
                         <div className="text-sm text-navy/70 dark:text-gray-300">
                           <span className="font-medium">Database Column:</span> {field.name}
                         </div>
-                        <div className="text-sm text-navy/50 dark:text-gray-400">
-                          Added {new Date(field.created_at).toLocaleDateString()}
-                        </div>
+                        {!(field as any).is_core && (
+                          <div className="text-sm text-navy/50 dark:text-gray-400">
+                            Added {new Date(field.created_at).toLocaleDateString()}
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-2">
+                        {!(field as any).is_core && (
+                          <button
+                            onClick={() => handleEditField(field as CustomField & { is_core?: boolean })}
+                            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            title="Edit Field"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteField(field)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          className={`p-2 rounded-lg transition-colors ${
+                            (field as any).is_core 
+                              ? 'text-gray-400 cursor-not-allowed' 
+                              : 'text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
+                          }`}
                           title="Delete Field"
+                          disabled={(field as any).is_core}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -424,6 +608,94 @@ export const AdminSettingsPage: React.FC = () => {
                   className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 disabled:bg-goldenrod/50 text-navy dark:text-navy rounded-lg font-medium"
                 >
                   {loading ? 'Adding...' : 'Add Field'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Field Modal */}
+      {showEditForm && editingField && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
+            <div className="p-6 border-b border-navy/10 dark:border-gray-600">
+              <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Custom Field</h2>
+              <p className="text-navy/60 dark:text-gray-400 text-sm mt-1">
+                Update field properties (column name cannot be changed)
+              </p>
+            </div>
+            
+            <form onSubmit={handleUpdateField} className="p-6 space-y-4">
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Field Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  disabled
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+                />
+                <p className="text-xs text-navy/50 dark:text-gray-400 mt-1">
+                  Column name cannot be changed after creation
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Display Label *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.label}
+                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Field Type</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+                >
+                  <option value="text">Text</option>
+                  <option value="number">Number</option>
+                  <option value="email">Email</option>
+                  <option value="tel">Phone</option>
+                  <option value="date">Date</option>
+                </select>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="edit-required"
+                  checked={formData.required}
+                  onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
+                  className="mr-2"
+                />
+                <label htmlFor="edit-required" className="text-navy dark:text-white">
+                  Required field
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingField(null);
+                  }}
+                  className="px-4 py-2 text-navy dark:text-white border border-navy/20 dark:border-gray-600 rounded-lg hover:bg-navy/5 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 disabled:bg-goldenrod/50 text-navy dark:text-navy rounded-lg font-medium"
+                >
+                  {loading ? 'Updating...' : 'Update Field'}
                 </button>
               </div>
             </form>
