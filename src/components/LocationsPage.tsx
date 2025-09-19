@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocations } from '../hooks/useDatabase';
 import { MapPin, Plus, Search, Edit, Eye, Building } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export const LocationsPage: React.FC = () => {
   const { locations, loading, error, createLocation, updateLocation } = useLocations();
@@ -8,6 +9,7 @@ export const LocationsPage: React.FC = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [customFields, setCustomFields] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -15,14 +17,44 @@ export const LocationsPage: React.FC = () => {
     departments: 1,
     status: 'active' as const
   });
+  const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+
+  // Load custom fields on component mount
+  React.useEffect(() => {
+    loadCustomFields();
+  }, []);
+
+  const loadCustomFields = async () => {
+    if (!supabase) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .eq('table_name', 'locations')
+        .order('created_at');
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Failed to load custom fields:', error);
+        return;
+      }
+
+      setCustomFields(data || []);
+    } catch (err) {
+      console.error('Failed to load custom fields:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createLocation({
+      const locationData = {
         ...formData,
         organization_id: 'current-org-id', // This will be resolved by the service
-      });
+        ...customFieldData // Include custom field data
+      };
+      
+      await createLocation(locationData);
       setShowAddForm(false);
       setFormData({
         name: '',
@@ -30,6 +62,7 @@ export const LocationsPage: React.FC = () => {
         departments: 1,
         status: 'active'
       });
+      setCustomFieldData({});
     } catch (err) {
       console.error('Failed to create location:', err);
     }
@@ -43,6 +76,14 @@ export const LocationsPage: React.FC = () => {
       departments: location.departments,
       status: location.status
     });
+    
+    // Load custom field values for editing
+    const customData: Record<string, any> = {};
+    customFields.forEach(field => {
+      customData[field.name] = (location as any)[field.name] || '';
+    });
+    setCustomFieldData(customData);
+    
     setShowEditForm(true);
   };
 
@@ -51,7 +92,12 @@ export const LocationsPage: React.FC = () => {
     if (!editingLocation) return;
     
     try {
-      await updateLocation(editingLocation.id, formData);
+      const updateData = {
+        ...formData,
+        ...customFieldData // Include custom field data
+      };
+      
+      await updateLocation(editingLocation.id, updateData);
       setShowEditForm(false);
       setEditingLocation(null);
       setFormData({
@@ -60,8 +106,66 @@ export const LocationsPage: React.FC = () => {
         departments: 1,
         status: 'active'
       });
+      setCustomFieldData({});
     } catch (err) {
       console.error('Failed to update location:', err);
+    }
+  };
+
+  const renderCustomField = (field: any) => {
+    const value = customFieldData[field.name] || '';
+    
+    switch (field.type) {
+      case 'number':
+        return (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'email':
+        return (
+          <input
+            type="email"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'tel':
+        return (
+          <input
+            type="tel"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      default: // text
+        return (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
     }
   };
 
@@ -246,6 +350,25 @@ export const LocationsPage: React.FC = () => {
                 </select>
               </div>
 
+              {/* Custom Fields */}
+              {customFields.length > 0 && (
+                <>
+                  <div className="col-span-2">
+                    <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-gray-600 pt-4">
+                      Additional Information
+                    </h3>
+                  </div>
+                  {customFields.map((field) => (
+                    <div key={field.id}>
+                      <label className="block text-navy dark:text-white font-medium mb-2">
+                        {field.label} {field.required && '*'}
+                      </label>
+                      {renderCustomField(field)}
+                    </div>
+                  ))}
+                </>
+              )}
+
               <div className="flex justify-end gap-4 pt-4">
                 <button
                   type="button"
@@ -320,6 +443,25 @@ export const LocationsPage: React.FC = () => {
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
+
+              {/* Custom Fields */}
+              {customFields.length > 0 && (
+                <>
+                  <div className="col-span-2">
+                    <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-gray-600 pt-4">
+                      Additional Information
+                    </h3>
+                  </div>
+                  {customFields.map((field) => (
+                    <div key={field.id}>
+                      <label className="block text-navy dark:text-white font-medium mb-2">
+                        {field.label} {field.required && '*'}
+                      </label>
+                      {renderCustomField(field)}
+                    </div>
+                  ))}
+                </>
+              )}
 
               <div className="flex justify-end gap-4 pt-4">
                 <button

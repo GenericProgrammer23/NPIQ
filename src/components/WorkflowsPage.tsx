@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useWorkflows } from '../hooks/useDatabase';
 import { Workflow, Plus, Search, Edit, Eye, Play, Archive } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export const WorkflowsPage: React.FC = () => {
   const { workflows, loading, error, createWorkflow } = useWorkflows();
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [customFields, setCustomFields] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -15,14 +17,44 @@ export const WorkflowsPage: React.FC = () => {
     status: 'draft' as const,
     steps: [] as any[]
   });
+  const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+
+  // Load custom fields on component mount
+  React.useEffect(() => {
+    loadCustomFields();
+  }, []);
+
+  const loadCustomFields = async () => {
+    if (!supabase) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .eq('table_name', 'workflows')
+        .order('created_at');
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Failed to load custom fields:', error);
+        return;
+      }
+
+      setCustomFields(data || []);
+    } catch (err) {
+      console.error('Failed to load custom fields:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createWorkflow({
+      const workflowData = {
         ...formData,
         organization_id: 'current-org-id', // This will be resolved by the service
-      });
+        ...customFieldData // Include custom field data
+      };
+      
+      await createWorkflow(workflowData);
       setShowAddForm(false);
       setFormData({
         name: '',
@@ -31,8 +63,66 @@ export const WorkflowsPage: React.FC = () => {
         status: 'draft',
         steps: []
       });
+      setCustomFieldData({});
     } catch (err) {
       console.error('Failed to create workflow:', err);
+    }
+  };
+
+  const renderCustomField = (field: any) => {
+    const value = customFieldData[field.name] || '';
+    
+    switch (field.type) {
+      case 'number':
+        return (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'email':
+        return (
+          <input
+            type="email"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'tel':
+        return (
+          <input
+            type="tel"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      default: // text
+        return (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
     }
   };
 
@@ -253,6 +343,25 @@ export const WorkflowsPage: React.FC = () => {
                   <option value="active">Active</option>
                 </select>
               </div>
+
+              {/* Custom Fields */}
+              {customFields.length > 0 && (
+                <>
+                  <div className="col-span-2">
+                    <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-gray-600 pt-4">
+                      Additional Information
+                    </h3>
+                  </div>
+                  {customFields.map((field) => (
+                    <div key={field.id}>
+                      <label className="block text-navy dark:text-white font-medium mb-2">
+                        {field.label} {field.required && '*'}
+                      </label>
+                      {renderCustomField(field)}
+                    </div>
+                  ))}
+                </>
+              )}
 
               <div className="flex justify-end gap-4 pt-4">
                 <button

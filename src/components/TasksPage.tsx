@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTasks, useWorkflows, useProviders } from '../hooks/useDatabase';
 import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export const TasksPage: React.FC = () => {
   const { tasks, loading, error, createTask, updateTask } = useTasks();
@@ -10,6 +11,7 @@ export const TasksPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [customFields, setCustomFields] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -21,17 +23,47 @@ export const TasksPage: React.FC = () => {
     due_date: '',
     assigned_to: ''
   });
+  const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+
+  // Load custom fields on component mount
+  React.useEffect(() => {
+    loadCustomFields();
+  }, []);
+
+  const loadCustomFields = async () => {
+    if (!supabase) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .eq('table_name', 'tasks')
+        .order('created_at');
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Failed to load custom fields:', error);
+        return;
+      }
+
+      setCustomFields(data || []);
+    } catch (err) {
+      console.error('Failed to load custom fields:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createTask({
+      const taskData = {
         ...formData,
         workflow_id: formData.workflow_id || null,
         provider_id: formData.provider_id || null,
         due_date: formData.due_date || null,
         assigned_to: formData.assigned_to || null,
-      });
+        ...customFieldData // Include custom field data
+      };
+      
+      await createTask(taskData);
       setShowAddForm(false);
       setFormData({
         title: '',
@@ -43,8 +75,66 @@ export const TasksPage: React.FC = () => {
         due_date: '',
         assigned_to: ''
       });
+      setCustomFieldData({});
     } catch (err) {
       console.error('Failed to create task:', err);
+    }
+  };
+
+  const renderCustomField = (field: any) => {
+    const value = customFieldData[field.name] || '';
+    
+    switch (field.type) {
+      case 'number':
+        return (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'email':
+        return (
+          <input
+            type="email"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      case 'tel':
+        return (
+          <input
+            type="tel"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
+      default: // text
+        return (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setCustomFieldData({ ...customFieldData, [field.name]: e.target.value })}
+            className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+            required={field.required}
+          />
+        );
     }
   };
 
@@ -361,6 +451,25 @@ export const TasksPage: React.FC = () => {
                   className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
                 />
               </div>
+
+              {/* Custom Fields */}
+              {customFields.length > 0 && (
+                <>
+                  <div className="col-span-2">
+                    <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-gray-600 pt-4">
+                      Additional Information
+                    </h3>
+                  </div>
+                  {customFields.map((field) => (
+                    <div key={field.id}>
+                      <label className="block text-navy dark:text-white font-medium mb-2">
+                        {field.label} {field.required && '*'}
+                      </label>
+                      {renderCustomField(field)}
+                    </div>
+                  ))}
+                </>
+              )}
 
               <div className="flex justify-end gap-4 pt-4">
                 <button
