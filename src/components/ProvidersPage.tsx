@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useProviders, useLocations } from '../hooks/useDatabase';
-import { Users, Plus, Search, Filter, Edit, Eye, MapPin, Mail, Phone } from 'lucide-react';
+import { Users, Plus, Search, Filter, Edit, Eye, MapPin, Mail, Phone, Upload, FileText, Download } from 'lucide-react';
 import { Provider } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
+import { formatters, validators } from '../utils/formatters';
 
 interface ProvidersPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -24,10 +25,19 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
     specialty: '',
     license_number: '',
     license_expiry: '',
+    npi: '',
+    caqh: '',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    zip: '',
     location_id: '',
     status: 'pending' as const
   });
   const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [showDocuments, setShowDocuments] = useState<string | null>(null);
 
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -71,12 +81,30 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate fields
+    if (!validators.phone(formData.phone)) {
+      alert('Please enter a valid 10-digit phone number');
+      return;
+    }
+    if (!validators.npi(formData.npi)) {
+      alert('NPI must be exactly 10 digits');
+      return;
+    }
+    if (!validators.email(formData.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+    
     try {
       const providerData = {
         ...formData,
         organization_id: 'current-org-id', // This will be resolved by the service
         location_id: formData.location_id || null, // Properly handle optional location
         license_expiry: formData.license_expiry || null, // Convert empty string to null
+        phone: formatters.phone(formData.phone),
+        npi: formData.npi ? parseInt(formData.npi) : null,
+        caqh: formData.caqh ? parseInt(formData.caqh) : null,
         ...customFieldData // Include custom field data
       };
       
