@@ -88,6 +88,7 @@ export interface Workflow {
 export interface Task {
   id: string;
   workflow_id?: string;
+  subflow_id?: string;
   provider_id?: string;
   title: string;
   description?: string;
@@ -99,7 +100,24 @@ export interface Task {
   created_at: string;
   updated_at: string;
   workflow?: Workflow;
+  subflow?: Subflow;
   provider?: Provider;
+}
+
+export interface Subflow {
+  id: string;
+  workflow_id: string;
+  name: string;
+  purpose?: string;
+  prerequisites: string;
+  dependencies: string;
+  exit_condition: string;
+  status: 'not_started' | 'in_progress' | 'complete';
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+  workflow?: Workflow;
+  tasks?: Task[];
 }
 
 // Database service functions
@@ -398,9 +416,212 @@ export class DatabaseService {
     return data;
   }
 
+  // Subflows
+  static async getSubflows(workflowId?: string): Promise<Subflow[]> {
+    if (!supabase) return [];
+    let query = supabase
+      .from('subflows')
+      .select(`
+        *,
+        workflow:workflows(*),
+        tasks:tasks(*)
+      `)
+      .order('order_index');
+
+    if (workflowId) {
+      query = query.eq('workflow_id', workflowId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async createSubflow(subflow: Omit<Subflow, 'id' | 'created_at' | 'updated_at'>): Promise<Subflow> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('subflows')
+      .insert(subflow)
+      .select(`
+        *,
+        workflow:workflows(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updateSubflow(id: string, updates: Partial<Subflow>): Promise<Subflow> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('subflows')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        workflow:workflows(*),
+        tasks:tasks(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Check subflow prerequisites
+  static async checkSubflowPrerequisites(subflowId: string, providerId?: string): Promise<boolean> {
+    if (!supabase) return false;
+    
+    try {
+      const { data: subflow } = await supabase
+        .from('subflows')
+        .select('prerequisites, dependencies')
+        .eq('id', subflowId)
+        .single();
+
+      if (!subflow) return false;
+
+      // Simple prerequisite checking - in a real system you'd parse the prerequisites string
+      // For now, we'll assume prerequisites are met if the provider has basic info
+      if (providerId && subflow.prerequisites.includes('provider')) {
+        const { data: provider } = await supabase
+          .from('providers')
+          .select('first_name, last_name, specialty')
+          .eq('id', providerId)
+          .single();
+
+        return !!(provider?.first_name && provider?.last_name && provider?.specialty);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error checking prerequisites:', error);
+      return false;
+    }
+  }
+
+  // Emit tasks for a subflow when prerequisites are met
+  static async emitSubflowTasks(subflowId: string, providerId?: string): Promise<void> {
+    if (!supabase) return;
+
+    try {
+      const { data: subflow } = await supabase
+        .from('subflows')
+        .select('*')
+        .eq('id', subflowId)
+        .single();
+
+      if (!subflow || subflow.status !== 'not_started') return;
+
+      // Check if prerequisites are met
+      const prereqsMet = await this.checkSubflowPrerequisites(subflowId, providerId);
+      if (!prereqsMet) return;
+
+      // Update subflow status to in_progress
+      await this.updateSubflow(subflowId, { status: 'in_progress' });
+
+      // Create default tasks based on subflow name
+      const defaultTasks = this.getDefaultTasksForSubflow(subflow.name);
+      
+      for (const taskTemplate of defaultTasks) {
+        await this.createTask({
+          subflow_id: subflowId,
+          workflow_id: subflow.workflow_id,
+          provider_id: providerId || null,
+          title: taskTemplate.title,
+          description: taskTemplate.description,
+          status: 'pending',
+          priority: taskTemplate.priority || 'medium',
+          due_date: taskTemplate.dueInDays ? 
+            new Date(Date.now() + taskTemplate.dueInDays * 24 * 60 * 60 * 1000).toISOString() : 
+            null
+        });
+      }
+    } catch (error) {
+      console.error('Error emitting subflow tasks:', error);
+    }
+  }
+
+  // Get default tasks for a subflow
+  private static getDefaultTasksForSubflow(subflowName: string) {
+    const taskTemplates: Record<string, Array<{
+      title: string;
+      description: string;
+      priority?: string;
+      dueInDays?: number;
+    }>> = {
+      'Provider Baseline': [
+        {
+          title: 'Collect Provider Demographics',
+          description: 'Gather basic provider information including name, address, contact details',
+          priority: 'high',
+          dueInDays: 3
+        },
+        {
+          title: 'Verify Professional License',
+          description: 'Verify provider license status and expiration date',
+          priority: 'high',
+          dueInDays: 5
+        },
+        {
+          title: 'Background Check',
+          description: 'Complete background verification process',
+          priority: 'medium',
+          dueInDays: 10
+        }
+      ],
+      'Medicare Enrollment': [
+        {
+          title: 'Submit Medicare Application',
+          description: 'Complete and submit Medicare provider enrollment application',
+          priority: 'high',
+          dueInDays: 7
+        },
+        {
+          title: 'NPI Verification',
+          description: 'Verify National Provider Identifier (NPI) number',
+          priority: 'high',
+          dueInDays: 3
+        }
+      ],
+      'AHCCCS Enrollment': [
+        {
+          title: 'Submit AHCCCS Application',
+          description: 'Complete Arizona Medicaid provider enrollment',
+          priority: 'high',
+          dueInDays: 14
+        },
+        {
+          title: 'AHCCCS Site Visit',
+          description: 'Schedule and complete required site visit',
+          priority: 'medium',
+          dueInDays: 21
+        }
+      ],
+      'PTPN Application': [
+        {
+          title: 'Submit PTPN Application',
+          description: 'Complete Provider Training and Practice Network application',
+          priority: 'medium',
+          dueInDays: 10
+        },
+        {
+          title: 'Attach Approval Evidence',
+          description: 'Upload PTPN approval documentation',
+          priority: 'high',
+          dueInDays: 5
+        }
+      ]
+    };
+
+    return taskTemplates[subflowName] || [];
+  }
+
   // Tasks
   static async getTasks(filters?: {
     workflowId?: string;
+    subflowId?: string;
     providerId?: string;
     status?: string;
     assignedTo?: string;
@@ -411,12 +632,16 @@ export class DatabaseService {
       .select(`
         *,
         workflow:workflows(*),
+        subflow:subflows(*),
         provider:providers(*)
       `)
       .order('created_at', { ascending: false });
 
     if (filters?.workflowId) {
       query = query.eq('workflow_id', filters.workflowId);
+    }
+    if (filters?.subflowId) {
+      query = query.eq('subflow_id', filters.subflowId);
     }
     if (filters?.providerId) {
       query = query.eq('provider_id', filters.providerId);
@@ -441,6 +666,7 @@ export class DatabaseService {
       .select(`
         *,
         workflow:workflows(*),
+        subflow:subflows(*),
         provider:providers(*)
       `)
       .single();
@@ -458,6 +684,7 @@ export class DatabaseService {
       .select(`
         *,
         workflow:workflows(*),
+        subflow:subflows(*),
         provider:providers(*)
       `)
       .single();

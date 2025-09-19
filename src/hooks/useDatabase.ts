@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DatabaseService, Provider, Location, Task, Workflow } from '../lib/supabase';
+import { DatabaseService, Provider, Location, Task, Workflow, Subflow } from '../lib/supabase';
 
 // Custom hook for providers
 export function useProviders(organizationId?: string) {
@@ -133,9 +133,84 @@ export function useLocations(organizationId?: string) {
   };
 }
 
+// Custom hook for subflows
+export function useSubflows(workflowId?: string) {
+  const [subflows, setSubflows] = useState<Subflow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchSubflows() {
+      try {
+        setLoading(true);
+        const data = await DatabaseService.getSubflows(workflowId);
+        setSubflows(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch subflows');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSubflows();
+  }, [workflowId]);
+
+  const createSubflow = async (subflow: Omit<Subflow, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newSubflow = await DatabaseService.createSubflow(subflow);
+      setSubflows(prev => [...prev, newSubflow]);
+      return newSubflow;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create subflow');
+      throw err;
+    }
+  };
+
+  const updateSubflow = async (id: string, updates: Partial<Subflow>) => {
+    try {
+      const updatedSubflow = await DatabaseService.updateSubflow(id, updates);
+      setSubflows(prev => prev.map(s => s.id === id ? updatedSubflow : s));
+      return updatedSubflow;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update subflow');
+      throw err;
+    }
+  };
+
+  const emitTasksForSubflow = async (subflowId: string, providerId?: string) => {
+    try {
+      await DatabaseService.emitSubflowTasks(subflowId, providerId);
+      // Refresh subflows to get updated status
+      const data = await DatabaseService.getSubflows(workflowId);
+      setSubflows(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to emit tasks for subflow');
+      throw err;
+    }
+  };
+
+  return {
+    subflows,
+    loading,
+    error,
+    createSubflow,
+    updateSubflow,
+    emitTasksForSubflow,
+    refetch: () => {
+      setLoading(true);
+      DatabaseService.getSubflows(workflowId)
+        .then(setSubflows)
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  };
+}
+
 // Custom hook for tasks
 export function useTasks(filters?: {
   workflowId?: string;
+  subflowId?: string;
   providerId?: string;
   status?: string;
   assignedTo?: string;
@@ -159,7 +234,7 @@ export function useTasks(filters?: {
     }
 
     fetchTasks();
-  }, [filters?.workflowId, filters?.providerId, filters?.status, filters?.assignedTo]);
+  }, [filters?.workflowId, filters?.subflowId, filters?.providerId, filters?.status, filters?.assignedTo]);
 
   const createTask = async (task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     try {
