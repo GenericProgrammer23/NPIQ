@@ -104,7 +104,7 @@ export const AdminSettingsPage: React.FC = () => {
       const { error: alterError } = await supabase.rpc('add_provider_column', {
         p_column_name: formData.name.toLowerCase().replace(/\s+/g, '_'),
         p_column_type: columnType,
-        p_is_required: Number(formData.required ? 1 : 0)
+        p_is_required: formData.required
       });
 
       if (alterError) {
