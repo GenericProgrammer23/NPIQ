@@ -151,14 +151,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
               {stats.activeWorkflows > 0 && (
                 <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-navy dark:text-white">{stats.activeWorkflows} active workflows running</span>
+                  <span className="text-navy dark:text-white">{stats.activeWorkflows} active workflows with subflows in progress</span>
                   <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">Today</span>
                 </div>
               )}
               {stats.pendingTasks > 0 && (
                 <div className="flex items-center p-3 bg-navy/5 dark:bg-gray-700 rounded-lg">
                   <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                  <span className="text-navy dark:text-white">{stats.pendingTasks} tasks awaiting attention</span>
+                  <span className="text-navy dark:text-white">{stats.pendingTasks} subflow tasks awaiting attention</span>
                   <span className="text-navy/50 dark:text-gray-400 text-sm ml-auto">Today</span>
                 </div>
               )}
@@ -166,7 +166,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
           ) : (
             <div className="text-center py-8">
               <div className="w-2 h-2 bg-gray-400 rounded-full mx-auto mb-3"></div>
-              <span className="text-navy/60 dark:text-gray-400">No recent activity. Start by adding providers and creating workflows.</span>
+              <span className="text-navy/60 dark:text-gray-400">No recent activity. Start by adding providers and creating workflows with subflows.</span>
             </div>
           )}
         </div>

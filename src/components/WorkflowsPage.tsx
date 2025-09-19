@@ -369,7 +369,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 {selectedWorkflow === workflow.id && (
                   <div className="mt-6 border-t border-navy/10 dark:border-gray-600 pt-6">
                     <h4 className="text-lg font-semibold text-navy dark:text-white mb-4">Subflows</h4>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {subflows.map((subflow) => {
                         const prereqsMet = checkPrerequisites(subflow);
                         const depsMet = checkDependencies(subflow);
@@ -377,69 +377,145 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                         const canComplete = subflow.status === 'in_progress';
 
                         return (
-                          <div key={subflow.id} className="bg-navy/5 dark:bg-gray-700 rounded-lg p-4">
+                          <div key={subflow.id} className="bg-white dark:bg-gray-700 border border-navy/20 dark:border-gray-600 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-3 mb-3">
                                   {getSubflowStatusIcon(subflow.status)}
-                                  <h5 className="font-semibold text-navy dark:text-white">{subflow.name}</h5>
-                                  <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                                  <h5 className="text-lg font-semibold text-navy dark:text-white">{subflow.name}</h5>
+                                  <span className="text-xs px-2 py-1 rounded-full bg-navy/10 dark:bg-gray-600 text-navy dark:text-gray-300 font-medium">
                                     {subflow.status.replace('_', ' ')}
                                   </span>
                                 </div>
                                 
                                 {subflow.purpose && (
-                                  <p className="text-sm text-navy/70 dark:text-gray-300 mb-2">{subflow.purpose}</p>
+                                  <div className="mb-4">
+                                    <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Purpose</h6>
+                                    <p className="text-sm text-navy/70 dark:text-gray-300">{subflow.purpose}</p>
+                                  </div>
                                 )}
                                 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-navy/60 dark:text-gray-400">
+                                <div className="space-y-3 mb-4">
                                   <div>
-                                    <span className="font-medium">Prerequisites: </span>
-                                    <span className={prereqsMet ? 'text-green-600' : 'text-red-600'}>
-                                      {prereqsMet ? '✓' : '✗'} {subflow.prerequisites || 'None'}
-                                    </span>
-                                  </div>
-                                  {subflow.dependencies && (
-                                    <div>
-                                      <span className="font-medium">Dependencies: </span>
-                                      <span className={depsMet ? 'text-green-600' : 'text-red-600'}>
-                                        {depsMet ? '✓' : '✗'} {subflow.dependencies}
+                                    <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Prerequisites</h6>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                                        prereqsMet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                      }`}>
+                                        {prereqsMet ? '✓' : '✗'}
+                                      </span>
+                                      <span className="text-sm text-navy/70 dark:text-gray-300">
+                                        {subflow.prerequisites || 'None'}
                                       </span>
                                     </div>
-                                  )}
-                                  <div>
-                                    <span className="font-medium">Exit Condition: </span>
-                                    {subflow.exit_condition || 'All tasks completed'}
                                   </div>
+                                  
+                                  {subflow.dependencies && (
+                                    <div>
+                                      <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Dependencies</h6>
+                                      <div className="flex items-center gap-2">
+                                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                                          depsMet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                          {depsMet ? '✓' : '✗'}
+                                        </span>
+                                        <span className="text-sm text-navy/70 dark:text-gray-300">
+                                          {subflow.dependencies}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
                                   <div>
-                                    <span className="font-medium">Tasks: </span>
-                                    {subflow.tasks?.length || 0} tasks
+                                    <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Exit Condition</h6>
+                                    <span className="text-sm text-navy/70 dark:text-gray-300">
+                                      {subflow.exit_condition || 'All tasks completed'}
+                                    </span>
+                                  </div>
+                                  
+                                  <div>
+                                    <h6 className="text-sm font-medium text-navy dark:text-white mb-1">Tasks</h6>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm text-navy/70 dark:text-gray-300">
+                                        {subflow.tasks?.length || 0} tasks
+                                      </span>
+                                      {subflow.tasks && subflow.tasks.length > 0 && (
+                                        <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                                          {subflow.tasks.filter((t: any) => t.status === 'completed').length} completed
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
                               
-                              <div className="flex items-center gap-2 ml-4">
+                              <div className="flex flex-col gap-2 ml-4">
                                 {canStart && (
                                   <button
                                     onClick={() => handleStartSubflow(subflow.id)}
-                                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 font-medium transition-colors"
                                   >
-                                    Start
+                                    Start Subflow
                                   </button>
                                 )}
                                 {canComplete && (
                                   <button
                                     onClick={() => handleCompleteSubflow(subflow.id)}
-                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                                    className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 font-medium transition-colors"
                                   >
-                                    Complete
+                                    Mark Complete
                                   </button>
+                                )}
+                                {subflow.status === 'not_started' && !canStart && (
+                                  <div className="text-xs text-navy/50 dark:text-gray-400 text-center">
+                                    Waiting for<br />prerequisites
+                                  </div>
                                 )}
                               </div>
                             </div>
+                            
+                            {/* Task List for In Progress Subflows */}
+                            {subflow.status === 'in_progress' && subflow.tasks && subflow.tasks.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-navy/10 dark:border-gray-600">
+                                <h6 className="text-sm font-medium text-navy dark:text-white mb-2">Active Tasks</h6>
+                                <div className="space-y-2">
+                                  {subflow.tasks.slice(0, 3).map((task: any) => (
+                                    <div key={task.id} className="flex items-center justify-between text-sm">
+                                      <span className="text-navy/70 dark:text-gray-300">{task.title}</span>
+                                      <span className={`px-2 py-1 rounded-full text-xs ${
+                                        task.status === 'completed' 
+                                          ? 'bg-green-100 text-green-700' 
+                                          : task.status === 'in_progress'
+                                          ? 'bg-blue-100 text-blue-700'
+                                          : 'bg-yellow-100 text-yellow-700'
+                                      }`}>
+                                        {task.status.replace('_', ' ')}
+                                      </span>
+                                    </div>
+                                  ))}
+                                  {subflow.tasks.length > 3 && (
+                                    <div className="text-xs text-navy/50 dark:text-gray-400">
+                                      +{subflow.tasks.length - 3} more tasks
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
+                      
+                      {subflows.length === 0 && (
+                        <div className="col-span-full text-center py-8">
+                          <div className="text-navy/30 dark:text-gray-500 mb-2">
+                            <CheckSquare className="h-12 w-12 mx-auto" />
+                          </div>
+                          <h6 className="text-lg font-medium text-navy dark:text-white mb-2">No subflows defined</h6>
+                          <p className="text-navy/60 dark:text-gray-400">
+                            This workflow doesn't have any subflows configured yet.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

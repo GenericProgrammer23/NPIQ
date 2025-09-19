@@ -331,7 +331,15 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                       {task.workflow && (
                         <div className="flex items-center">
                           <CheckSquare className="h-4 w-4 mr-2" />
-                          {task.subflow ? `${task.workflow.name} > ${task.subflow.name}` : task.workflow.name}
+                          <span className="text-navy/70 dark:text-gray-300">
+                            {task.workflow.name}
+                            {task.subflow && (
+                              <>
+                                <span className="mx-2 text-navy/40 dark:text-gray-500">→</span>
+                                <span className="font-medium text-navy dark:text-white">{task.subflow.name}</span>
+                              </>
+                            )}
+                          </span>
                         </div>
                       )}
                       {task.provider && (
