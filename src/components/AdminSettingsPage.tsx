@@ -38,14 +38,20 @@ export const AdminSettingsPage: React.FC = () => {
         .select('*')
         .order('created_at');
 
-      if (error && error.code !== '42P01') { // Table doesn't exist yet
+      if (error) {
+        // Handle table not found errors gracefully
+        if (error.code === 'PGRST205' || error.code === '42P01') {
+          console.info('Custom fields table not yet created, starting with empty fields');
+          setCustomFields([]);
+          return;
+        }
         throw error;
       }
 
       setCustomFields(data || []);
     } catch (err) {
       console.error('Failed to load custom fields:', err);
-      setCustomFields([]);
+      setError('Failed to load custom fields. Please try again.');
     } finally {
       setLoading(false);
     }
