@@ -571,6 +571,7 @@ export const AdminSettingsPage: React.FC = () => {
                   <option value="email">Email</option>
                   <option value="tel">Phone</option>
                   <option value="date">Date</option>
+                  <option value="file">File Upload</option>
                 </select>
               </div>
 
@@ -663,6 +664,7 @@ export const AdminSettingsPage: React.FC = () => {
                   <option value="email">Email</option>
                   <option value="tel">Phone</option>
                   <option value="date">Date</option>
+                  <option value="file">File Upload</option>
                 </select>
               </div>
 

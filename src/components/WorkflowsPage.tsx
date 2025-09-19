@@ -195,6 +195,28 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
             required={field.required}
           />
         );
+      case 'file':
+        return (
+          <div className="space-y-2">
+            <input
+              type="file"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setCustomFieldData({ ...customFieldData, [field.name]: file.name });
+                }
+              }}
+              className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-gray-700 text-navy dark:text-white"
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+              required={field.required}
+            />
+            {value && (
+              <p className="text-sm text-navy/60 dark:text-gray-400">
+                Current file: {value}
+              </p>
+            )}
+          </div>
+        );
       default: // text
         return (
           <input
