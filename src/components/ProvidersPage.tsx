@@ -468,110 +468,9 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => {
-                      const formatted = formatters.phone(e.target.value);
-                      setFormData({ ...formData, phone: formatted });
-                    }}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                    placeholder="123-456-7890"
                   />
-                </div>
-                <div>
-                  <label className="block text-navy dark:text-white font-medium mb-2">NPI Number</label>
-                  <input
-                    type="text"
-                    value={formData.npi}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setFormData({ ...formData, npi: cleaned });
-                    }}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                    placeholder="1234567890"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-navy dark:text-white font-medium mb-2">CAQH Number</label>
-                  <input
-                    type="text"
-                    value={formData.caqh}
-                    onChange={(e) => {
-                      const cleaned = e.target.value.replace(/\D/g, '');
-                      setFormData({ ...formData, caqh: cleaned });
-                    }}
-                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                    placeholder="123456"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-navy dark:text-white mb-4 border-t border-navy/20 dark:border-dark-cyan/30 pt-4">
-                  Address Information
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-navy dark:text-white font-medium mb-2">Address Line 1</label>
-                    <input
-                      type="text"
-                      value={formData.address_line1}
-                      onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
-                      className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                      placeholder="123 Main Street"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-navy dark:text-white font-medium mb-2">Address Line 2</label>
-                    <input
-                      type="text"
-                      value={formData.address_line2}
-                      onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
-                      className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                      placeholder="Suite 100 (optional)"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-navy dark:text-white font-medium mb-2">City</label>
-                      <input
-                        type="text"
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                        placeholder="Phoenix"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-navy dark:text-white font-medium mb-2">State</label>
-                      <select
-                        value={formData.state}
-                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                      >
-                        <option value="">Select State</option>
-                        <option value="AZ">Arizona</option>
-                        <option value="CA">California</option>
-                        <option value="TX">Texas</option>
-                        <option value="FL">Florida</option>
-                        <option value="NY">New York</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-navy dark:text-white font-medium mb-2">ZIP Code</label>
-                      <input
-                        type="text"
-                        value={formData.zip}
-                        onChange={(e) => {
-                          const cleaned = e.target.value.replace(/\D/g, '').slice(0, 5);
-                          setFormData({ ...formData, zip: cleaned });
-                        }}
-                        className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                        placeholder="85001"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -835,6 +734,80 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Documents Modal */}
+      {showDocuments && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-navy dark:text-white">Provider Documents</h2>
+                <button
+                  onClick={() => setShowDocuments(null)}
+                  className="text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Upload Section */}
+              <div className="mb-6 p-4 border border-navy/20 dark:border-dark-cyan/30 rounded-lg">
+                <h3 className="text-lg font-medium text-navy dark:text-white mb-3">Upload New Document</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <select className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream">
+                    <option value="">Select Document Type</option>
+                    <option value="caqh_attestation">CAQH Attestation</option>
+                    <option value="license">Medical License</option>
+                    <option value="malpractice">Malpractice Insurance</option>
+                    <option value="background_check">Background Check</option>
+                    <option value="education">Education Credentials</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                    className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                  />
+                </div>
+                <button className="mt-3 px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy rounded-lg font-medium flex items-center">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Document
+                </button>
+              </div>
+
+              {/* Documents List */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium text-navy dark:text-white">Uploaded Documents</h3>
+                {documents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 text-navy/30 dark:text-cream/30 mx-auto mb-4" />
+                    <p className="text-navy/60 dark:text-cream/60">No documents uploaded yet</p>
+                  </div>
+                ) : (
+                  documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 border border-navy/20 dark:border-dark-cyan/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-navy/60 dark:text-cream/60" />
+                        <div>
+                          <p className="font-medium text-navy dark:text-white">{doc.file_name}</p>
+                          <p className="text-sm text-navy/60 dark:text-cream/60">
+                            {doc.document_type.replace('_', ' ').toUpperCase()} • {(doc.file_size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <button className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors">
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
