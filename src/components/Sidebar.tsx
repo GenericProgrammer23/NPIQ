@@ -19,14 +19,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isO
   ];
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-navy dark:bg-gray-800 border-r border-navy-light dark:border-gray-700 z-40">
+    <div className="fixed left-0 top-0 h-full w-64 bg-navy dark:bg-navy border-r border-navy-light dark:border-dark-cyan/30 z-40">
       <div className="p-6">
         <div className="flex items-center mb-8">
           <Building className="h-8 w-8 text-goldenrod mr-3" />
           <h1 className="text-2xl font-bold text-cream dark:text-white">NPIQ</h1>
         </div>
         
-        <div className="flex items-center mb-6 p-3 bg-navy-light dark:bg-gray-700 rounded-lg">
+        <div className="flex items-center mb-6 p-3 bg-navy-light dark:bg-navy-light rounded-lg">
           {isOnline ? (
             <>
               <Wifi className="h-4 w-4 text-dark-cyan mr-2" />
@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isO
               className={`w-full flex items-center px-4 py-3 rounded-lg text-left font-medium transition-colors ${
                 currentPage === item.id
                   ? 'bg-dark-cyan text-white'
-                  : 'text-cream/80 dark:text-gray-300 hover:text-cream dark:hover:text-white hover:bg-navy-light dark:hover:bg-gray-700'
+                  : 'text-cream/80 dark:text-cream/80 hover:text-cream dark:hover:text-white hover:bg-navy-light dark:hover:bg-navy-light'
               }`}
             >
               <item.icon className="h-5 w-5 mr-3" />
