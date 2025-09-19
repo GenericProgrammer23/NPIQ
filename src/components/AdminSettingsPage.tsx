@@ -59,56 +59,54 @@ export const AdminSettingsPage: React.FC = () => {
   const loadAllTableFields = async () => {
     if (!supabase) return;
     
+    if (!supabase) return;
+    
     try {
       const tables = ['providers', 'locations', 'workflows', 'tasks'];
       const allFields: CustomField[] = [];
       
       for (const tableName of tables) {
-        // Get columns from information_schema
-        const { data: columns, error: columnsError } = await supabase
-          .rpc('get_table_columns', { table_name: tableName });
-        
-        if (columnsError) {
-          console.error(`Failed to get columns for ${tableName}:`, columnsError);
+        try {
+          // Get custom field definitions
+          const { data: customFieldDefs, error: customError } = await supabase
+            .from('custom_fields')
+            .select('*')
+            .eq('table_name', tableName);
+          
+          if (customError && customError.code !== 'PGRST116') {
+            console.error(`Failed to get custom fields for ${tableName}:`, customError);
+            continue;
+          }
+          
+          // Combine core fields and custom fields
+          const coreFields = getCoreFields(tableName);
+          const customFields = customFieldDefs || [];
+          
+          // Add core fields as read-only
+          coreFields.forEach(field => {
+            allFields.push({
+              id: `core_${tableName}_${field.name}`,
+              name: field.name,
+              label: field.label,
+              type: field.type,
+              required: field.required,
+              table_name: tableName,
+              created_at: '',
+              is_core: true
+            } as CustomField & { is_core: boolean });
+          });
+          
+          // Add custom fields
+          customFields.forEach(field => {
+            allFields.push({
+              ...field,
+              is_core: false
+            } as CustomField & { is_core: boolean });
+          });
+        } catch (err) {
+          console.error(`Failed to load fields for ${tableName}:`, err);
           continue;
         }
-        
-        // Get custom field definitions
-        const { data: customFieldDefs, error: customError } = await supabase
-          .from('custom_fields')
-          .select('*')
-          .eq('table_name', tableName);
-        
-        if (customError && customError.code !== 'PGRST116') {
-          console.error(`Failed to get custom fields for ${tableName}:`, customError);
-          continue;
-        }
-        
-        // Combine core fields and custom fields
-        const coreFields = getCoreFields(tableName);
-        const customFields = customFieldDefs || [];
-        
-        // Add core fields as read-only
-        coreFields.forEach(field => {
-          allFields.push({
-            id: `core_${tableName}_${field.name}`,
-            name: field.name,
-            label: field.label,
-            type: field.type,
-            required: field.required,
-            table_name: tableName,
-            created_at: '',
-            is_core: true
-          } as CustomField & { is_core: boolean });
-        });
-        
-        // Add custom fields
-        customFields.forEach(field => {
-          allFields.push({
-            ...field,
-            is_core: false
-          } as CustomField & { is_core: boolean });
-        });
       }
       
       setCustomFields(allFields);
