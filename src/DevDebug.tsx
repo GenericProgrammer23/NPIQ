@@ -20,7 +20,7 @@ export default function DevDebug() {
       let mems = null;
       if (uid) {
         const { data } = await supabase
-          .from("org_memberships")
+          .from("org_members")
           .select("org_id, role")
           .eq("user_id", uid);
         mems = data ?? [];
@@ -28,7 +28,7 @@ export default function DevDebug() {
 
       // If your UI tracks an org selector, surface it here:
       const orgId =
-        (mems && mems[0]?.org_id) ||
+        (mems && mems[0]?.organization_id) ||
         null;
 
       setSessionInfo({ uid, email: session?.user?.email ?? null });
@@ -43,7 +43,7 @@ export default function DevDebug() {
       <div><b>SB URL:</b> {import.meta.env.VITE_SUPABASE_URL || "MISSING"}</div>
       <div><b>User ID:</b> {sessionInfo?.uid || "null"}</div>
       <div><b>Email:</b> {sessionInfo?.email || "null"}</div>
-      <div><b>org_memberships:</b> {JSON.stringify(memberships)}</div>
+      <div><b>org_members:</b> {JSON.stringify(memberships)}</div>
       <div><b>activeOrgId (guessed):</b> {activeOrgId || "null"}</div>
       <div><b>providers count:</b> {providersCount?.count ?? "?"}</div>
       <div><b>providers error:</b> {providersCount?.error?.code || "none"}</div>

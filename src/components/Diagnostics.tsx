@@ -48,7 +48,7 @@ export default function Diagnostics() {
       auth: { hasSession: false },
       org: { hasOrg: false },
       providers: {},
-      timestamp: new Date().toISOString(),
+    const tables = ['organizations', 'locations', 'providers', 'workflows', 'tasks', 'org_members'];
     };
 
     try {
