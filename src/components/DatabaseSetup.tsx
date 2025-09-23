@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Database, AlertCircle, CheckCircle, Loader, ExternalLink } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
 interface DatabaseSetupProps {
   onComplete: () => void;
@@ -21,11 +22,21 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({ onComplete }) => {
     setError(null);
     
     try {
-      // Simulate connection test
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       if (credentials.url && credentials.anonKey) {
-        // Store credentials in localStorage temporarily for the reload
+        // Create a temporary Supabase client to test the connection
+        const testClient = createClient(credentials.url, credentials.anonKey);
+        
+        // Perform a real connection test by querying the organizations table
+        const { error: testError } = await testClient
+          .from('organizations')
+          .select('count')
+          .limit(1);
+        
+        if (testError) {
+          throw new Error(`Database connection failed: ${testError.message}`);
+        }
+        
+        // Store credentials in localStorage for the reload
         localStorage.setItem('temp_supabase_url', credentials.url);
         localStorage.setItem('temp_supabase_key', credentials.anonKey);
         setSuccess('Connection successful! Database is ready.');
@@ -36,7 +47,8 @@ export const DatabaseSetup: React.FC<DatabaseSetupProps> = ({ onComplete }) => {
         setError('Please provide both URL and Anon Key');
       }
     } catch (err) {
-      setError('Failed to connect to database. Please check your credentials.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect to database. Please check your credentials and ensure the database schema has been applied.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
