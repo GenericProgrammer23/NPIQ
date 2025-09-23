@@ -24,7 +24,7 @@ export const AdminSettingsPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     label: '',
-    type: 'text' as 'text' | 'number' | 'date' | 'email' | 'tel' | 'file',
+    type: 'text' as 'text' | 'number' | 'date' | 'email' | 'tel',
     required: false,
     table_name: 'providers' as 'providers' | 'locations' | 'workflows' | 'tasks'
   });
@@ -332,8 +332,7 @@ export const AdminSettingsPage: React.FC = () => {
       case 'email':
       case 'tel':
       case 'text':
-      case 'file':
-        return 'text'; // Store file paths as text
+        return 'text';
       default: return 'text';
     }
   };
@@ -569,7 +568,6 @@ export const AdminSettingsPage: React.FC = () => {
                   <option value="email">Email</option>
                   <option value="tel">Phone</option>
                   <option value="date">Date</option>
-                  <option value="file">File Upload</option>
                 </select>
               </div>
 
@@ -662,7 +660,6 @@ export const AdminSettingsPage: React.FC = () => {
                   <option value="email">Email</option>
                   <option value="tel">Phone</option>
                   <option value="date">Date</option>
-                  <option value="file">File Upload</option>
                 </select>
               </div>
 
