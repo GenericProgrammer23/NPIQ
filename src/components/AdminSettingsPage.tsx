@@ -59,8 +59,6 @@ export const AdminSettingsPage: React.FC = () => {
   const loadAllTableFields = async () => {
     if (!supabase) return;
     
-    if (!supabase) return;
-    
     try {
       const tables = ['providers', 'locations', 'workflows', 'tasks'];
       const allFields: CustomField[] = [];

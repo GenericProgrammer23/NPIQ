@@ -78,8 +78,6 @@ export interface Provider {
   updated_at: string;
   organization?: Organization;
   location?: Location;
-}
-
 export interface Workflow {
   id: string;
   organization_id: string;

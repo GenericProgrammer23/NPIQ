@@ -11,27 +11,6 @@ export const formatters = {
     return value;
   },
 
-  // Format NPI as 10 digits
-  npi: (value: string): string => {
-    if (!value) return '';
-    const cleaned = value.replace(/\D/g, '');
-    return cleaned.slice(0, 10);
-  },
-
-  // Format address object
-  address: (addressObj: any): string => {
-    if (typeof addressObj === 'string') return addressObj;
-    if (!addressObj) return '';
-    
-    const parts = [];
-    if (addressObj.line1) parts.push(addressObj.line1);
-    if (addressObj.line2) parts.push(addressObj.line2);
-    if (addressObj.city) parts.push(addressObj.city);
-    if (addressObj.state) parts.push(addressObj.state);
-    if (addressObj.zip) parts.push(addressObj.zip);
-    
-    return parts.join(', ');
-  }
 };
 
 export const validators = {
@@ -60,16 +39,4 @@ export const validators = {
   required: (value: string): boolean => {
     return value && value.trim().length > 0;
   }
-};
-
-export const parseAddress = (addressString: string) => {
-  // Simple parser - in practice you might want more sophisticated parsing
-  return {
-    line1: '',
-    line2: '',
-    city: '',
-    state: '',
-    zip: '',
-    full: addressString
-  };
 };

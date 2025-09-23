@@ -20,6 +20,7 @@ CREATE TABLE public.locations (
   status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text])),
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  phone_number text,
   CONSTRAINT locations_pkey PRIMARY KEY (id),
   CONSTRAINT locations_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
@@ -58,8 +59,7 @@ CREATE TABLE public.providers (
   status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['active'::text, 'pending'::text, 'expired'::text, 'suspended'::text])),
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT providers_pkey PRIMARY KEY (id),
-  CONSTRAINT providers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
+  phone_number text,
   CONSTRAINT providers_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id)
 );
 CREATE TABLE public.tasks (

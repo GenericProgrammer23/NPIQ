@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useWorkflows, useSubflows, useProviders } from '../hooks/useDatabase';
-import { Workflow, Plus, Search, Edit, Eye, Play, Archive, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Workflow, Plus, Search, Edit, Eye, Play, Archive, CheckCircle, Clock, AlertCircle, CheckSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Subflow } from '../lib/supabase';
 

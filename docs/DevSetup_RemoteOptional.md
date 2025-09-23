@@ -149,7 +149,9 @@ The NPIQ schema includes:
 - **locations**: Facilities within organizations  
 - **providers**: Healthcare providers with credentials
 - **workflows**: Credentialing process workflows
+- **subflows**: Workflow sub-processes with prerequisites and dependencies
 - **tasks**: Individual workflow tasks and assignments
+- **custom_fields**: User-defined fields for extending core tables
 
 All tables include:
 - Automatic timestamp tracking (`created_at`, `updated_at`)
