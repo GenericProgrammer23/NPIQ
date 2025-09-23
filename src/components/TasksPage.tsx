@@ -70,6 +70,18 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Sanitize custom field data
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+    
     try {
       const taskData = {
         ...formData,
@@ -78,7 +90,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         provider_id: formData.provider_id || null,
         due_date: formData.due_date || null,
         assigned_to: formData.assigned_to || null,
-        ...customFieldData // Include custom field data
+        ...sanitizedCustomFieldData // Include sanitized custom field data
       };
       
       await createTask(taskData);

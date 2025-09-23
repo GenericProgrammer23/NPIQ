@@ -60,11 +60,23 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Sanitize custom field data
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+    
     try {
       const locationData = {
         ...formData,
         organization_id: 'current-org-id', // This will be resolved by the service
-        ...customFieldData // Include custom field data
+        ...sanitizedCustomFieldData // Include sanitized custom field data
       };
       
       await createLocation(locationData);
@@ -104,10 +116,21 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
     e.preventDefault();
     if (!editingLocation) return;
     
+    // Sanitize custom field data
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+    
     try {
       const updateData = {
         ...formData,
-        ...customFieldData // Include custom field data
+        ...sanitizedCustomFieldData // Include sanitized custom field data
       };
       
       await updateLocation(editingLocation.id, updateData);

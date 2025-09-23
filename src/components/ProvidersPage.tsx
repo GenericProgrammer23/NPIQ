@@ -83,6 +83,17 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
       return;
     }
     
+    // Sanitize custom field data
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+    
     try {
       const providerData = {
         ...formData,
@@ -90,7 +101,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         location_id: formData.location_id || null, // Properly handle optional location
         license_expiry: formData.license_expiry || null, // Convert empty string to null
         phone: formatters.phone(formData.phone),
-        ...customFieldData // Include custom field data
+        ...sanitizedCustomFieldData // Include sanitized custom field data
       };
       
       await createProvider(providerData);
@@ -140,12 +151,23 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
     e.preventDefault();
     if (!editingProvider) return;
     
+    // Sanitize custom field data
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+    
     try {
       const updateData = {
         ...formData,
         location_id: formData.location_id || null,
         license_expiry: formData.license_expiry || null, // Convert empty string to null
-        ...customFieldData // Include custom field data
+        ...sanitizedCustomFieldData // Include sanitized custom field data
       };
       
       await updateProvider(editingProvider.id, updateData);

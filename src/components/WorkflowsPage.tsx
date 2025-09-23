@@ -70,11 +70,23 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Sanitize custom field data
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+    
     try {
       const workflowData = {
         ...formData,
         organization_id: 'current-org-id', // This will be resolved by the service
-        ...customFieldData // Include custom field data
+        ...sanitizedCustomFieldData // Include sanitized custom field data
       };
       
       await createWorkflow(workflowData);
@@ -116,10 +128,21 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
     e.preventDefault();
     if (!editingWorkflow) return;
     
+    // Sanitize custom field data
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+    
     try {
       const updateData = {
         ...formData,
-        ...customFieldData // Include custom field data
+        ...sanitizedCustomFieldData // Include sanitized custom field data
       };
       
       // We need to add updateWorkflow to the hook
