@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSubflows, useWorkflows } from '../hooks/useDatabase';
-import { GitBranch, Plus, Search, Filter, Edit, Eye, Play, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { GitBranch, Plus, Search, Filter, CreditCard as Edit, Eye, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Subflow } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 
@@ -242,17 +242,19 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
   const formatConditionDisplay = (condition: string) => {
     const [type, value] = condition.split(':');
     switch (type) {
-      case 'provider_field':
+      case 'provider_field': {
         const providerField = availableFields.providerFields.find(f => f.name === value);
         return `Provider has ${providerField?.label || value}`;
-      case 'location_field':
+      }
+      case 'location_field': {
         const locationField = availableFields.locationFields.find(f => f.name === value);
         return `Location has ${locationField?.label || value}`;
+      }
       case 'subflow_complete':
         return `${value} completed`;
       case 'provider_status':
         return `Provider becomes ${value.charAt(0).toUpperCase() + value.slice(1)}`;
-      case 'external_approval':
+      case 'external_approval': {
         const approvalLabels: { [key: string]: string } = {
           ahcccs: 'AHCCCS Approval',
           medicare: 'Medicare Approval',
@@ -260,7 +262,8 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
           license_verified: 'License Verification'
         };
         return `${approvalLabels[value] || value} Received`;
-      case 'application_approved':
+      }
+      case 'application_approved': {
         const appLabels: { [key: string]: string } = {
           ahcccs: 'AHCCCS',
           medicare: 'Medicare',
@@ -268,7 +271,8 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
           medicaid: 'Medicaid'
         };
         return `${appLabels[value] || value} Application Approved`;
-      case 'document_verified':
+      }
+      case 'document_verified': {
         const docLabels: { [key: string]: string } = {
           license: 'License',
           background_check: 'Background Check',
@@ -276,13 +280,15 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
           education: 'Education Credentials'
         };
         return `${docLabels[value] || value} Verified`;
-      case 'provider_milestone':
+      }
+      case 'provider_milestone': {
         const milestoneLabels: { [key: string]: string } = {
           baseline_complete: 'Provider Baseline Complete',
           enrollment_complete: 'All Enrollments Complete',
           ready_to_practice: 'Ready to Practice'
         };
         return milestoneLabels[value] || value;
+      }
       default:
         return condition;
     }

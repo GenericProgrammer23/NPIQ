@@ -131,40 +131,42 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
     }
   };
 
-  const createProviderChangeWorkflow = async (provider: any, changeType: 'name' | 'location') => {
-    try {
-      const workflowName = changeType === 'name' 
-        ? `Provider Name Change: ${provider.first_name} ${provider.last_name}`
-        : `Provider Location Change: ${provider.first_name} ${provider.last_name}`;
+  // Future feature: Provider change workflows
+  // Commented out until we implement provider change detection
+  // const createProviderChangeWorkflow = async (provider: any, changeType: 'name' | 'location') => {
+  //   try {
+  //     const workflowName = changeType === 'name'
+  //       ? `Provider Name Change: ${provider.first_name} ${provider.last_name}`
+  //       : `Provider Location Change: ${provider.first_name} ${provider.last_name}`;
 
-      const workflow = await DatabaseService.createWorkflow({
-        name: workflowName,
-        description: `Handle ${changeType} change for provider ${provider.first_name} ${provider.last_name}`,
-        type: 'compliance',
-        status: 'active',
-        steps: [
-          { name: 'Document Change Request', status: 'pending' },
-          { name: 'Update Records', status: 'pending' },
-          { name: 'Notify Stakeholders', status: 'pending' },
-          { name: 'Verify Compliance', status: 'pending' }
-        ],
-        organization_id: provider.organization_id
-      });
+  //     const workflow = await DatabaseService.createWorkflow({
+  //       name: workflowName,
+  //       description: `Handle ${changeType} change for provider ${provider.first_name} ${provider.last_name}`,
+  //       type: 'compliance',
+  //       status: 'active',
+  //       steps: [
+  //         { name: 'Document Change Request', status: 'pending' },
+  //         { name: 'Update Records', status: 'pending' },
+  //         { name: 'Notify Stakeholders', status: 'pending' },
+  //         { name: 'Verify Compliance', status: 'pending' }
+  //       ],
+  //       organization_id: provider.organization_id
+  //     });
 
-      await DatabaseService.createTask({
-        workflow_id: workflow.id,
-        provider_id: provider.id,
-        title: `Process ${changeType === 'name' ? 'Name' : 'Location'} Change`,
-        description: `Update all systems and documentation for provider ${changeType} change`,
-        status: 'pending',
-        priority: 'medium',
-        due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() // Due in 5 days
-      });
+  //     await DatabaseService.createTask({
+  //       workflow_id: workflow.id,
+  //       provider_id: provider.id,
+  //       title: `Process ${changeType === 'name' ? 'Name' : 'Location'} Change`,
+  //       description: `Update all systems and documentation for provider ${changeType} change`,
+  //       status: 'pending',
+  //       priority: 'medium',
+  //       due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() // Due in 5 days
+  //     });
 
-    } catch (error) {
-      console.error(`Failed to create ${changeType} change workflow:`, error);
-    }
-  };
+  //   } catch (error) {
+  //     console.error(`Failed to create ${changeType} change workflow:`, error);
+  //   }
+  // };
 
   // This component doesn't render anything visible
   return null;
