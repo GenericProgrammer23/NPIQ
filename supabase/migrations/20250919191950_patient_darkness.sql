@@ -11,11 +11,28 @@
 */
 
 -- Add subflow_id column to tasks table
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS subflow_id uuid;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'tasks' AND column_name = 'subflow_id'
+  ) THEN
+    ALTER TABLE tasks ADD COLUMN subflow_id uuid;
+  END IF;
+END $$;
 
 -- Add foreign key constraint
-ALTER TABLE tasks ADD CONSTRAINT tasks_subflow_id_fkey 
-  FOREIGN KEY (subflow_id) REFERENCES subflows(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'tasks_subflow_id_fkey'
+    AND table_name = 'tasks'
+  ) THEN
+    ALTER TABLE tasks ADD CONSTRAINT tasks_subflow_id_fkey
+      FOREIGN KEY (subflow_id) REFERENCES subflows(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- Add index for performance
 CREATE INDEX IF NOT EXISTS idx_tasks_subflow_id ON tasks(subflow_id);
