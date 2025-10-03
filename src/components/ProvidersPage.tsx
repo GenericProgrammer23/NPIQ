@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useProviders, useLocations } from '../hooks/useDatabase';
-import { Users, Plus, Search, Filter, Edit, Eye, MapPin, Mail, Phone } from 'lucide-react';
+import { Users, Plus, Search, Filter, CreditCard as Edit, Eye, MapPin, Mail, Phone } from 'lucide-react';
 import { Provider } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 import { formatters, validators } from '../utils/formatters';
@@ -293,7 +293,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
 
   if (loading) {
     return (
-      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+      <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
         <div className="animate-pulse">
           <div className="h-8 bg-navy/10 dark:bg-gray-700 rounded w-64 mb-6"></div>
           <div className="space-y-4">
@@ -308,7 +308,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
 
   if (error) {
     return (
-      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+      <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p className="text-red-800 dark:text-red-400">Error loading providers: {error}</p>
         </div>
@@ -317,7 +317,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Providers</h1>

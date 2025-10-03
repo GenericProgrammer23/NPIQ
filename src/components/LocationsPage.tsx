@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocations } from '../hooks/useDatabase';
-import { MapPin, Plus, Search, Edit, Eye, Building } from 'lucide-react';
+import { MapPin, Plus, Search, CreditCard as Edit, Eye, Building } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface LocationsPageProps {
@@ -266,7 +266,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Locations</h1>

@@ -287,7 +287,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Tasks</h1>

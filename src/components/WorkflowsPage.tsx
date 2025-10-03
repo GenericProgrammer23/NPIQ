@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useWorkflows, useSubflows, useProviders } from '../hooks/useDatabase';
-import { Workflow, Plus, Search, Edit, Eye, Play, Archive, CheckCircle, Clock, AlertCircle, CheckSquare } from 'lucide-react';
+import { Workflow, Plus, Search, CreditCard as Edit, Eye, Play, Archive, CheckCircle, Clock, AlertCircle, CheckSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Subflow } from '../lib/supabase';
 
@@ -365,7 +365,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Workflows</h1>

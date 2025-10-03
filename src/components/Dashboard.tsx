@@ -79,7 +79,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
   ];
 
   return (
-    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Dashboard</h1>
         <p className="text-navy/70 dark:text-cream/70">Overview of your healthcare credentialing system</p>

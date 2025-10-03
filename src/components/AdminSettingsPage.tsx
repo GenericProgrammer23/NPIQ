@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2, Edit } from 'lucide-react';
+import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2, CreditCard as Edit } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface CustomField {
@@ -362,7 +362,7 @@ export const AdminSettingsPage: React.FC = () => {
 
   if (loading && customFields.length === 0) {
     return (
-      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+      <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
         <div className="animate-pulse">
           <div className="h-8 bg-navy/10 dark:bg-gray-700 rounded w-64 mb-6"></div>
           <div className="space-y-4">
@@ -376,7 +376,7 @@ export const AdminSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Admin Settings</h1>

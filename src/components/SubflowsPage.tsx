@@ -325,7 +325,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
   if (loading) {
     return (
-      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+      <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
         <div className="animate-pulse">
           <div className="h-8 bg-navy/10 dark:bg-gray-700 rounded w-64 mb-6"></div>
           <div className="space-y-4">
@@ -340,7 +340,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
   if (error) {
     return (
-      <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+      <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <p className="text-red-800 dark:text-red-400">Error loading subflows: {error}</p>
         </div>
@@ -349,7 +349,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
   }
 
   return (
-    <div className="p-6 bg-cream dark:bg-navy min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Subflows</h1>
