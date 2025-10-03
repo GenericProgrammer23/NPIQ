@@ -4,6 +4,7 @@ import { AuthWrapper } from './components/AuthWrapper';
 import { Dashboard } from './components/Dashboard';
 import { ProvidersPage } from './components/ProvidersPage';
 import { LocationsPage } from './components/LocationsPage';
+import { PayersPage } from './components/PayersPage';
 import { WorkflowsPage } from './components/WorkflowsPage';
 import { SubflowsPage } from './components/SubflowsPage';
 import { TasksPage } from './components/TasksPage';
@@ -32,6 +33,8 @@ function App() {
         return <ProvidersPage initialFilter={pageFilter} />;
       case 'locations':
         return <LocationsPage initialFilter={pageFilter} />;
+      case 'payers':
+        return <PayersPage initialFilter={pageFilter} />;
       case 'workflows':
         return <WorkflowsPage initialFilter={pageFilter} />;
       case 'subflows':

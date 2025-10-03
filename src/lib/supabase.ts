@@ -129,6 +129,50 @@ export interface Subflow {
   tasks?: Task[];
 }
 
+export interface Payer {
+  id: string;
+  organization_id: string;
+  name: string;
+  type: 'insurance' | 'credentialing' | 'government' | 'other';
+  workflow_state: 'AZ' | 'TX' | 'ALL';
+  application_fields: Record<string, any>;
+  status: 'active' | 'inactive';
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  organization?: Organization;
+}
+
+export interface ProviderPayerApplication {
+  id: string;
+  provider_id: string;
+  payer_id: string;
+  application_submission_date?: string;
+  application_approved_date?: string;
+  provider_loaded_date?: string;
+  status: 'not_started' | 'submitted' | 'approved' | 'loaded' | 'rejected';
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  provider?: Provider;
+  payer?: Payer;
+}
+
+export interface LocationPayerApplication {
+  id: string;
+  location_id: string;
+  payer_id: string;
+  application_submission_date?: string;
+  application_approved_date?: string;
+  location_loaded_date?: string;
+  status: 'not_started' | 'submitted' | 'approved' | 'loaded' | 'rejected';
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  location?: Location;
+  payer?: Payer;
+}
+
 // Database service functions
 export class DatabaseService {
   // Check if Supabase is configured
@@ -747,6 +791,213 @@ export class DatabaseService {
         workflow:workflows(*),
         subflow:subflows(*),
         provider:providers(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Payers
+  static async getPayers(organizationId?: string): Promise<Payer[]> {
+    if (!supabase) return [];
+    let query = supabase
+      .from('payers')
+      .select(`
+        *,
+        organization:organizations(*)
+      `)
+      .order('name');
+
+    if (organizationId) {
+      query = query.eq('organization_id', organizationId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async createPayer(payer: Omit<Payer, 'id' | 'created_at' | 'updated_at'>): Promise<Payer> {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    if (!payer.organization_id || payer.organization_id === 'current-org-id') {
+      const user = await this.getCurrentUser();
+      if (user) {
+        const { data: membership } = await supabase
+          .from('org_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (membership) {
+          payer.organization_id = membership.organization_id;
+        }
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('payers')
+      .insert(payer)
+      .select(`
+        *,
+        organization:organizations(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updatePayer(id: string, updates: Partial<Payer>): Promise<Payer> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('payers')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        organization:organizations(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async deletePayer(id: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { error } = await supabase
+      .from('payers')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  // Provider Payer Applications
+  static async getProviderPayerApplications(filters?: {
+    providerId?: string;
+    payerId?: string;
+  }): Promise<ProviderPayerApplication[]> {
+    if (!supabase) return [];
+    let query = supabase
+      .from('provider_payer_applications')
+      .select(`
+        *,
+        provider:providers(*),
+        payer:payers(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (filters?.providerId) {
+      query = query.eq('provider_id', filters.providerId);
+    }
+    if (filters?.payerId) {
+      query = query.eq('payer_id', filters.payerId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async createProviderPayerApplication(
+    application: Omit<ProviderPayerApplication, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<ProviderPayerApplication> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('provider_payer_applications')
+      .insert(application)
+      .select(`
+        *,
+        provider:providers(*),
+        payer:payers(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updateProviderPayerApplication(
+    id: string,
+    updates: Partial<ProviderPayerApplication>
+  ): Promise<ProviderPayerApplication> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('provider_payer_applications')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        provider:providers(*),
+        payer:payers(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Location Payer Applications
+  static async getLocationPayerApplications(filters?: {
+    locationId?: string;
+    payerId?: string;
+  }): Promise<LocationPayerApplication[]> {
+    if (!supabase) return [];
+    let query = supabase
+      .from('location_payer_applications')
+      .select(`
+        *,
+        location:locations(*),
+        payer:payers(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (filters?.locationId) {
+      query = query.eq('location_id', filters.locationId);
+    }
+    if (filters?.payerId) {
+      query = query.eq('payer_id', filters.payerId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async createLocationPayerApplication(
+    application: Omit<LocationPayerApplication, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<LocationPayerApplication> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('location_payer_applications')
+      .insert(application)
+      .select(`
+        *,
+        location:locations(*),
+        payer:payers(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updateLocationPayerApplication(
+    id: string,
+    updates: Partial<LocationPayerApplication>
+  ): Promise<LocationPayerApplication> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('location_payer_applications')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        location:locations(*),
+        payer:payers(*)
       `)
       .single();
 

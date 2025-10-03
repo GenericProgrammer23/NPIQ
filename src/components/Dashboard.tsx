@@ -1,6 +1,8 @@
 import React from 'react';
 import { useDashboardStats } from '../hooks/useDatabase';
-import { Users, MapPin, Workflow, CheckSquare, Plus, TrendingUp } from 'lucide-react';
+import { Users, MapPin, Workflow, CheckSquare, Plus, TrendingUp, CreditCard } from 'lucide-react';
+import { WorkflowProgressWidget } from './WorkflowProgressWidget';
+import { CalendarWidget } from './CalendarWidget';
 
 interface DashboardProps {
   onPageChange: (page: string, filter?: { type: string; value: string }) => void;
@@ -102,37 +104,45 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
         ))}
       </div>
 
+      {/* Workflow Progress and Calendar */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <WorkflowProgressWidget onNavigate={(providerId, workflowId) => {
+          onPageChange('workflows', { type: 'provider', value: providerId });
+        }} />
+        <CalendarWidget />
+      </div>
+
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6 mb-6">
         <h2 className="text-xl font-semibold text-navy dark:text-white mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button 
+          <button
             onClick={() => onPageChange('providers', { type: 'action', value: 'add' })}
             className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
           >
             <Plus className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Provider</span>
           </button>
-          <button 
+          <button
             onClick={() => onPageChange('locations', { type: 'action', value: 'add' })}
             className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
           >
             <MapPin className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Location</span>
           </button>
-          <button 
+          <button
+            onClick={() => onPageChange('payers', { type: 'action', value: 'add' })}
+            className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
+          >
+            <CreditCard className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
+            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Payer</span>
+          </button>
+          <button
             onClick={() => onPageChange('workflows', { type: 'action', value: 'add' })}
             className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
           >
             <Workflow className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Create Workflow</span>
-          </button>
-          <button 
-            onClick={() => onPageChange('tasks', { type: 'action', value: 'add' })}
-            className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
-          >
-            <CheckSquare className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Create Task</span>
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DatabaseService, Provider, Location, Task, Workflow, Subflow } from '../lib/supabase';
+import { DatabaseService, Provider, Location, Task, Workflow, Subflow, Payer, ProviderPayerApplication, LocationPayerApplication } from '../lib/supabase';
 
 // Custom hook for providers
 export function useProviders(organizationId?: string) {
@@ -318,6 +318,216 @@ export function useWorkflows(organizationId?: string) {
       setLoading(true);
       DatabaseService.getWorkflows(organizationId)
         .then(setWorkflows)
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  };
+}
+
+// Custom hook for payers
+export function usePayers(organizationId?: string) {
+  const [payers, setPayers] = useState<Payer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchPayers() {
+      try {
+        setLoading(true);
+        const data = await DatabaseService.getPayers(organizationId);
+        setPayers(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch payers');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPayers();
+  }, [organizationId]);
+
+  const createPayer = async (payer: Omit<Payer, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newPayer = await DatabaseService.createPayer(payer);
+      setPayers(prev => [...prev, newPayer]);
+      return newPayer;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create payer');
+      throw err;
+    }
+  };
+
+  const updatePayer = async (id: string, updates: Partial<Payer>) => {
+    try {
+      const updatedPayer = await DatabaseService.updatePayer(id, updates);
+      setPayers(prev => prev.map(p => p.id === id ? updatedPayer : p));
+      return updatedPayer;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update payer');
+      throw err;
+    }
+  };
+
+  const deletePayer = async (id: string) => {
+    try {
+      await DatabaseService.deletePayer(id);
+      setPayers(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete payer');
+      throw err;
+    }
+  };
+
+  return {
+    payers,
+    loading,
+    error,
+    createPayer,
+    updatePayer,
+    deletePayer,
+    refetch: () => {
+      setLoading(true);
+      DatabaseService.getPayers(organizationId)
+        .then(setPayers)
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  };
+}
+
+// Custom hook for provider payer applications
+export function useProviderPayerApplications(filters?: {
+  providerId?: string;
+  payerId?: string;
+}) {
+  const [applications, setApplications] = useState<ProviderPayerApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchApplications() {
+      try {
+        setLoading(true);
+        const data = await DatabaseService.getProviderPayerApplications(filters);
+        setApplications(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch provider payer applications');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchApplications();
+  }, [filters?.providerId, filters?.payerId]);
+
+  const createApplication = async (
+    application: Omit<ProviderPayerApplication, 'id' | 'created_at' | 'updated_at'>
+  ) => {
+    try {
+      const newApplication = await DatabaseService.createProviderPayerApplication(application);
+      setApplications(prev => [...prev, newApplication]);
+      return newApplication;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create provider payer application');
+      throw err;
+    }
+  };
+
+  const updateApplication = async (
+    id: string,
+    updates: Partial<ProviderPayerApplication>
+  ) => {
+    try {
+      const updatedApplication = await DatabaseService.updateProviderPayerApplication(id, updates);
+      setApplications(prev => prev.map(a => a.id === id ? updatedApplication : a));
+      return updatedApplication;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update provider payer application');
+      throw err;
+    }
+  };
+
+  return {
+    applications,
+    loading,
+    error,
+    createApplication,
+    updateApplication,
+    refetch: () => {
+      setLoading(true);
+      DatabaseService.getProviderPayerApplications(filters)
+        .then(setApplications)
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  };
+}
+
+// Custom hook for location payer applications
+export function useLocationPayerApplications(filters?: {
+  locationId?: string;
+  payerId?: string;
+}) {
+  const [applications, setApplications] = useState<LocationPayerApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchApplications() {
+      try {
+        setLoading(true);
+        const data = await DatabaseService.getLocationPayerApplications(filters);
+        setApplications(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch location payer applications');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchApplications();
+  }, [filters?.locationId, filters?.payerId]);
+
+  const createApplication = async (
+    application: Omit<LocationPayerApplication, 'id' | 'created_at' | 'updated_at'>
+  ) => {
+    try {
+      const newApplication = await DatabaseService.createLocationPayerApplication(application);
+      setApplications(prev => [...prev, newApplication]);
+      return newApplication;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create location payer application');
+      throw err;
+    }
+  };
+
+  const updateApplication = async (
+    id: string,
+    updates: Partial<LocationPayerApplication>
+  ) => {
+    try {
+      const updatedApplication = await DatabaseService.updateLocationPayerApplication(id, updates);
+      setApplications(prev => prev.map(a => a.id === id ? updatedApplication : a));
+      return updatedApplication;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update location payer application');
+      throw err;
+    }
+  };
+
+  return {
+    applications,
+    loading,
+    error,
+    createApplication,
+    updateApplication,
+    refetch: () => {
+      setLoading(true);
+      DatabaseService.getLocationPayerApplications(filters)
+        .then(setApplications)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
     }
