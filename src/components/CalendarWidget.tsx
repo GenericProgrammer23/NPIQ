@@ -86,7 +86,7 @@ export const CalendarWidget: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
       <h2 className="text-xl font-semibold text-navy dark:text-white mb-4 flex items-center">
         <CalendarIcon className="h-5 w-5 mr-2" />
         Calendar & Upcoming Tasks
@@ -96,7 +96,7 @@ export const CalendarWidget: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => navigateMonth('prev')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            className="p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors"
           >
             ←
           </button>
@@ -105,7 +105,7 @@ export const CalendarWidget: React.FC = () => {
           </h3>
           <button
             onClick={() => navigateMonth('next')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            className="p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors"
           >
             →
           </button>
@@ -145,7 +145,7 @@ export const CalendarWidget: React.FC = () => {
                     ? 'bg-blue-500 text-white font-bold'
                     : isSelected
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-navy dark:text-white font-semibold'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-navy dark:text-white'
+                    : 'hover:bg-navy/5 dark:hover:bg-navy-dark text-navy dark:text-white'
                 }`}
               >
                 <span>{day}</span>
@@ -158,7 +158,7 @@ export const CalendarWidget: React.FC = () => {
         </div>
       </div>
 
-      <div className="border-t border-navy/10 dark:border-gray-700 pt-4">
+      <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-4">
         <h3 className="font-semibold text-navy dark:text-white mb-3 flex items-center">
           <Clock className="h-4 w-4 mr-2" />
           Upcoming Tasks
@@ -168,7 +168,7 @@ export const CalendarWidget: React.FC = () => {
             {upcomingTasks.map(task => (
               <div
                 key={task.id}
-                className="flex items-start p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors"
+                className="flex items-start p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors"
               >
                 <AlertCircle className={`h-4 w-4 mr-2 mt-0.5 flex-shrink-0 ${getPriorityColor(task.priority)}`} />
                 <div className="flex-1 min-w-0">

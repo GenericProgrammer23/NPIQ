@@ -81,7 +81,7 @@ export const WorkflowProgressWidget: React.FC<WorkflowProgressWidgetProps> = ({ 
 
   if (workflowProgress.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
         <h2 className="text-xl font-semibold text-navy dark:text-white mb-4 flex items-center">
           <TrendingUp className="h-5 w-5 mr-2" />
           In-Progress Workflows
@@ -112,7 +112,7 @@ export const WorkflowProgressWidget: React.FC<WorkflowProgressWidgetProps> = ({ 
           return (
             <div
               key={`${progress.workflowId}-${progress.providerId}-${index}`}
-              className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-3 rounded-lg transition-colors"
+              className="cursor-pointer hover:bg-navy/5 dark:hover:bg-navy-dark p-3 rounded-lg transition-colors"
               onClick={() => onNavigate?.(progress.providerId, progress.workflowId)}
             >
               <div className="flex items-center justify-between mb-2">
