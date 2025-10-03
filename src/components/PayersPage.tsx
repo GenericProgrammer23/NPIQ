@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { usePayers, useProviders, useProviderPayerApplications } from '../hooks/useDatabase';
-import { CreditCard, Plus, Search, Edit, Trash2, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle } from 'lucide-react';
 import { Payer } from '../lib/supabase';
 
 interface PayersPageProps {
