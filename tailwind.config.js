@@ -10,7 +10,7 @@ export default {
         'navy-dark': '#1A323E',
         'dark-cyan': '#007E7D',
         goldenrod: '#E3A72F',
-        cream: '#EFE6DC',
+        cream: '#152733',
         'cream-light': '#F4EDE4',
         // Dark mode colors matching login page
         'dark-navy': '#15323E',
