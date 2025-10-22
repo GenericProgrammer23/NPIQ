@@ -12,6 +12,7 @@ import { AdminSettingsPage } from './components/AdminSettingsPage';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowEngine } from './components/WorkflowEngine';
 import { DatabaseService } from './lib/supabase';
+import { initLocalDatabase, seedLocalDatabase } from './lib/localdb';
 import Diagnostics from './components/Diagnostics';
 import { DarkModeToggle } from './components/DarkModeToggle';
 import { useProviders } from './hooks/useDatabase';
@@ -20,7 +21,20 @@ function App() {
   const [currentPage, setCurrentPage] = React.useState('dashboard');
   const [pageFilter, setPageFilter] = React.useState<{ type: string; value: string } | null>(null);
   const [isOnline] = React.useState(DatabaseService.isConfigured());
+  const [dbInitialized, setDbInitialized] = React.useState(false);
   const { providers } = useProviders();
+
+  React.useEffect(() => {
+    const initDB = async () => {
+      if (import.meta.env.VITE_USE_LOCAL_DB === 'true') {
+        await initLocalDatabase();
+        await seedLocalDatabase();
+        console.log('Local database initialized and seeded');
+      }
+      setDbInitialized(true);
+    };
+    initDB();
+  }, []);
 
   const handlePageChange = (page: string, filter?: { type: string; value: string }) => {
     setCurrentPage(page);
