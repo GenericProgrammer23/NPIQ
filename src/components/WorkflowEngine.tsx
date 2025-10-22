@@ -108,14 +108,6 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
 
   const createIncompleteDataTasks = async (provider: any, missingFields: string[]) => {
     try {
-      // Check if tasks already exist for missing data
-      const existingTasks = await DatabaseService.getTasks({ providerId: provider.id });
-      const hasDataCollectionTask = existingTasks.some(t =>
-        t.title.includes('Obtain Provider Information')
-      );
-
-      if (hasDataCollectionTask) return;
-
       const fieldLabels: { [key: string]: string } = {
         email: 'Email Address',
         phone: 'Phone Number',
@@ -125,18 +117,38 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
       };
 
       const missingFieldsList = missingFields.map(field => fieldLabels[field]).join(', ');
+      const newDescription = `Missing required information for ${provider.first_name} ${provider.last_name}: ${missingFieldsList}`;
 
+      // Check if task already exists for this provider
+      const existingTasks = await DatabaseService.getTasks({ providerId: provider.id });
+      const existingTask = existingTasks.find(t =>
+        t.title === 'Obtain Provider Information' &&
+        (t.status === 'pending' || t.status === 'in_progress')
+      );
+
+      if (existingTask) {
+        // Update the existing task with the current missing fields
+        if (existingTask.description !== newDescription) {
+          await DatabaseService.updateTask(existingTask.id, {
+            description: newDescription
+          });
+          console.log(`Updated task for provider ${provider.first_name} ${provider.last_name} with current missing fields`);
+        }
+        return;
+      }
+
+      // Create new task if none exists
       await DatabaseService.createTask({
         provider_id: provider.id,
         title: 'Obtain Provider Information',
-        description: `Missing required information for ${provider.first_name} ${provider.last_name}: ${missingFieldsList}`,
+        description: newDescription,
         status: 'pending',
         priority: 'medium',
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Due in 7 days
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       });
 
     } catch (error) {
-      console.error('Failed to create incomplete data tasks:', error);
+      console.error('Failed to create or update incomplete data tasks:', error);
     }
   };
 

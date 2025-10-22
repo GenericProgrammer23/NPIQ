@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTasks, useWorkflows, useProviders, useSubflows } from '../hooks/useDatabase';
-import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2 } from 'lucide-react';
+import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2, Edit } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface TasksPageProps {
@@ -13,8 +13,10 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   const { subflows } = useSubflows();
   const { providers } = useProviders();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('pending');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [customFields, setCustomFields] = useState<any[]>([]);
 
@@ -202,6 +204,75 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
     }
   };
 
+  const handleEditTask = (task: any) => {
+    setEditingTask(task);
+    setFormData({
+      title: task.title,
+      description: task.description || '',
+      workflow_id: task.workflow_id || '',
+      subflow_id: task.subflow_id || '',
+      provider_id: task.provider_id || '',
+      status: task.status,
+      priority: task.priority,
+      due_date: task.due_date ? task.due_date.split('T')[0] : '',
+      assigned_to: task.assigned_to || ''
+    });
+
+    const customData: Record<string, any> = {};
+    customFields.forEach(field => {
+      customData[field.name] = (task as any)[field.name] || '';
+    });
+    setCustomFieldData(customData);
+
+    setShowEditForm(true);
+  };
+
+  const handleUpdateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTask) return;
+
+    const sanitizedCustomFieldData: Record<string, any> = {};
+    customFields.forEach(field => {
+      const value = customFieldData[field.name];
+      if (field.type === 'number') {
+        sanitizedCustomFieldData[field.name] = value === '' ? null : value;
+      } else {
+        sanitizedCustomFieldData[field.name] = value;
+      }
+    });
+
+    try {
+      const updateData = {
+        ...formData,
+        workflow_id: formData.workflow_id || null,
+        subflow_id: formData.subflow_id || null,
+        provider_id: formData.provider_id || null,
+        due_date: formData.due_date || null,
+        assigned_to: formData.assigned_to || null,
+        ...sanitizedCustomFieldData
+      };
+
+      await updateTask(editingTask.id, updateData);
+      setShowEditForm(false);
+      setEditingTask(null);
+      setFormData({
+        title: '',
+        description: '',
+        workflow_id: '',
+        subflow_id: '',
+        provider_id: '',
+        status: 'pending',
+        priority: 'medium',
+        due_date: '',
+        assigned_to: ''
+      });
+      setCustomFieldData({});
+    } catch (err) {
+      console.error('Failed to update task:', err);
+      alert('Failed to update task. Please try again.');
+    }
+  };
+
   const handleDeleteTask = async (taskId: string) => {
     if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
       return;
@@ -213,9 +284,9 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
           .from('tasks')
           .delete()
           .eq('id', taskId);
-        
+
         if (error) throw error;
-        
+
         // Refresh tasks list
         window.location.reload();
       }
@@ -426,6 +497,13 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                       <option value="rejected">Rejected</option>
                     </select>
                     <button
+                      onClick={() => handleEditTask(task)}
+                      className="p-2 text-dark-cyan hover:text-dark-cyan/80 hover:bg-dark-cyan/10 dark:hover:bg-dark-cyan/20 rounded-lg transition-colors"
+                      title="Edit Task"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => handleDeleteTask(task.id)}
                       className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       title="Delete Task"
@@ -596,6 +674,161 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                   className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy rounded-lg font-medium"
                 >
                   Create Task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal */}
+      {showEditForm && editingTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
+              <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Task</h2>
+            </div>
+
+            <form onSubmit={handleUpdateTask} className="p-6 space-y-4">
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Task Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                />
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-navy dark:text-white font-medium mb-2">Status *</label>
+                  <select
+                    required
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-navy dark:text-white font-medium mb-2">Priority *</label>
+                  <select
+                    required
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Due Date</label>
+                <input
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                />
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Provider</label>
+                <select
+                  value={formData.provider_id}
+                  onChange={(e) => setFormData({ ...formData, provider_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                >
+                  <option value="">No Provider</option>
+                  {providers.map(provider => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.first_name} {provider.last_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Workflow</label>
+                <select
+                  value={formData.workflow_id}
+                  onChange={(e) => setFormData({ ...formData, workflow_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                >
+                  <option value="">No Workflow</option>
+                  {workflows.map(workflow => (
+                    <option key={workflow.id} value={workflow.id}>
+                      {workflow.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-navy dark:text-white font-medium mb-2">Subflow</label>
+                <select
+                  value={formData.subflow_id}
+                  onChange={(e) => setFormData({ ...formData, subflow_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                  disabled={!formData.workflow_id}
+                >
+                  <option value="">No Subflow</option>
+                  {subflows
+                    .filter(sf => sf.workflow_id === formData.workflow_id)
+                    .map(subflow => (
+                      <option key={subflow.id} value={subflow.id}>
+                        {subflow.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {customFields.map(field => (
+                <div key={field.id}>
+                  <label className="block text-navy dark:text-white font-medium mb-2">
+                    {field.label} {field.required && '*'}
+                  </label>
+                  {renderCustomField(field, customFieldData[field.name] || '')}
+                </div>
+              ))}
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingTask(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-navy dark:text-cream rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy dark:text-navy rounded-lg font-medium"
+                >
+                  Update Task
                 </button>
               </div>
             </form>
