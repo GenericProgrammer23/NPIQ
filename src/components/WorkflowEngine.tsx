@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { DatabaseService } from '../lib/supabase';
 
 interface WorkflowEngineProps {
@@ -6,10 +6,16 @@ interface WorkflowEngineProps {
 }
 
 export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => {
-  
+  const processingRef = useRef(false);
+
   useEffect(() => {
-    // Check for workflow triggers when providers change
-    checkWorkflowTriggers();
+    // Prevent double-execution in React StrictMode
+    if (processingRef.current) return;
+
+    processingRef.current = true;
+    checkWorkflowTriggers().finally(() => {
+      processingRef.current = false;
+    });
   }, [providers]);
 
   const checkWorkflowTriggers = async () => {
