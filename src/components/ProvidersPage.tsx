@@ -4,6 +4,7 @@ import { Users, Plus, Search, Filter, CreditCard as Edit, Eye, MapPin, Mail, Pho
 import { Provider } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 import { formatters, validators } from '../utils/formatters';
+import { ProviderDetailModal } from './ProviderDetailModal';
 
 interface ProvidersPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -32,6 +33,8 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
 
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [viewingProvider, setViewingProvider] = useState<Provider | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Handle initial filter from dashboard
   React.useEffect(() => {
@@ -433,10 +436,16 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <button className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors">
+                    <button
+                      onClick={() => {
+                        setViewingProvider(provider);
+                        setShowDetailModal(true);
+                      }}
+                      className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors"
+                    >
                       <Eye className="h-4 w-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleEdit(provider)}
                       className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
                     >
@@ -765,6 +774,20 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             </form>
           </div>
         </div>
+      )}
+
+      {/* Provider Detail Modal */}
+      {showDetailModal && viewingProvider && (
+        <ProviderDetailModal
+          provider={viewingProvider}
+          onClose={() => {
+            setShowDetailModal(false);
+            setViewingProvider(null);
+          }}
+          onUpdate={() => {
+            window.location.reload();
+          }}
+        />
       )}
 
     </div>
