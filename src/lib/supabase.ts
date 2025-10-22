@@ -152,6 +152,7 @@ export interface ProviderPayerApplication {
   application_submission_date?: string;
   application_approved_date?: string;
   provider_loaded_date?: string;
+  effective_date?: string;
   status: 'not_started' | 'submitted' | 'approved' | 'loaded' | 'rejected';
   notes?: string;
   created_at: string;
