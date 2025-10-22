@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { DatabaseService, Provider, Location, Task, Workflow, Subflow, Payer, ProviderPayerApplication, LocationPayerApplication } from '../lib/supabase';
-import { DatabaseAdapter } from '../lib/database-adapter';
 
 // Custom hook for providers
 export function useProviders(organizationId?: string) {
@@ -12,7 +11,7 @@ export function useProviders(organizationId?: string) {
     async function fetchProviders() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getProviders(organizationId);
+        const data = await DatabaseService.getProviders(organizationId);
         setProviders(data);
         setError(null);
       } catch (err) {
@@ -27,7 +26,7 @@ export function useProviders(organizationId?: string) {
 
   const createProvider = async (provider: Omit<Provider, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const newProvider = await DatabaseAdapter.createProvider(provider);
+      const newProvider = await DatabaseService.createProvider(provider);
       setProviders(prev => [...prev, newProvider]);
       return newProvider;
     } catch (err) {
@@ -38,7 +37,7 @@ export function useProviders(organizationId?: string) {
 
   const updateProvider = async (id: string, updates: Partial<Provider>) => {
     try {
-      const updatedProvider = await DatabaseAdapter.updateProvider(id, updates);
+      const updatedProvider = await DatabaseService.updateProvider(id, updates);
       setProviders(prev => prev.map(p => p.id === id ? updatedProvider : p));
       return updatedProvider;
     } catch (err) {
@@ -55,7 +54,7 @@ export function useProviders(organizationId?: string) {
     updateProvider,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getProviders(organizationId)
+      DatabaseService.getProviders(organizationId)
         .then(setProviders)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -73,7 +72,7 @@ export function useLocations(organizationId?: string) {
     async function fetchLocations() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getLocations(organizationId);
+        const data = await DatabaseService.getLocations(organizationId);
         setLocations(data);
         setError(null);
       } catch (err) {
@@ -88,7 +87,7 @@ export function useLocations(organizationId?: string) {
 
   const createLocation = async (location: Omit<Location, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const newLocation = await DatabaseAdapter.createLocation(location);
+      const newLocation = await DatabaseService.createLocation(location);
       setLocations(prev => [...prev, newLocation]);
       return newLocation;
     } catch (err) {
@@ -99,7 +98,7 @@ export function useLocations(organizationId?: string) {
 
   const updateLocation = async (id: string, updates: Partial<Location>) => {
     try {
-      const updatedLocation = await DatabaseAdapter.updateLocation(id, updates);
+      const updatedLocation = await DatabaseService.updateLocation(id, updates);
       setLocations(prev => prev.map(l => l.id === id ? updatedLocation : l));
       return updatedLocation;
     } catch (err) {
@@ -116,7 +115,7 @@ export function useLocations(organizationId?: string) {
     updateLocation,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getLocations(organizationId)
+      DatabaseService.getLocations(organizationId)
         .then(setLocations)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -134,7 +133,7 @@ export function useSubflows(workflowId?: string) {
     async function fetchSubflows() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getSubflows(workflowId);
+        const data = await DatabaseService.getSubflows(workflowId);
         setSubflows(data);
         setError(null);
       } catch (err) {
@@ -149,7 +148,7 @@ export function useSubflows(workflowId?: string) {
 
   const createSubflow = async (subflow: Omit<Subflow, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const newSubflow = await DatabaseAdapter.createSubflow(subflow);
+      const newSubflow = await DatabaseService.createSubflow(subflow);
       setSubflows(prev => [...prev, newSubflow]);
       return newSubflow;
     } catch (err) {
@@ -160,7 +159,7 @@ export function useSubflows(workflowId?: string) {
 
   const updateSubflow = async (id: string, updates: Partial<Subflow>) => {
     try {
-      const updatedSubflow = await DatabaseAdapter.updateSubflow(id, updates);
+      const updatedSubflow = await DatabaseService.updateSubflow(id, updates);
       setSubflows(prev => prev.map(s => s.id === id ? updatedSubflow : s));
       return updatedSubflow;
     } catch (err) {
@@ -173,7 +172,7 @@ export function useSubflows(workflowId?: string) {
     try {
       await DatabaseService.emitSubflowTasks(subflowId, providerId);
       // Refresh subflows to get updated status
-      const data = await DatabaseAdapter.getSubflows(workflowId);
+      const data = await DatabaseService.getSubflows(workflowId);
       setSubflows(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to emit tasks for subflow');
@@ -190,7 +189,7 @@ export function useSubflows(workflowId?: string) {
     emitTasksForSubflow,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getSubflows(workflowId)
+      DatabaseService.getSubflows(workflowId)
         .then(setSubflows)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -214,7 +213,7 @@ export function useTasks(filters?: {
     async function fetchTasks() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getTasks(filters);
+        const data = await DatabaseService.getTasks(filters);
         setTasks(data);
         setError(null);
       } catch (err) {
@@ -229,7 +228,7 @@ export function useTasks(filters?: {
 
   const createTask = async (task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const newTask = await DatabaseAdapter.createTask(task);
+      const newTask = await DatabaseService.createTask(task);
       setTasks(prev => [...prev, newTask]);
       return newTask;
     } catch (err) {
@@ -240,7 +239,7 @@ export function useTasks(filters?: {
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     try {
-      const updatedTask = await DatabaseAdapter.updateTask(id, updates);
+      const updatedTask = await DatabaseService.updateTask(id, updates);
       setTasks(prev => prev.map(t => t.id === id ? updatedTask : t));
       return updatedTask;
     } catch (err) {
@@ -257,7 +256,7 @@ export function useTasks(filters?: {
     updateTask,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getTasks(filters)
+      DatabaseService.getTasks(filters)
         .then(setTasks)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -275,7 +274,7 @@ export function useWorkflows(organizationId?: string) {
     async function fetchWorkflows() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getWorkflows(organizationId);
+        const data = await DatabaseService.getWorkflows(organizationId);
         setWorkflows(data);
         setError(null);
       } catch (err) {
@@ -290,7 +289,7 @@ export function useWorkflows(organizationId?: string) {
 
   const createWorkflow = async (workflow: Omit<Workflow, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const newWorkflow = await DatabaseAdapter.createWorkflow(workflow);
+      const newWorkflow = await DatabaseService.createWorkflow(workflow);
       setWorkflows(prev => [...prev, newWorkflow]);
       return newWorkflow;
     } catch (err) {
@@ -301,7 +300,7 @@ export function useWorkflows(organizationId?: string) {
 
   const updateWorkflow = async (id: string, updates: Partial<Workflow>) => {
     try {
-      const updatedWorkflow = await DatabaseAdapter.updateWorkflow(id, updates);
+      const updatedWorkflow = await DatabaseService.updateWorkflow(id, updates);
       setWorkflows(prev => prev.map(w => w.id === id ? updatedWorkflow : w));
       return updatedWorkflow;
     } catch (err) {
@@ -317,7 +316,7 @@ export function useWorkflows(organizationId?: string) {
     updateWorkflow,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getWorkflows(organizationId)
+      DatabaseService.getWorkflows(organizationId)
         .then(setWorkflows)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -335,7 +334,7 @@ export function usePayers(organizationId?: string) {
     async function fetchPayers() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getPayers(organizationId);
+        const data = await DatabaseService.getPayers(organizationId);
         setPayers(data);
         setError(null);
       } catch (err) {
@@ -350,7 +349,7 @@ export function usePayers(organizationId?: string) {
 
   const createPayer = async (payer: Omit<Payer, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const newPayer = await DatabaseAdapter.createPayer(payer);
+      const newPayer = await DatabaseService.createPayer(payer);
       setPayers(prev => [...prev, newPayer]);
       return newPayer;
     } catch (err) {
@@ -361,7 +360,7 @@ export function usePayers(organizationId?: string) {
 
   const updatePayer = async (id: string, updates: Partial<Payer>) => {
     try {
-      const updatedPayer = await DatabaseAdapter.updatePayer(id, updates);
+      const updatedPayer = await DatabaseService.updatePayer(id, updates);
       setPayers(prev => prev.map(p => p.id === id ? updatedPayer : p));
       return updatedPayer;
     } catch (err) {
@@ -389,7 +388,7 @@ export function usePayers(organizationId?: string) {
     deletePayer,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getPayers(organizationId)
+      DatabaseService.getPayers(organizationId)
         .then(setPayers)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -410,7 +409,7 @@ export function useProviderPayerApplications(filters?: {
     async function fetchApplications() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getProviderPayerApplications(filters);
+        const data = await DatabaseService.getProviderPayerApplications(filters);
         setApplications(data);
         setError(null);
       } catch (err) {
@@ -427,7 +426,7 @@ export function useProviderPayerApplications(filters?: {
     application: Omit<ProviderPayerApplication, 'id' | 'created_at' | 'updated_at'>
   ) => {
     try {
-      const newApplication = await DatabaseAdapter.createProviderPayerApplication(application);
+      const newApplication = await DatabaseService.createProviderPayerApplication(application);
       setApplications(prev => [...prev, newApplication]);
       return newApplication;
     } catch (err) {
@@ -441,7 +440,7 @@ export function useProviderPayerApplications(filters?: {
     updates: Partial<ProviderPayerApplication>
   ) => {
     try {
-      const updatedApplication = await DatabaseAdapter.updateProviderPayerApplication(id, updates);
+      const updatedApplication = await DatabaseService.updateProviderPayerApplication(id, updates);
       setApplications(prev => prev.map(a => a.id === id ? updatedApplication : a));
       return updatedApplication;
     } catch (err) {
@@ -458,7 +457,7 @@ export function useProviderPayerApplications(filters?: {
     updateApplication,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getProviderPayerApplications(filters)
+      DatabaseService.getProviderPayerApplications(filters)
         .then(setApplications)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -479,7 +478,7 @@ export function useLocationPayerApplications(filters?: {
     async function fetchApplications() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getLocationPayerApplications(filters);
+        const data = await DatabaseService.getLocationPayerApplications(filters);
         setApplications(data);
         setError(null);
       } catch (err) {
@@ -496,7 +495,7 @@ export function useLocationPayerApplications(filters?: {
     application: Omit<LocationPayerApplication, 'id' | 'created_at' | 'updated_at'>
   ) => {
     try {
-      const newApplication = await DatabaseAdapter.createLocationPayerApplication(application);
+      const newApplication = await DatabaseService.createLocationPayerApplication(application);
       setApplications(prev => [...prev, newApplication]);
       return newApplication;
     } catch (err) {
@@ -510,7 +509,7 @@ export function useLocationPayerApplications(filters?: {
     updates: Partial<LocationPayerApplication>
   ) => {
     try {
-      const updatedApplication = await DatabaseAdapter.updateLocationPayerApplication(id, updates);
+      const updatedApplication = await DatabaseService.updateLocationPayerApplication(id, updates);
       setApplications(prev => prev.map(a => a.id === id ? updatedApplication : a));
       return updatedApplication;
     } catch (err) {
@@ -527,7 +526,7 @@ export function useLocationPayerApplications(filters?: {
     updateApplication,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getLocationPayerApplications(filters)
+      DatabaseService.getLocationPayerApplications(filters)
         .then(setApplications)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -550,7 +549,7 @@ export function useDashboardStats(organizationId?: string) {
     async function fetchStats() {
       try {
         setLoading(true);
-        const data = await DatabaseAdapter.getDashboardStats(organizationId);
+        const data = await DatabaseService.getDashboardStats(organizationId);
         setStats(data);
         setError(null);
       } catch (err) {
@@ -569,7 +568,7 @@ export function useDashboardStats(organizationId?: string) {
     error,
     refetch: () => {
       setLoading(true);
-      DatabaseAdapter.getDashboardStats(organizationId)
+      DatabaseService.getDashboardStats(organizationId)
         .then(setStats)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
