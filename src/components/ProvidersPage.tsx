@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useProviders, useLocations } from '../hooks/useDatabase';
-import { Users, Plus, Search, Filter, CreditCard as Edit, Eye, MapPin, Mail, Phone } from 'lucide-react';
-import { Provider } from '../lib/supabase';
+import { useProviders, useLocations, useProviderPayerApplications, usePayers } from '../hooks/useDatabase';
+import { Users, Plus, Search, Filter, CreditCard as Edit, Eye, MapPin, Mail, Phone, CheckCircle } from 'lucide-react';
+import { Provider, DatabaseService } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 import { formatters, validators } from '../utils/formatters';
 import { ProviderDetailModal } from './ProviderDetailModal';
+import { EditProviderModalContent } from './EditProviderModalContent';
 
 interface ProvidersPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -441,13 +442,15 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                         setViewingProvider(provider);
                         setShowDetailModal(true);
                       }}
-                      className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors"
+                      className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
+                      title="View Details"
                     >
                       <Eye className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleEdit(provider)}
                       className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
+                      title="Edit Provider"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -596,6 +599,13 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                 </>
               )}
 
+              <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+                <h3 className="text-xl font-semibold text-navy dark:text-white mb-2">Payer Application Status</h3>
+                <p className="text-navy/60 dark:text-gray-400 text-sm">
+                  Payer applications can be managed after the provider is created. Edit the provider to add and track application dates.
+                </p>
+              </div>
+
               <div className="flex justify-end gap-4 pt-4">
                 <button
                   type="button"
@@ -618,8 +628,26 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
 
       {/* Edit Provider Modal */}
       {showEditForm && editingProvider && (
+        <EditProviderModalContent
+          editingProvider={editingProvider}
+          formData={formData}
+          setFormData={setFormData}
+          customFields={customFields}
+          customFieldData={customFieldData}
+          locations={locations}
+          handleUpdate={handleUpdate}
+          renderCustomField={renderCustomField}
+          onCancel={() => {
+            setShowEditForm(false);
+            setEditingProvider(null);
+          }}
+        />
+      )}
+
+      {/* Edit Provider Modal OLD - KEEPING FOR NOW */}
+      {false && showEditForm && editingProvider && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-navy-light rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
               <h2 className="text-xl font-semibold text-navy dark:text-white">Edit Provider</h2>
             </div>
