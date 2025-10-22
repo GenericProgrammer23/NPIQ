@@ -222,7 +222,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
   }
 
   return (
-    <div className="p-6 bg-page-bg dark:bg-gray-900 min-h-screen">
+    <div className="p-6 bg-page-bg dark:bg-[#203A49] min-h-screen">
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>

@@ -32,7 +32,7 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
 
   const checkIncompleteDataWorkflow = async (provider: any) => {
     const missingFields = [];
-    
+
     // Check required fields
     if (!provider.email) missingFields.push('email');
     if (!provider.phone) missingFields.push('phone');
@@ -42,6 +42,9 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
 
     if (missingFields.length > 0) {
       await createIncompleteDataTasks(provider, missingFields);
+    } else {
+      // All required fields are present, auto-complete any pending "Obtain Provider Information" tasks
+      await autoCompleteProviderInfoTask(provider);
     }
   };
 
@@ -101,7 +104,7 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
     try {
       // Check if tasks already exist for missing data
       const existingTasks = await DatabaseService.getTasks({ providerId: provider.id });
-      const hasDataCollectionTask = existingTasks.some(t => 
+      const hasDataCollectionTask = existingTasks.some(t =>
         t.title.includes('Obtain Provider Information')
       );
 
@@ -128,6 +131,30 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
 
     } catch (error) {
       console.error('Failed to create incomplete data tasks:', error);
+    }
+  };
+
+  const autoCompleteProviderInfoTask = async (provider: any) => {
+    try {
+      // Find any pending "Obtain Provider Information" tasks for this provider
+      const existingTasks = await DatabaseService.getTasks({ providerId: provider.id });
+      const dataCollectionTasks = existingTasks.filter(t =>
+        t.title.includes('Obtain Provider Information') &&
+        (t.status === 'pending' || t.status === 'in_progress')
+      );
+
+      // Auto-complete these tasks since all required information is now present
+      for (const task of dataCollectionTasks) {
+        await DatabaseService.updateTask(task.id, {
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          description: `${task.description}\n\nAuto-completed: All required provider information has been obtained.`
+        });
+        console.log(`Auto-completed task: ${task.title} for provider ${provider.first_name} ${provider.last_name}`);
+      }
+
+    } catch (error) {
+      console.error('Failed to auto-complete provider info task:', error);
     }
   };
 
