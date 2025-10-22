@@ -138,6 +138,8 @@ export interface Payer {
   application_fields: Record<string, any>;
   status: 'active' | 'inactive';
   description?: string;
+  requires_demographics?: boolean;
+  dependent_on_payer_ids?: string[];
   created_at: string;
   updated_at: string;
   organization?: Organization;

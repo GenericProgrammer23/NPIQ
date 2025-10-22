@@ -237,31 +237,6 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   // Main app
   return (
     <div className="min-h-screen bg-navy">
-      {isOnline ? (
-        <div className="bg-dark-cyan/20 border-b border-dark-cyan/30 p-2">
-          <div className="flex items-center justify-between max-w-7xl mx-auto px-4">
-            <div className="flex items-center">
-              <Wifi className="h-4 w-4 text-dark-cyan mr-2" />
-              <span className="text-dark-cyan text-sm">Connected to Supabase</span>
-            </div>
-            <button onClick={handleSignOut} className="text-cream/70 hover:text-cream text-sm">
-              Sign Out
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-goldenrod/20 border-b border-goldenrod/30 p-2">
-          <div className="flex items-center justify-between max-w-7xl mx-auto px-4">
-            <div className="flex items-center">
-              <WifiOff className="h-4 w-4 text-goldenrod mr-2" />
-              <span className="text-goldenrod text-sm">Running in Local Mode</span>
-            </div>
-            <button onClick={handleSignOut} className="text-cream/70 hover:text-cream text-sm">
-              Sign Out
-            </button>
-          </div>
-        </div>
-      )}
       {children}
     </div>
   );

@@ -121,7 +121,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
           </div>
 
           <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6">
-            <h3 className="text-xl font-semibold text-navy dark:text-white mb-4">Payer Applications</h3>
+            <h3 className="text-xl font-semibold text-navy dark:text-white mb-4">Payer Application Status</h3>
 
             {appsLoading ? (
               <div className="text-center py-8">
@@ -137,17 +137,16 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                   <thead>
                     <tr className="border-b border-navy/10 dark:border-dark-cyan/30">
                       <th className="text-left py-3 px-4 text-sm font-semibold text-navy dark:text-white">Payer</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-navy dark:text-white">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-navy dark:text-white">Submitted</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-navy dark:text-white">Approved</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-navy dark:text-white">Loaded</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-navy dark:text-white">Actions</th>
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Submitted</th>
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Approved</th>
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Loaded</th>
                     </tr>
                   </thead>
                   <tbody>
                     {applications.map((app) => {
-                      const isEditing = editingApp === app.id;
-                      const updates = appUpdates[app.id] || {};
+                      const hasSubmitted = app.application_submission_date || app.status === 'submitted' || app.status === 'approved' || app.status === 'loaded';
+                      const hasApproved = app.application_approved_date || app.status === 'approved' || app.status === 'loaded';
+                      const hasLoaded = app.provider_loaded_date || app.status === 'loaded';
 
                       return (
                         <tr key={app.id} className="border-b border-navy/10 dark:border-dark-cyan/30 hover:bg-navy/5 dark:hover:bg-navy-dark">
@@ -156,88 +155,25 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                               {app.payer?.name || 'Unknown Payer'}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            {isEditing ? (
-                              <select
-                                value={updates.status || app.status}
-                                onChange={(e) => setAppUpdate(app.id, 'status', e.target.value)}
-                                className="px-2 py-1 border border-navy/20 dark:border-gray-600 rounded text-sm dark:bg-navy-dark dark:text-white"
-                              >
-                                <option value="not_started">Not Started</option>
-                                <option value="submitted">Submitted</option>
-                                <option value="approved">Approved</option>
-                                <option value="loaded">Loaded</option>
-                                <option value="rejected">Rejected</option>
-                              </select>
+                          <td className="py-3 px-4 text-center">
+                            {hasSubmitted ? (
+                              <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
                             ) : (
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                                {getStatusIcon(app.status)}
-                                <span className="ml-1 capitalize">{app.status.replace('_', ' ')}</span>
-                              </span>
+                              <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mx-auto" />
                             )}
                           </td>
-                          <td className="py-3 px-4 text-sm text-navy dark:text-white">
-                            {isEditing ? (
-                              <input
-                                type="date"
-                                value={updates.application_submission_date || app.application_submission_date || ''}
-                                onChange={(e) => setAppUpdate(app.id, 'application_submission_date', e.target.value)}
-                                className="px-2 py-1 border border-navy/20 dark:border-gray-600 rounded text-sm dark:bg-navy-dark dark:text-white"
-                              />
+                          <td className="py-3 px-4 text-center">
+                            {hasApproved ? (
+                              <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
                             ) : (
-                              app.application_submission_date || '-'
+                              <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mx-auto" />
                             )}
                           </td>
-                          <td className="py-3 px-4 text-sm text-navy dark:text-white">
-                            {isEditing ? (
-                              <input
-                                type="date"
-                                value={updates.application_approved_date || app.application_approved_date || ''}
-                                onChange={(e) => setAppUpdate(app.id, 'application_approved_date', e.target.value)}
-                                className="px-2 py-1 border border-navy/20 dark:border-gray-600 rounded text-sm dark:bg-navy-dark dark:text-white"
-                              />
+                          <td className="py-3 px-4 text-center">
+                            {hasLoaded ? (
+                              <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
                             ) : (
-                              app.application_approved_date || '-'
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-navy dark:text-white">
-                            {isEditing ? (
-                              <input
-                                type="date"
-                                value={updates.provider_loaded_date || app.provider_loaded_date || ''}
-                                onChange={(e) => setAppUpdate(app.id, 'provider_loaded_date', e.target.value)}
-                                className="px-2 py-1 border border-navy/20 dark:border-gray-600 rounded text-sm dark:bg-navy-dark dark:text-white"
-                              />
-                            ) : (
-                              app.provider_loaded_date || '-'
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {isEditing ? (
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleUpdateApplication(app.id)}
-                                  className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setEditingApp(null);
-                                    setAppUpdates({});
-                                  }}
-                                  className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setEditingApp(app.id)}
-                                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                              >
-                                Edit
-                              </button>
+                              <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mx-auto" />
                             )}
                           </td>
                         </tr>

@@ -25,7 +25,9 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
     workflow_state: 'ALL' as const,
     description: '',
     status: 'active' as const,
-    application_fields: {}
+    application_fields: {},
+    requires_demographics: false,
+    dependent_on_payer_ids: [] as string[]
   });
 
   const [bulkAssignData, setBulkAssignData] = useState({
@@ -141,7 +143,9 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
       workflow_state: payer.workflow_state,
       description: payer.description || '',
       status: payer.status,
-      application_fields: payer.application_fields || {}
+      application_fields: payer.application_fields || {},
+      requires_demographics: payer.requires_demographics || false,
+      dependent_on_payer_ids: payer.dependent_on_payer_ids || []
     });
     setShowEditForm(true);
   };
@@ -153,7 +157,9 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
       workflow_state: 'ALL',
       description: '',
       status: 'active',
-      application_fields: {}
+      application_fields: {},
+      requires_demographics: false,
+      dependent_on_payer_ids: []
     });
   };
 
@@ -225,7 +231,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center px-4 py-2 bg-navy dark:bg-blue-600 text-white rounded-lg hover:bg-navy/90 dark:hover:bg-blue-700 transition-colors"
+            className="flex items-center px-4 py-2 bg-navy dark:bg-navy-light text-white dark:text-cream rounded-lg hover:bg-navy/90 dark:hover:bg-navy-dark transition-colors"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Payer
@@ -241,13 +247,13 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
             placeholder="Search payers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-800 dark:text-white"
+            className="w-full pl-10 pr-4 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-light dark:text-white"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-800 dark:text-white"
+          className="px-4 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-light dark:text-white"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -259,11 +265,11 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
         {filteredPayers.map((payer) => (
           <div
             key={payer.id}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-navy/10 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow"
+            className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center">
-                <CreditCard className="h-8 w-8 text-blue-600 dark:text-blue-400 mr-3" />
+                <CreditCard className="h-8 w-8 text-dark-cyan dark:text-dark-cyan mr-3" />
                 <div>
                   <h3 className="text-lg font-semibold text-navy dark:text-white">{payer.name}</h3>
                   <p className="text-sm text-navy/60 dark:text-gray-400 capitalize">{payer.type}</p>
@@ -272,13 +278,13 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
               <div className="flex gap-2">
                 <button
                   onClick={() => openEditForm(payer)}
-                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                  className="p-2 text-dark-cyan dark:text-dark-cyan hover:bg-dark-cyan/10 dark:hover:bg-dark-cyan/20 rounded transition-colors"
                 >
                   <Edit className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(payer.id)}
-                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                  className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -310,7 +316,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
               </span>
               <button
                 onClick={() => setShowBulkAssign(payer.id)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-sm text-dark-cyan dark:text-dark-cyan hover:underline"
               >
                 Assign to Providers
               </button>
@@ -325,7 +331,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
           <p className="text-navy/60 dark:text-gray-400 text-lg">No payers found</p>
           <button
             onClick={() => setShowAddForm(true)}
-            className="mt-4 text-blue-600 dark:text-blue-400 hover:underline"
+            className="mt-4 text-dark-cyan dark:text-dark-cyan hover:underline"
           >
             Add your first payer
           </button>
@@ -334,7 +340,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
 
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-navy-light rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-navy dark:text-white mb-6">Add New Payer</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -346,7 +352,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                   placeholder="e.g., CAQH, Medicare, AHCCCS"
                 />
               </div>
@@ -359,7 +365,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                 >
                   <option value="insurance">Insurance</option>
                   <option value="credentialing">Credentialing</option>
@@ -376,7 +382,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.workflow_state}
                   onChange={(e) => setFormData({ ...formData, workflow_state: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                 >
                   <option value="ALL">All States</option>
                   <option value="AZ">Arizona (AZ)</option>
@@ -391,7 +397,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                   rows={3}
                   placeholder="Optional description..."
                 />
@@ -413,7 +419,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-navy dark:bg-blue-600 text-white rounded-lg hover:bg-navy/90 dark:hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-navy dark:bg-dark-cyan text-white rounded-lg hover:bg-navy/90 dark:hover:bg-dark-cyan/80 transition-colors"
                 >
                   Add Payer
                 </button>
@@ -423,7 +429,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                     setShowAddForm(false);
                     resetForm();
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-navy dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-navy-dark text-navy dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-navy transition-colors"
                 >
                   Cancel
                 </button>
@@ -435,7 +441,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
 
       {showEditForm && editingPayer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-navy-light rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-navy dark:text-white mb-6">Edit Payer</h2>
             <form onSubmit={handleEdit} className="space-y-4">
               <div>
@@ -447,7 +453,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                 />
               </div>
 
@@ -459,7 +465,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                 >
                   <option value="insurance">Insurance</option>
                   <option value="credentialing">Credentialing</option>
@@ -476,7 +482,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.workflow_state}
                   onChange={(e) => setFormData({ ...formData, workflow_state: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                 >
                   <option value="ALL">All States</option>
                   <option value="AZ">Arizona (AZ)</option>
@@ -492,7 +498,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                   required
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -506,15 +512,53 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                   rows={3}
                 />
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="requiresDemographics"
+                  checked={formData.requires_demographics}
+                  onChange={(e) => setFormData({ ...formData, requires_demographics: e.target.checked })}
+                  className="mr-2 h-4 w-4 text-dark-cyan focus:ring-dark-cyan border-navy/20 dark:border-dark-cyan/30 rounded"
+                />
+                <label htmlFor="requiresDemographics" className="text-sm text-navy dark:text-gray-300">
+                  Requires demographic information
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-1">
+                  Dependent on Other Applications
+                </label>
+                <select
+                  multiple
+                  value={formData.dependent_on_payer_ids}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setFormData({ ...formData, dependent_on_payer_ids: selected });
+                  }}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
+                  size={4}
+                >
+                  {payers.filter(p => p.id !== editingPayer?.id).map(payer => (
+                    <option key={payer.id} value={payer.id}>
+                      {payer.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-navy/60 dark:text-gray-400 mt-1">
+                  Hold Ctrl/Cmd to select multiple. Applications for this payer will be blocked until selected payers are approved.
+                </p>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-navy dark:bg-blue-600 text-white rounded-lg hover:bg-navy/90 dark:hover:bg-blue-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-navy dark:bg-dark-cyan text-white rounded-lg hover:bg-navy/90 dark:hover:bg-dark-cyan/80 transition-colors"
                 >
                   Save Changes
                 </button>
@@ -525,7 +569,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                     setEditingPayer(null);
                     resetForm();
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-navy dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-navy-dark text-navy dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-navy transition-colors"
                 >
                   Cancel
                 </button>
@@ -537,7 +581,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
 
       {showBulkAssign && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-navy-light rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-navy dark:text-white mb-6">Assign Payer to Providers</h2>
 
             <div className="mb-4">
@@ -559,7 +603,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
               <h3 className="font-semibold text-navy dark:text-white">Select Providers</h3>
               <button
                 onClick={selectAllProviders}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-sm text-dark-cyan dark:text-dark-cyan hover:underline"
               >
                 {bulkAssignData.selectedProviders.length === providers.length ? 'Deselect All' : 'Select All'}
               </button>
@@ -569,7 +613,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
               {providers.map((provider) => (
                 <label
                   key={provider.id}
-                  className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer"
+                  className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-navy-dark rounded-lg cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -593,7 +637,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
               <button
                 onClick={handleBulkAssign}
                 disabled={bulkAssignData.selectedProviders.length === 0 && providers.length > 0}
-                className="flex-1 px-4 py-2 bg-navy dark:bg-blue-600 text-white rounded-lg hover:bg-navy/90 dark:hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-navy dark:bg-dark-cyan text-white rounded-lg hover:bg-navy/90 dark:hover:bg-dark-cyan/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Assign to {bulkAssignData.selectedProviders.length || providers.length} Provider(s)
               </button>
@@ -606,7 +650,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                     addToWorkflows: false
                   });
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-navy dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-navy-dark text-navy dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-navy transition-colors"
               >
                 Cancel
               </button>
