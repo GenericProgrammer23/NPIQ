@@ -8,7 +8,7 @@ interface TasksPageProps {
 }
 
 export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
-  const { tasks, loading, error, createTask, updateTask } = useTasks();
+  const { tasks, loading, error, createTask, updateTask, refetch } = useTasks();
   const { workflows } = useWorkflows();
   const { subflows } = useSubflows();
   const { providers } = useProviders();
@@ -44,9 +44,10 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
     }
   }, [initialFilter]);
 
-  // Load custom fields on component mount
+  // Load custom fields and refresh tasks on component mount
   React.useEffect(() => {
     loadCustomFields();
+    refetch();
   }, []);
 
   const loadCustomFields = async () => {

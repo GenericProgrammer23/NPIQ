@@ -140,13 +140,24 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Submitted</th>
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Approved</th>
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Loaded</th>
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Effective Date</th>
+                      {editingApp && <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {applications.map((app) => {
-                      const hasSubmitted = app.application_submission_date || app.status === 'submitted' || app.status === 'approved' || app.status === 'loaded';
-                      const hasApproved = app.application_approved_date || app.status === 'approved' || app.status === 'loaded';
-                      const hasLoaded = app.provider_loaded_date || app.status === 'loaded';
+                      const formatDate = (dateString: string | null) => {
+                        if (!dateString) return '';
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                      };
+
+                      const formatDateForInput = (dateString: string | null) => {
+                        if (!dateString) return '';
+                        return dateString.split('T')[0];
+                      };
+
+                      const isEditing = editingApp === app.id;
 
                       return (
                         <tr key={app.id} className="border-b border-navy/10 dark:border-dark-cyan/30 hover:bg-navy/5 dark:hover:bg-navy-dark">
@@ -155,27 +166,83 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                               {app.payer?.name || 'Unknown Payer'}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            {hasSubmitted ? (
-                              <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
+                          <td className="py-3 px-4 text-center text-sm">
+                            {isEditing ? (
+                              <input
+                                type="date"
+                                value={formatDateForInput(appUpdates[app.id]?.application_submission_date ?? app.application_submission_date)}
+                                onChange={(e) => setAppUpdate(app.id, 'application_submission_date', e.target.value || null)}
+                                className="px-2 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-center bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                              />
                             ) : (
-                              <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mx-auto" />
+                              <span className="text-navy dark:text-cream cursor-pointer hover:bg-dark-cyan/10 px-2 py-1 rounded" onClick={() => setEditingApp(app.id)}>
+                                {formatDate(app.application_submission_date)}
+                              </span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            {hasApproved ? (
-                              <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
+                          <td className="py-3 px-4 text-center text-sm">
+                            {isEditing ? (
+                              <input
+                                type="date"
+                                value={formatDateForInput(appUpdates[app.id]?.application_approved_date ?? app.application_approved_date)}
+                                onChange={(e) => setAppUpdate(app.id, 'application_approved_date', e.target.value || null)}
+                                className="px-2 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-center bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                              />
                             ) : (
-                              <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mx-auto" />
+                              <span className="text-navy dark:text-cream cursor-pointer hover:bg-dark-cyan/10 px-2 py-1 rounded" onClick={() => setEditingApp(app.id)}>
+                                {formatDate(app.application_approved_date)}
+                              </span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            {hasLoaded ? (
-                              <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
+                          <td className="py-3 px-4 text-center text-sm">
+                            {isEditing ? (
+                              <input
+                                type="date"
+                                value={formatDateForInput(appUpdates[app.id]?.provider_loaded_date ?? app.provider_loaded_date)}
+                                onChange={(e) => setAppUpdate(app.id, 'provider_loaded_date', e.target.value || null)}
+                                className="px-2 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-center bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                              />
                             ) : (
-                              <div className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded-full mx-auto" />
+                              <span className="text-navy dark:text-cream cursor-pointer hover:bg-dark-cyan/10 px-2 py-1 rounded" onClick={() => setEditingApp(app.id)}>
+                                {formatDate(app.provider_loaded_date)}
+                              </span>
                             )}
                           </td>
+                          <td className="py-3 px-4 text-center text-sm">
+                            {isEditing ? (
+                              <input
+                                type="date"
+                                value={formatDateForInput(appUpdates[app.id]?.effective_date ?? app.effective_date)}
+                                onChange={(e) => setAppUpdate(app.id, 'effective_date', e.target.value || null)}
+                                className="px-2 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-center bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                              />
+                            ) : (
+                              <span className="text-navy dark:text-cream cursor-pointer hover:bg-dark-cyan/10 px-2 py-1 rounded" onClick={() => setEditingApp(app.id)}>
+                                {formatDate(app.effective_date)}
+                              </span>
+                            )}
+                          </td>
+                          {isEditing && (
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex gap-2 justify-center">
+                                <button
+                                  onClick={() => handleUpdateApplication(app.id)}
+                                  className="px-3 py-1 bg-goldenrod hover:bg-goldenrod/90 text-navy rounded text-sm font-medium"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingApp(null);
+                                    setAppUpdates({});
+                                  }}
+                                  className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-navy dark:text-cream rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
