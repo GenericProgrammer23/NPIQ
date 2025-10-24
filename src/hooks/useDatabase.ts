@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DatabaseService, Provider, Location, Task, Workflow, Subflow, Payer, ProviderPayerApplication, LocationPayerApplication } from '../lib/supabase';
+import { DatabaseService, Provider, Location, Task, Workflow, Subflow, Payer, ProviderPayerApplication, LocationPayerApplication, WorkflowInstance } from '../lib/supabase';
 
 // Custom hook for providers
 export function useProviders(organizationId?: string) {
@@ -265,7 +265,7 @@ export function useTasks(filters?: {
 }
 
 // Custom hook for workflows
-export function useWorkflows(organizationId?: string) {
+export function useWorkflows(organizationId?: string, templatesOnly: boolean = false) {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -274,7 +274,7 @@ export function useWorkflows(organizationId?: string) {
     async function fetchWorkflows() {
       try {
         setLoading(true);
-        const data = await DatabaseService.getWorkflows(organizationId);
+        const data = await DatabaseService.getWorkflows(organizationId, templatesOnly);
         setWorkflows(data);
         setError(null);
       } catch (err) {
@@ -285,7 +285,7 @@ export function useWorkflows(organizationId?: string) {
     }
 
     fetchWorkflows();
-  }, [organizationId]);
+  }, [organizationId, templatesOnly]);
 
   const createWorkflow = async (workflow: Omit<Workflow, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -316,7 +316,7 @@ export function useWorkflows(organizationId?: string) {
     updateWorkflow,
     refetch: () => {
       setLoading(true);
-      DatabaseService.getWorkflows(organizationId)
+      DatabaseService.getWorkflows(organizationId, templatesOnly)
         .then(setWorkflows)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
@@ -528,6 +528,98 @@ export function useLocationPayerApplications(filters?: {
       setLoading(true);
       DatabaseService.getLocationPayerApplications(filters)
         .then(setApplications)
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
+    }
+  };
+}
+
+// Custom hook for workflow instances
+export function useWorkflowInstances(filters?: {
+  organizationId?: string;
+  entityType?: 'provider' | 'location';
+  entityId?: string;
+  status?: string;
+  workflowTemplateId?: string;
+}) {
+  const [instances, setInstances] = useState<WorkflowInstance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchInstances() {
+      try {
+        setLoading(true);
+        const data = await DatabaseService.getWorkflowInstances(filters);
+        setInstances(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch workflow instances');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchInstances();
+  }, [filters?.organizationId, filters?.entityType, filters?.entityId, filters?.status, filters?.workflowTemplateId]);
+
+  const createInstance = async (
+    instance: Omit<WorkflowInstance, 'id' | 'created_at' | 'updated_at'>
+  ) => {
+    try {
+      const newInstance = await DatabaseService.createWorkflowInstance(instance);
+      setInstances(prev => [...prev, newInstance]);
+      return newInstance;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create workflow instance');
+      throw err;
+    }
+  };
+
+  const updateInstance = async (
+    id: string,
+    updates: Partial<WorkflowInstance>
+  ) => {
+    try {
+      const updatedInstance = await DatabaseService.updateWorkflowInstance(id, updates);
+      setInstances(prev => prev.map(i => i.id === id ? updatedInstance : i));
+      return updatedInstance;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update workflow instance');
+      throw err;
+    }
+  };
+
+  const instantiateWorkflow = async (
+    workflowTemplateId: string,
+    entityType: 'provider' | 'location',
+    entityId: string
+  ) => {
+    try {
+      const newInstance = await DatabaseService.instantiateWorkflow(
+        workflowTemplateId,
+        entityType,
+        entityId
+      );
+      setInstances(prev => [...prev, newInstance]);
+      return newInstance;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to instantiate workflow');
+      throw err;
+    }
+  };
+
+  return {
+    instances,
+    loading,
+    error,
+    createInstance,
+    updateInstance,
+    instantiateWorkflow,
+    refetch: () => {
+      setLoading(true);
+      DatabaseService.getWorkflowInstances(filters)
+        .then(setInstances)
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
     }

@@ -9,7 +9,7 @@ interface WorkflowsPageProps {
 }
 
 export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) => {
-  const { workflows, loading, error, createWorkflow } = useWorkflows();
+  const { workflows, loading, error, createWorkflow } = useWorkflows(undefined, true);
   const { providers } = useProviders();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);

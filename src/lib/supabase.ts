@@ -89,9 +89,28 @@ export interface Workflow {
   status: 'active' | 'draft' | 'archived';
   steps: any[];
   created_by?: string;
+  is_template?: boolean;
+  trigger_conditions?: any[];
   created_at: string;
   updated_at: string;
   organization?: Organization;
+}
+
+export interface WorkflowInstance {
+  id: string;
+  workflow_template_id: string;
+  entity_type: 'provider' | 'location';
+  entity_id: string;
+  status: 'active' | 'completed' | 'cancelled';
+  started_at: string;
+  completed_at?: string;
+  progress_percentage: number;
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
+  workflow_template?: Workflow;
+  provider?: Provider;
+  location?: Location;
 }
 
 export interface Task {
@@ -99,6 +118,8 @@ export interface Task {
   workflow_id?: string;
   subflow_id?: string;
   provider_id?: string;
+  location_id?: string;
+  instance_id?: string;
   title: string;
   description?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
@@ -111,11 +132,14 @@ export interface Task {
   workflow?: Workflow;
   subflow?: Subflow;
   provider?: Provider;
+  location?: Location;
+  instance?: WorkflowInstance;
 }
 
 export interface Subflow {
   id: string;
   workflow_id: string;
+  instance_id?: string;
   name: string;
   purpose?: string;
   prerequisites: string;
@@ -126,6 +150,7 @@ export interface Subflow {
   created_at: string;
   updated_at: string;
   workflow?: Workflow;
+  instance?: WorkflowInstance;
   tasks?: Task[];
 }
 
@@ -420,7 +445,7 @@ export class DatabaseService {
   }
 
   // Workflows
-  static async getWorkflows(organizationId?: string): Promise<Workflow[]> {
+  static async getWorkflows(organizationId?: string, templatesOnly: boolean = false): Promise<Workflow[]> {
     if (!supabase) return [];
     let query = supabase
       .from('workflows')
@@ -434,7 +459,11 @@ export class DatabaseService {
       query = query.eq('organization_id', organizationId);
     }
 
-    const { data, error } = await query;
+    if (templatesOnly) {
+      query = query.eq('is_template', true);
+    }
+
+    const { data, error} = await query;
     if (error) throw error;
     return data || [];
   }
@@ -1006,6 +1035,183 @@ export class DatabaseService {
 
     if (error) throw error;
     return data;
+  }
+
+  // Workflow Instances
+  static async getWorkflowInstances(filters?: {
+    organizationId?: string;
+    entityType?: 'provider' | 'location';
+    entityId?: string;
+    status?: string;
+    workflowTemplateId?: string;
+  }): Promise<WorkflowInstance[]> {
+    if (!supabase) return [];
+    let query = supabase
+      .from('workflow_instances')
+      .select(`
+        *,
+        workflow_template:workflows(*),
+        provider:providers(*),
+        location:locations(*)
+      `)
+      .order('started_at', { ascending: false });
+
+    if (filters?.organizationId) {
+      query = query.eq('organization_id', filters.organizationId);
+    }
+    if (filters?.entityType) {
+      query = query.eq('entity_type', filters.entityType);
+    }
+    if (filters?.entityId) {
+      query = query.eq('entity_id', filters.entityId);
+    }
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+    if (filters?.workflowTemplateId) {
+      query = query.eq('workflow_template_id', filters.workflowTemplateId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async createWorkflowInstance(
+    instance: Omit<WorkflowInstance, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<WorkflowInstance> {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    // Get current user's organization if not provided
+    if (!instance.organization_id || instance.organization_id === 'current-org-id') {
+      const user = await this.getCurrentUser();
+      if (user) {
+        const { data: membership } = await supabase
+          .from('org_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (membership) {
+          instance.organization_id = membership.organization_id;
+        }
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('workflow_instances')
+      .insert(instance)
+      .select(`
+        *,
+        workflow_template:workflows(*),
+        provider:providers(*),
+        location:locations(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updateWorkflowInstance(
+    id: string,
+    updates: Partial<WorkflowInstance>
+  ): Promise<WorkflowInstance> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('workflow_instances')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        workflow_template:workflows(*),
+        provider:providers(*),
+        location:locations(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Create a workflow instance with subflows and tasks
+  static async instantiateWorkflow(
+    workflowTemplateId: string,
+    entityType: 'provider' | 'location',
+    entityId: string
+  ): Promise<WorkflowInstance> {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    try {
+      // Get the workflow template
+      const { data: template, error: templateError } = await supabase
+        .from('workflows')
+        .select('*')
+        .eq('id', workflowTemplateId)
+        .single();
+
+      if (templateError || !template) throw templateError || new Error('Template not found');
+
+      // Create the workflow instance
+      const instance = await this.createWorkflowInstance({
+        workflow_template_id: workflowTemplateId,
+        entity_type: entityType,
+        entity_id: entityId,
+        status: 'active',
+        started_at: new Date().toISOString(),
+        progress_percentage: 0,
+        organization_id: template.organization_id
+      });
+
+      // Get subflows for this workflow template
+      const { data: templateSubflows } = await supabase
+        .from('subflows')
+        .select('*')
+        .eq('workflow_id', workflowTemplateId)
+        .is('instance_id', null)
+        .order('order_index');
+
+      // Create instance subflows
+      if (templateSubflows && templateSubflows.length > 0) {
+        for (const templateSubflow of templateSubflows) {
+          const { data: instanceSubflow } = await supabase
+            .from('subflows')
+            .insert({
+              workflow_id: workflowTemplateId,
+              instance_id: instance.id,
+              name: templateSubflow.name,
+              purpose: templateSubflow.purpose,
+              prerequisites: templateSubflow.prerequisites,
+              dependencies: templateSubflow.dependencies,
+              exit_condition: templateSubflow.exit_condition,
+              status: 'not_started',
+              order_index: templateSubflow.order_index
+            })
+            .select()
+            .single();
+
+          // Check if prerequisites are met to start this subflow
+          if (instanceSubflow) {
+            const prereqsMet = await this.checkSubflowPrerequisites(
+              instanceSubflow.id,
+              entityType === 'provider' ? entityId : undefined
+            );
+
+            if (prereqsMet) {
+              await this.emitSubflowTasks(
+                instanceSubflow.id,
+                entityType === 'provider' ? entityId : undefined
+              );
+            }
+          }
+        }
+      }
+
+      return instance;
+    } catch (error) {
+      console.error('Error instantiating workflow:', error);
+      throw error;
+    }
   }
 
   // Dashboard statistics

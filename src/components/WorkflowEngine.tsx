@@ -9,7 +9,6 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
   const processingRef = useRef(false);
 
   useEffect(() => {
-    // Prevent double-execution in React StrictMode
     if (processingRef.current) return;
 
     processingRef.current = true;
@@ -26,20 +25,42 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
   };
 
   const checkNewProviderWorkflow = async (provider: any) => {
-    // Check if this is a new provider (created recently)
     const createdAt = new Date(provider.created_at);
     const now = new Date();
     const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
 
-    if (hoursSinceCreation <= 24) { // New provider within 24 hours
-      await createNewProviderWorkflow(provider);
+    if (hoursSinceCreation <= 24) {
+      try {
+        const existingInstances = await DatabaseService.getWorkflowInstances({
+          entityType: 'provider',
+          entityId: provider.id
+        });
+
+        if (existingInstances.length > 0) return;
+
+        const workflowTemplates = await DatabaseService.getWorkflows(provider.organization_id, true);
+        const newProviderTemplate = workflowTemplates.find(t =>
+          t.name.toLowerCase().includes('new provider') ||
+          t.name.toLowerCase().includes('onboarding')
+        );
+
+        if (newProviderTemplate) {
+          await DatabaseService.instantiateWorkflow(
+            newProviderTemplate.id,
+            'provider',
+            provider.id
+          );
+          console.log(`Created workflow instance for new provider: ${provider.first_name} ${provider.last_name}`);
+        }
+      } catch (error) {
+        console.error('Failed to create new provider workflow instance:', error);
+      }
     }
   };
 
   const checkIncompleteDataWorkflow = async (provider: any) => {
     const missingFields = [];
 
-    // Check required fields
     if (!provider.email) missingFields.push('email');
     if (!provider.phone) missingFields.push('phone');
     if (!provider.specialty) missingFields.push('specialty');
@@ -49,60 +70,7 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
     if (missingFields.length > 0) {
       await createIncompleteDataTasks(provider, missingFields);
     } else {
-      // All required fields are present, auto-complete any pending "Obtain Provider Information" tasks
       await autoCompleteProviderInfoTask(provider);
-    }
-  };
-
-  const createNewProviderWorkflow = async (provider: any) => {
-    try {
-      // Check if workflow already exists for this provider
-      const existingWorkflows = await DatabaseService.getWorkflows();
-      const hasExistingWorkflow = existingWorkflows.some(w => 
-        w.name.includes(`New Provider: ${provider.first_name} ${provider.last_name}`)
-      );
-
-      if (hasExistingWorkflow) return;
-
-      // Create new provider workflow
-      const workflow = await DatabaseService.createWorkflow({
-        name: `New Provider: ${provider.first_name} ${provider.last_name}`,
-        description: `Onboarding workflow for new provider ${provider.first_name} ${provider.last_name}`,
-        type: 'credentialing',
-        status: 'active',
-        steps: [
-          { name: 'Collect Provider Information', status: 'pending' },
-          { name: 'Verify Credentials', status: 'pending' },
-          { name: 'Background Check', status: 'pending' },
-          { name: 'License Verification', status: 'pending' },
-          { name: 'Final Approval', status: 'pending' }
-        ],
-        organization_id: provider.organization_id
-      });
-
-      // Create initial tasks
-      await DatabaseService.createTask({
-        workflow_id: workflow.id,
-        provider_id: provider.id,
-        title: 'Welcome New Provider',
-        description: `Send welcome package to ${provider.first_name} ${provider.last_name}`,
-        status: 'pending',
-        priority: 'high',
-        due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Due in 24 hours
-      });
-
-      await DatabaseService.createTask({
-        workflow_id: workflow.id,
-        provider_id: provider.id,
-        title: 'Initial Document Collection',
-        description: 'Collect required documents from new provider',
-        status: 'pending',
-        priority: 'high',
-        due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() // Due in 3 days
-      });
-
-    } catch (error) {
-      console.error('Failed to create new provider workflow:', error);
     }
   };
 
@@ -119,7 +87,6 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
       const missingFieldsList = missingFields.map(field => fieldLabels[field]).join(', ');
       const newDescription = `Missing required information for ${provider.first_name} ${provider.last_name}: ${missingFieldsList}`;
 
-      // Check if task already exists for this provider
       const existingTasks = await DatabaseService.getTasks({ providerId: provider.id });
       const existingTask = existingTasks.find(t =>
         t.title === 'Obtain Provider Information' &&
@@ -127,7 +94,6 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
       );
 
       if (existingTask) {
-        // Update the existing task with the current missing fields
         if (existingTask.description !== newDescription) {
           await DatabaseService.updateTask(existingTask.id, {
             description: newDescription
@@ -137,7 +103,6 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
         return;
       }
 
-      // Create new task if none exists
       await DatabaseService.createTask({
         provider_id: provider.id,
         title: 'Obtain Provider Information',
@@ -154,14 +119,12 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
 
   const autoCompleteProviderInfoTask = async (provider: any) => {
     try {
-      // Find any pending "Obtain Provider Information" tasks for this provider
       const existingTasks = await DatabaseService.getTasks({ providerId: provider.id });
       const dataCollectionTasks = existingTasks.filter(t =>
         t.title.includes('Obtain Provider Information') &&
         (t.status === 'pending' || t.status === 'in_progress')
       );
 
-      // Auto-complete these tasks since all required information is now present
       for (const task of dataCollectionTasks) {
         await DatabaseService.updateTask(task.id, {
           status: 'completed',
@@ -176,43 +139,5 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
     }
   };
 
-  // Future feature: Provider change workflows
-  // Commented out until we implement provider change detection
-  // const createProviderChangeWorkflow = async (provider: any, changeType: 'name' | 'location') => {
-  //   try {
-  //     const workflowName = changeType === 'name'
-  //       ? `Provider Name Change: ${provider.first_name} ${provider.last_name}`
-  //       : `Provider Location Change: ${provider.first_name} ${provider.last_name}`;
-
-  //     const workflow = await DatabaseService.createWorkflow({
-  //       name: workflowName,
-  //       description: `Handle ${changeType} change for provider ${provider.first_name} ${provider.last_name}`,
-  //       type: 'compliance',
-  //       status: 'active',
-  //       steps: [
-  //         { name: 'Document Change Request', status: 'pending' },
-  //         { name: 'Update Records', status: 'pending' },
-  //         { name: 'Notify Stakeholders', status: 'pending' },
-  //         { name: 'Verify Compliance', status: 'pending' }
-  //       ],
-  //       organization_id: provider.organization_id
-  //     });
-
-  //     await DatabaseService.createTask({
-  //       workflow_id: workflow.id,
-  //       provider_id: provider.id,
-  //       title: `Process ${changeType === 'name' ? 'Name' : 'Location'} Change`,
-  //       description: `Update all systems and documentation for provider ${changeType} change`,
-  //       status: 'pending',
-  //       priority: 'medium',
-  //       due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() // Due in 5 days
-  //     });
-
-  //   } catch (error) {
-  //     console.error(`Failed to create ${changeType} change workflow:`, error);
-  //   }
-  // };
-
-  // This component doesn't render anything visible
   return null;
 };
