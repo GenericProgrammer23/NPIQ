@@ -37,7 +37,28 @@ export const StartWorkflowModal: React.FC<StartWorkflowModalProps> = ({
       onClose();
     } catch (err) {
       console.error('Failed to start workflow:', err);
-      setError(err instanceof Error ? err.message : 'Failed to start workflow');
+
+      // Provide detailed error message
+      let errorMessage = 'Failed to start workflow';
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+
+        // Add helpful context for common errors
+        if (err.message.includes('foreign key') || err.message.includes('relationship')) {
+          errorMessage = 'Database Error: Unable to create workflow instance.\n\nThe system encountered an issue with database relationships. This has been logged and the technical team will investigate.';
+        } else if (err.message.includes('does not exist')) {
+          errorMessage = 'Entity Not Found: The selected ' + entityType + ' may have been deleted.\n\nPlease refresh the page and try again.';
+        } else if (err.message.includes('permission') || err.message.includes('policy')) {
+          errorMessage = 'Permission Denied: You do not have permission to create workflows.\n\nPlease contact your administrator to request workflow creation permissions.';
+        } else if (err.message.includes('duplicate') || err.message.includes('unique')) {
+          errorMessage = 'Duplicate Workflow: A workflow of this type is already running for this ' + entityType + '.\n\nCheck the Dashboard to see existing workflows.';
+        } else if (err.message.includes('template')) {
+          errorMessage = 'Template Error: The selected workflow template is invalid or incomplete.\n\nPlease select a different workflow or contact support.';
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setStarting(false);
     }
@@ -109,8 +130,20 @@ export const StartWorkflowModal: React.FC<StartWorkflowModalProps> = ({
               )}
 
               {error && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mt-0.5">
+                      <span className="text-red-600 dark:text-red-400 text-xs font-bold">!</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-1">
+                        Workflow Start Failed
+                      </h4>
+                      <p className="text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
+                        {error}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 

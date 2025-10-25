@@ -1050,9 +1050,7 @@ export class DatabaseService {
       .from('workflow_instances')
       .select(`
         *,
-        workflow_template:workflows(*),
-        provider:providers(*),
-        location:locations(*)
+        workflow_template:workflows(*)
       `)
       .order('started_at', { ascending: false });
 
@@ -1074,7 +1072,45 @@ export class DatabaseService {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+
+    // Fetch related providers and locations separately
+    const instances = data || [];
+
+    const providerIds = instances
+      .filter(i => i.entity_type === 'provider')
+      .map(i => i.entity_id);
+    const locationIds = instances
+      .filter(i => i.entity_type === 'location')
+      .map(i => i.entity_id);
+
+    let providers: Provider[] = [];
+    let locations: Location[] = [];
+
+    if (providerIds.length > 0) {
+      const { data: providerData } = await supabase
+        .from('providers')
+        .select('*')
+        .in('id', providerIds);
+      providers = providerData || [];
+    }
+
+    if (locationIds.length > 0) {
+      const { data: locationData } = await supabase
+        .from('locations')
+        .select('*')
+        .in('id', locationIds);
+      locations = locationData || [];
+    }
+
+    // Attach providers and locations to instances
+    return instances.map(instance => {
+      if (instance.entity_type === 'provider') {
+        instance.provider = providers.find(p => p.id === instance.entity_id);
+      } else if (instance.entity_type === 'location') {
+        instance.location = locations.find(l => l.id === instance.entity_id);
+      }
+      return instance;
+    });
   }
 
   static async createWorkflowInstance(
@@ -1103,13 +1139,29 @@ export class DatabaseService {
       .insert(instance)
       .select(`
         *,
-        workflow_template:workflows(*),
-        provider:providers(*),
-        location:locations(*)
+        workflow_template:workflows(*)
       `)
       .single();
 
     if (error) throw error;
+
+    // Fetch the related provider or location
+    if (data.entity_type === 'provider') {
+      const { data: provider } = await supabase
+        .from('providers')
+        .select('*')
+        .eq('id', data.entity_id)
+        .single();
+      data.provider = provider;
+    } else if (data.entity_type === 'location') {
+      const { data: location } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('id', data.entity_id)
+        .single();
+      data.location = location;
+    }
+
     return data;
   }
 
@@ -1124,13 +1176,29 @@ export class DatabaseService {
       .eq('id', id)
       .select(`
         *,
-        workflow_template:workflows(*),
-        provider:providers(*),
-        location:locations(*)
+        workflow_template:workflows(*)
       `)
       .single();
 
     if (error) throw error;
+
+    // Fetch the related provider or location
+    if (data.entity_type === 'provider') {
+      const { data: provider } = await supabase
+        .from('providers')
+        .select('*')
+        .eq('id', data.entity_id)
+        .single();
+      data.provider = provider;
+    } else if (data.entity_type === 'location') {
+      const { data: location } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('id', data.entity_id)
+        .single();
+      data.location = location;
+    }
+
     return data;
   }
 
