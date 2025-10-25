@@ -10,7 +10,7 @@ interface SubflowsPageProps {
 
 export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => {
   const { subflows, loading, error, createSubflow, updateSubflow } = useSubflows();
-  const { workflows } = useWorkflows();
+  const { workflows } = useWorkflows(undefined, true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingSubflow, setEditingSubflow] = useState<Subflow | null>(null);
@@ -30,12 +30,10 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
   });
   const [availableFields, setAvailableFields] = useState<{
     providerFields: Array<{name: string, label: string}>,
-    locationFields: Array<{name: string, label: string}>,
-    tasks: Array<{id: string, title: string}>
+    locationFields: Array<{name: string, label: string}>
   }>({
     providerFields: [],
-    locationFields: [],
-    tasks: []
+    locationFields: []
   });
 
   // Handle initial filter from dashboard
@@ -58,7 +56,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
 
   const loadAvailableFields = async () => {
     if (!supabase) return;
-    
+
     try {
       // Get provider fields (core + custom)
       const providerFields = [
@@ -71,7 +69,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
         { name: 'license_expiry', label: 'License Expiry' },
         { name: 'status', label: 'Status' }
       ];
-      
+
       // Get location fields (core + custom)
       const locationFields = [
         { name: 'name', label: 'Location Name' },
@@ -79,29 +77,22 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
         { name: 'departments', label: 'Departments' },
         { name: 'status', label: 'Status' }
       ];
-      
+
       // Get custom fields for providers
       const { data: providerCustomFields } = await supabase
         .from('custom_fields')
         .select('name, label')
         .eq('table_name', 'providers');
-      
+
       // Get custom fields for locations
       const { data: locationCustomFields } = await supabase
         .from('custom_fields')
         .select('name, label')
         .eq('table_name', 'locations');
-      
-      // Get available tasks
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('id, title')
-        .limit(50);
-      
+
       setAvailableFields({
         providerFields: [...providerFields, ...(providerCustomFields || [])],
-        locationFields: [...locationFields, ...(locationCustomFields || [])],
-        tasks: tasks || []
+        locationFields: [...locationFields, ...(locationCustomFields || [])]
       });
     } catch (err) {
       console.error('Failed to load available fields:', err);
@@ -295,14 +286,15 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
   };
 
   const filteredSubflows = subflows.filter(subflow => {
-    const matchesSearch = 
+    const isTemplate = !subflow.instance_id;
+    const matchesSearch =
       subflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       subflow.purpose?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || subflow.status === statusFilter;
     const matchesWorkflow = workflowFilter === 'all' || subflow.workflow_id === workflowFilter;
-    
-    return matchesSearch && matchesStatus && matchesWorkflow;
+
+    return isTemplate && matchesSearch && matchesStatus && matchesWorkflow;
   });
 
   const getStatusColor = (status: string) => {
@@ -651,7 +643,12 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
               </div>
 
               <div>
-                <label className="block text-navy dark:text-white font-medium mb-2">Dependencies</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">
+                  Dependencies
+                  <span className="text-xs font-normal text-navy/60 dark:text-cream/60 ml-2">
+                    (Which subflows must complete first?)
+                  </span>
+                </label>
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
@@ -664,21 +661,14 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                         }
                       }}
                     >
-                      <option value="">Add dependency...</option>
-                      <optgroup label="Task Completion">
-                        {availableFields.tasks.map(task => (
-                          <option key={task.id} value={`task_complete|${task.id}`}>
-                            Task completed: {task.title}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Other Subflows">
-                        {subflows.filter(s => s.id !== editingSubflow?.id).map(subflow => (
+                      <option value="">Select subflow dependency...</option>
+                      {subflows
+                        .filter(s => s.id !== editingSubflow?.id && !s.instance_id)
+                        .map(subflow => (
                           <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
-                            Subflow completed: {subflow.name}
+                            {subflow.name}
                           </option>
                         ))}
-                      </optgroup>
                     </select>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -713,17 +703,17 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                       }}
                     >
                       <option value="">Add exit condition...</option>
-                      <optgroup label="Task Completion">
-                        {availableFields.tasks.map(task => (
-                          <option key={task.id} value={`task_complete|${task.id}`}>
-                            Task completed: {task.title}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Provider Fields">
+                      <optgroup label="Provider Data Fields">
                         {availableFields.providerFields.map(field => (
                           <option key={field.name} value={`provider_field|${field.name}`}>
                             Provider has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Location Data Fields">
+                        {availableFields.locationFields.map(field => (
+                          <option key={field.name} value={`location_field|${field.name}`}>
+                            Location has {field.label}
                           </option>
                         ))}
                       </optgroup>
@@ -889,7 +879,12 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
               </div>
 
               <div>
-                <label className="block text-navy dark:text-white font-medium mb-2">Dependencies</label>
+                <label className="block text-navy dark:text-white font-medium mb-2">
+                  Dependencies
+                  <span className="text-xs font-normal text-navy/60 dark:text-cream/60 ml-2">
+                    (Which subflows must complete first?)
+                  </span>
+                </label>
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <select
@@ -902,21 +897,14 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                         }
                       }}
                     >
-                      <option value="">Add dependency...</option>
-                      <optgroup label="Task Completion">
-                        {availableFields.tasks.map(task => (
-                          <option key={task.id} value={`task_complete|${task.id}`}>
-                            Task completed: {task.title}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Other Subflows">
-                        {subflows.filter(s => s.id !== editingSubflow?.id).map(subflow => (
+                      <option value="">Select subflow dependency...</option>
+                      {subflows
+                        .filter(s => s.id !== editingSubflow?.id && !s.instance_id)
+                        .map(subflow => (
                           <option key={subflow.id} value={`subflow_complete|${subflow.name}`}>
-                            Subflow completed: {subflow.name}
+                            {subflow.name}
                           </option>
                         ))}
-                      </optgroup>
                     </select>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -951,17 +939,17 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ initialFilter }) => 
                       }}
                     >
                       <option value="">Add exit condition...</option>
-                      <optgroup label="Task Completion">
-                        {availableFields.tasks.map(task => (
-                          <option key={task.id} value={`task_complete|${task.id}`}>
-                            Task completed: {task.title}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Provider Fields">
+                      <optgroup label="Provider Data Fields">
                         {availableFields.providerFields.map(field => (
                           <option key={field.name} value={`provider_field|${field.name}`}>
                             Provider has {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Location Data Fields">
+                        {availableFields.locationFields.map(field => (
+                          <option key={field.name} value={`location_field|${field.name}`}>
+                            Location has {field.label}
                           </option>
                         ))}
                       </optgroup>
