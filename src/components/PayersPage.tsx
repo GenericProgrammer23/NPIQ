@@ -27,8 +27,17 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
     status: 'active' as const,
     application_fields: {},
     requires_demographics: false,
-    dependent_on_payer_ids: [] as string[]
+    dependent_on_payer_ids: [] as string[],
+    days_to_approve: 30,
+    days_to_load: 60,
+    required_documents: [] as string[],
+    required_provider_fields: [] as string[],
+    priority_base: 100,
+    is_always_required: false
   });
+
+  const [newDocument, setNewDocument] = useState('');
+  const [newField, setNewField] = useState('');
 
   const [bulkAssignData, setBulkAssignData] = useState({
     selectedProviders: [] as string[],
@@ -145,7 +154,13 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
       status: payer.status,
       application_fields: payer.application_fields || {},
       requires_demographics: payer.requires_demographics || false,
-      dependent_on_payer_ids: payer.dependent_on_payer_ids || []
+      dependent_on_payer_ids: payer.dependent_on_payer_ids || [],
+      days_to_approve: payer.days_to_approve || 30,
+      days_to_load: payer.days_to_load || 60,
+      required_documents: payer.required_documents || [],
+      required_provider_fields: payer.required_provider_fields || [],
+      priority_base: payer.priority_base || 100,
+      is_always_required: payer.is_always_required || false
     });
     setShowEditForm(true);
   };
@@ -159,8 +174,16 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
       status: 'active',
       application_fields: {},
       requires_demographics: false,
-      dependent_on_payer_ids: []
+      dependent_on_payer_ids: [],
+      days_to_approve: 30,
+      days_to_load: 60,
+      required_documents: [],
+      required_provider_fields: [],
+      priority_base: 100,
+      is_always_required: false
     });
+    setNewDocument('');
+    setNewField('');
   };
 
   const toggleProviderSelection = (providerId: string) => {
@@ -403,13 +426,164 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-1">
+                    Days to Approve
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.days_to_approve}
+                    onChange={(e) => setFormData({ ...formData, days_to_approve: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-1">
+                    Days to Load
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.days_to_load}
+                    onChange={(e) => setFormData({ ...formData, days_to_load: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-1">
+                  Priority Base (lower = higher priority)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.priority_base}
+                  onChange={(e) => setFormData({ ...formData, priority_base: parseInt(e.target.value) || 100 })}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
+                  placeholder="100"
+                />
+                <p className="text-xs text-navy/60 dark:text-gray-400 mt-1">Medicare typically uses 1, others use higher numbers</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-2">
+                  Required Documents
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={newDocument}
+                    onChange={(e) => setNewDocument(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (newDocument.trim()) {
+                          setFormData({ ...formData, required_documents: [...formData.required_documents, newDocument.trim()] });
+                          setNewDocument('');
+                        }
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
+                    placeholder="e.g., COI, CV, License Copy"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newDocument.trim()) {
+                        setFormData({ ...formData, required_documents: [...formData.required_documents, newDocument.trim()] });
+                        setNewDocument('');
+                      }
+                    }}
+                    className="px-4 py-2 bg-dark-cyan text-white rounded-lg hover:bg-dark-cyan/90"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.required_documents.map((doc, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1 px-3 py-1 bg-navy/10 dark:bg-dark-cyan/20 text-navy dark:text-cream rounded-full text-sm">
+                      {doc}
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, required_documents: formData.required_documents.filter((_, i) => i !== idx) })}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-2">
+                  Required Provider Fields
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {['email', 'phone', 'specialty', 'license_number'].map(field => (
+                    <label key={field} className="flex items-center gap-2 p-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg cursor-pointer hover:bg-navy/5 dark:hover:bg-dark-cyan/10">
+                      <input
+                        type="checkbox"
+                        checked={formData.required_provider_fields.includes(field)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, required_provider_fields: [...formData.required_provider_fields, field] });
+                          } else {
+                            setFormData({ ...formData, required_provider_fields: formData.required_provider_fields.filter(f => f !== field) });
+                          }
+                        }}
+                        className="rounded"
+                      />
+                      <span className="text-sm text-navy dark:text-cream capitalize">{field.replace('_', ' ')}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-2">
+                  Dependent Payers
+                </label>
+                <select
+                  multiple
+                  value={formData.dependent_on_payer_ids}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setFormData({ ...formData, dependent_on_payer_ids: selected });
+                  }}
+                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
+                  size={4}
+                >
+                  {payers.filter(p => !editingPayer || p.id !== editingPayer.id).map(payer => (
+                    <option key={payer.id} value={payer.id}>{payer.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-navy/60 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple. These payers must be approved first.</p>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="is_always_required"
+                  checked={formData.is_always_required}
+                  onChange={(e) => setFormData({ ...formData, is_always_required: e.target.checked })}
+                  className="mr-2 rounded"
+                />
+                <label htmlFor="is_always_required" className="text-sm text-navy dark:text-gray-300">
+                  Always required (like Medicare - always highest priority)
+                </label>
+              </div>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
                   id="addToWorkflows"
                   checked={bulkAssignData.addToWorkflows}
                   onChange={(e) => setBulkAssignData({ ...bulkAssignData, addToWorkflows: e.target.checked })}
-                  className="mr-2"
+                  className="mr-2 rounded"
                 />
                 <label htmlFor="addToWorkflows" className="text-sm text-navy dark:text-gray-300">
                   Add to existing workflows (assign to providers)

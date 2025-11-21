@@ -124,6 +124,9 @@ export interface Task {
   description?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  computed_priority?: number;
+  priority_reason?: string;
+  blocks_payers?: string[];
   due_date?: string;
   assigned_to?: string;
   completed_at?: string;
@@ -138,7 +141,7 @@ export interface Task {
 
 export interface Subflow {
   id: string;
-  workflow_id: string;
+  workflow_id?: string;
   instance_id?: string;
   name: string;
   purpose?: string;
@@ -147,10 +150,13 @@ export interface Subflow {
   exit_condition: string;
   status: 'not_started' | 'in_progress' | 'complete';
   order_index: number;
+  is_template?: boolean;
+  payer_id?: string;
   created_at: string;
   updated_at: string;
   workflow?: Workflow;
   instance?: WorkflowInstance;
+  payer?: Payer;
   tasks?: Task[];
 }
 
@@ -165,6 +171,12 @@ export interface Payer {
   description?: string;
   requires_demographics?: boolean;
   dependent_on_payer_ids?: string[];
+  days_to_approve?: number;
+  days_to_load?: number;
+  required_documents?: string[];
+  required_provider_fields?: string[];
+  priority_base?: number;
+  is_always_required?: boolean;
   created_at: string;
   updated_at: string;
   organization?: Organization;
@@ -199,6 +211,66 @@ export interface LocationPayerApplication {
   updated_at: string;
   location?: Location;
   payer?: Payer;
+}
+
+export interface WorkflowSubflow {
+  id: string;
+  workflow_id: string;
+  subflow_id: string;
+  order_index: number;
+  is_required: boolean;
+  created_at: string;
+  workflow?: Workflow;
+  subflow?: Subflow;
+}
+
+export interface PayerSubflow {
+  id: string;
+  payer_id: string;
+  subflow_id: string;
+  is_primary: boolean;
+  created_at: string;
+  payer?: Payer;
+  subflow?: Subflow;
+}
+
+export interface WorkflowPayer {
+  id: string;
+  workflow_id: string;
+  payer_id: string;
+  order_index: number;
+  is_required: boolean;
+  created_at: string;
+  workflow?: Workflow;
+  payer?: Payer;
+}
+
+export interface PayerTaskTemplate {
+  id: string;
+  payer_id: string;
+  title_template: string;
+  description_template?: string;
+  task_type: 'document' | 'info' | 'submit' | 'approval' | 'loading';
+  trigger_condition?: string;
+  priority_modifier?: number;
+  due_date_offset_days?: number;
+  created_at: string;
+  updated_at: string;
+  payer?: Payer;
+}
+
+export interface PriorityRule {
+  id: string;
+  organization_id: string;
+  rule_name: string;
+  rule_type: 'payer_base' | 'dependency_count' | 'due_date' | 'task_type' | 'custom';
+  rule_config: Record<string, any>;
+  weight: number;
+  order_index: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  organization?: Organization;
 }
 
 // Database service functions

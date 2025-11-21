@@ -27,10 +27,16 @@ export const EditProviderModalContent: React.FC<EditProviderModalContentProps> =
   renderCustomField,
   onCancel
 }) => {
-  const { applications, loading: appsLoading, refetch: refetchApplications } = useProviderPayerApplications({
+  const { applications: rawApplications, loading: appsLoading, refetch: refetchApplications } = useProviderPayerApplications({
     providerId: editingProvider.id
   });
   const { payers } = usePayers();
+
+  // Sort applications alphabetically by payer name
+  const applications = [...rawApplications].sort((a, b) =>
+    (a.payer?.name || '').localeCompare(b.payer?.name || '')
+  );
+
   const [editingApp, setEditingApp] = useState<string | null>(null);
   const [appUpdates, setAppUpdates] = useState<Record<string, Partial<ProviderPayerApplication>>>({});
 

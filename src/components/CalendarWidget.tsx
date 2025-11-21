@@ -86,26 +86,26 @@ export const CalendarWidget: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
-      <h2 className="text-xl font-semibold text-navy dark:text-white mb-4 flex items-center">
-        <CalendarIcon className="h-5 w-5 mr-2" />
+    <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-4">
+      <h2 className="text-lg font-semibold text-navy dark:text-white mb-3 flex items-center">
+        <CalendarIcon className="h-4 w-4 mr-2" />
         Calendar & Upcoming Tasks
       </h2>
 
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
           <button
             onClick={() => navigateMonth('prev')}
-            className="p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors"
+            className="p-1 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors text-sm"
           >
             ←
           </button>
-          <h3 className="font-semibold text-navy dark:text-white">
-            {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          <h3 className="text-sm font-semibold text-navy dark:text-white">
+            {currentMonth.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
           </h3>
           <button
             onClick={() => navigateMonth('next')}
-            className="p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors"
+            className="p-1 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors text-sm"
           >
             →
           </button>
@@ -119,7 +119,7 @@ export const CalendarWidget: React.FC = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5">
           {Array.from({ length: startingDayOfWeek }).map((_, i) => (
             <div key={`empty-${i}`} className="aspect-square" />
           ))}
@@ -140,7 +140,7 @@ export const CalendarWidget: React.FC = () => {
               <button
                 key={day}
                 onClick={() => setSelectedDate(date)}
-                className={`aspect-square flex flex-col items-center justify-center rounded text-sm transition-colors ${
+                className={`aspect-square flex flex-col items-center justify-center rounded text-xs transition-colors ${
                   isToday
                     ? 'bg-blue-500 text-white font-bold'
                     : isSelected
@@ -148,9 +148,9 @@ export const CalendarWidget: React.FC = () => {
                     : 'hover:bg-navy/5 dark:hover:bg-navy-dark text-navy dark:text-white'
                 }`}
               >
-                <span>{day}</span>
+                <span className="text-xs">{day}</span>
                 {tasksForDay.length > 0 && (
-                  <span className="w-1 h-1 bg-orange-500 rounded-full mt-0.5" />
+                  <span className="w-0.5 h-0.5 bg-orange-500 rounded-full mt-0.5" />
                 )}
               </button>
             );
@@ -158,21 +158,21 @@ export const CalendarWidget: React.FC = () => {
         </div>
       </div>
 
-      <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-4">
-        <h3 className="font-semibold text-navy dark:text-white mb-3 flex items-center">
-          <Clock className="h-4 w-4 mr-2" />
+      <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-3 mt-3">
+        <h3 className="text-sm font-semibold text-navy dark:text-white mb-2 flex items-center">
+          <Clock className="h-3 w-3 mr-1" />
           Upcoming Tasks
         </h3>
         {upcomingTasks.length > 0 ? (
-          <div className="space-y-2">
-            {upcomingTasks.map(task => (
+          <div className="space-y-1.5">
+            {upcomingTasks.slice(0, 3).map(task => (
               <div
                 key={task.id}
-                className="flex items-start p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors"
+                className="flex items-start p-1.5 hover:bg-navy/5 dark:hover:bg-navy-dark rounded transition-colors"
               >
-                <AlertCircle className={`h-4 w-4 mr-2 mt-0.5 flex-shrink-0 ${getPriorityColor(task.priority)}`} />
+                <AlertCircle className={`h-3 w-3 mr-1.5 mt-0.5 flex-shrink-0 ${getPriorityColor(task.priority)}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-navy dark:text-white truncate">
+                  <p className="text-xs font-medium text-navy dark:text-white truncate">
                     {task.title}
                   </p>
                   <p className="text-xs text-navy/60 dark:text-gray-400">
@@ -180,7 +180,7 @@ export const CalendarWidget: React.FC = () => {
                   </p>
                 </div>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize flex-shrink-0 ${
+                  className={`text-xs px-1.5 py-0.5 rounded-full font-medium capitalize flex-shrink-0 ${
                     task.priority === 'urgent'
                       ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                       : task.priority === 'high'
@@ -196,8 +196,8 @@ export const CalendarWidget: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-sm text-navy/60 dark:text-gray-400">No upcoming tasks</p>
+          <div className="text-center py-2">
+            <p className="text-xs text-navy/60 dark:text-gray-400">No upcoming tasks</p>
           </div>
         )}
       </div>

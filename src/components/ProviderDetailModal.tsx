@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, Payer, ProviderPayerApplication } from '../lib/supabase';
-import { useProviderPayerApplications, usePayers } from '../hooks/useDatabase';
-import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2 } from 'lucide-react';
+import { useProviderPayerApplications, usePayers, useLocations } from '../hooks/useDatabase';
+import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save } from 'lucide-react';
 import { DatabaseService } from '../lib/supabase';
 
 interface ProviderDetailModalProps {
@@ -17,12 +17,31 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   onUpdate,
   highlightMissingFields = []
 }) => {
-  const { applications, loading: appsLoading, refetch: refetchApplications } = useProviderPayerApplications({
+  const { applications: rawApplications, loading: appsLoading, refetch: refetchApplications } = useProviderPayerApplications({
     providerId: provider.id
   });
+
+  // Sort applications alphabetically by payer name
+  const applications = [...rawApplications].sort((a, b) =>
+    (a.payer?.name || '').localeCompare(b.payer?.name || '')
+  );
   const { payers } = usePayers();
+  const { locations } = useLocations();
   const [editingApp, setEditingApp] = useState<string | null>(null);
   const [appUpdates, setAppUpdates] = useState<Record<string, Partial<ProviderPayerApplication>>>({});
+  const [isEditingProvider, setIsEditingProvider] = useState(false);
+  const [providerData, setProviderData] = useState({
+    first_name: provider.first_name,
+    last_name: provider.last_name,
+    email: provider.email || '',
+    phone: provider.phone || '',
+    specialty: provider.specialty || '',
+    license_number: provider.license_number || '',
+    license_expiry: provider.license_expiry || '',
+    location_id: provider.location_id || '',
+    status: provider.status
+  });
+  const [savingProvider, setSavingProvider] = useState(false);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -84,6 +103,44 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
     }));
   };
 
+  const handleSaveProvider = async () => {
+    try {
+      setSavingProvider(true);
+      await DatabaseService.updateProvider(provider.id, providerData);
+      await onUpdate();
+      setIsEditingProvider(false);
+
+      // Check if missing fields were filled and ask to complete tasks
+      const filledFields = highlightMissingFields.filter(field => {
+        return providerData[field as keyof typeof providerData] && providerData[field as keyof typeof providerData] !== '';
+      });
+
+      if (filledFields.length > 0) {
+        alert(`Great! You've completed ${filledFields.length} required field(s). Related tasks can now be marked as complete.`);
+      }
+    } catch (err) {
+      console.error('Failed to update provider:', err);
+      alert('Failed to update provider information');
+    } finally {
+      setSavingProvider(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setProviderData({
+      first_name: provider.first_name,
+      last_name: provider.last_name,
+      email: provider.email || '',
+      phone: provider.phone || '',
+      specialty: provider.specialty || '',
+      license_number: provider.license_number || '',
+      license_expiry: provider.license_expiry || '',
+      location_id: provider.location_id || '',
+      status: provider.status
+    });
+    setIsEditingProvider(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-navy-light rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -94,12 +151,41 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             </h2>
             <p className="text-navy/60 dark:text-gray-400">{provider.specialty || 'No specialty'}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded-lg transition-colors"
-          >
-            <X className="h-6 w-6 text-navy dark:text-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            {!isEditingProvider ? (
+              <button
+                onClick={() => setIsEditingProvider(true)}
+                className="px-4 py-2 bg-dark-cyan hover:bg-dark-cyan/90 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
+              >
+                <Edit2 className="h-4 w-4" />
+                Edit
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleSaveProvider}
+                  disabled={savingProvider}
+                  className="px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 text-navy rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  <Save className="h-4 w-4" />
+                  {savingProvider ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={savingProvider}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-navy dark:text-cream rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-navy/5 dark:hover:bg-navy-dark rounded-lg transition-colors"
+            >
+              <X className="h-6 w-6 text-navy dark:text-white" />
+            </button>
+          </div>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
@@ -123,32 +209,118 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                 Email
                 {highlightMissingFields.includes('email') && <span className="text-red-600">*</span>}
               </label>
-              <p className="text-navy dark:text-white">{provider.email || 'N/A'}</p>
+              {isEditingProvider ? (
+                <input
+                  type="email"
+                  value={providerData.email}
+                  onChange={(e) => setProviderData({ ...providerData, email: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                  placeholder="provider@example.com"
+                />
+              ) : (
+                <p className="text-navy dark:text-white">{provider.email || 'N/A'}</p>
+              )}
             </div>
             <div className={highlightMissingFields.includes('phone') ? 'bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border-2 border-red-300 dark:border-red-700' : ''}>
               <label className="text-sm font-medium text-navy/70 dark:text-gray-400 flex items-center gap-1">
                 Phone
                 {highlightMissingFields.includes('phone') && <span className="text-red-600">*</span>}
               </label>
-              <p className="text-navy dark:text-white">{provider.phone || 'N/A'}</p>
+              {isEditingProvider ? (
+                <input
+                  type="tel"
+                  value={providerData.phone}
+                  onChange={(e) => setProviderData({ ...providerData, phone: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                  placeholder="(555) 123-4567"
+                />
+              ) : (
+                <p className="text-navy dark:text-white">{provider.phone || 'N/A'}</p>
+              )}
             </div>
             <div className={highlightMissingFields.includes('license_number') ? 'bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border-2 border-red-300 dark:border-red-700' : ''}>
               <label className="text-sm font-medium text-navy/70 dark:text-gray-400 flex items-center gap-1">
                 License Number
                 {highlightMissingFields.includes('license_number') && <span className="text-red-600">*</span>}
               </label>
-              <p className="text-navy dark:text-white">{provider.license_number || 'N/A'}</p>
+              {isEditingProvider ? (
+                <input
+                  type="text"
+                  value={providerData.license_number}
+                  onChange={(e) => setProviderData({ ...providerData, license_number: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                  placeholder="LIC-12345"
+                />
+              ) : (
+                <p className="text-navy dark:text-white">{provider.license_number || 'N/A'}</p>
+              )}
             </div>
             <div className={highlightMissingFields.includes('specialty') ? 'bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border-2 border-red-300 dark:border-red-700' : ''}>
               <label className="text-sm font-medium text-navy/70 dark:text-gray-400 flex items-center gap-1">
                 Specialty
                 {highlightMissingFields.includes('specialty') && <span className="text-red-600">*</span>}
               </label>
-              <p className="text-navy dark:text-white">{provider.specialty || 'N/A'}</p>
+              {isEditingProvider ? (
+                <select
+                  value={providerData.specialty}
+                  onChange={(e) => setProviderData({ ...providerData, specialty: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                >
+                  <option value="">Select Specialty</option>
+                  <option value="Physical Therapy">Physical Therapy</option>
+                  <option value="Occupational Therapy">Occupational Therapy</option>
+                  <option value="Speech Therapy">Speech Therapy</option>
+                </select>
+              ) : (
+                <p className="text-navy dark:text-white">{provider.specialty || 'N/A'}</p>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-medium text-navy/70 dark:text-gray-400">License Expiry</label>
+              {isEditingProvider ? (
+                <input
+                  type="date"
+                  value={providerData.license_expiry?.split('T')[0] || ''}
+                  onChange={(e) => setProviderData({ ...providerData, license_expiry: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                />
+              ) : (
+                <p className="text-navy dark:text-white">{provider.license_expiry ? new Date(provider.license_expiry).toLocaleDateString() : 'N/A'}</p>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Location</label>
+              {isEditingProvider ? (
+                <select
+                  value={providerData.location_id}
+                  onChange={(e) => setProviderData({ ...providerData, location_id: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                >
+                  <option value="">No Location</option>
+                  {locations.map(loc => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-navy dark:text-white">{provider.location?.name || 'No location'}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Status</label>
-              <p className="text-navy dark:text-white capitalize">{provider.status}</p>
+              {isEditingProvider ? (
+                <select
+                  value={providerData.status}
+                  onChange={(e) => setProviderData({ ...providerData, status: e.target.value as any })}
+                  className="w-full mt-1 px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                >
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="expired">Expired</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+              ) : (
+                <p className="text-navy dark:text-white capitalize">{provider.status}</p>
+              )}
             </div>
           </div>
 
