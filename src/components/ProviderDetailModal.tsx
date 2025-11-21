@@ -106,7 +106,15 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   const handleSaveProvider = async () => {
     try {
       setSavingProvider(true);
-      await DatabaseService.updateProvider(provider.id, providerData);
+
+      // Clean the data - convert empty strings to null for date fields
+      const cleanedData = {
+        ...providerData,
+        license_expiry: providerData.license_expiry?.trim() || null,
+        location_id: providerData.location_id?.trim() || null
+      };
+
+      await DatabaseService.updateProvider(provider.id, cleanedData);
       await onUpdate();
       setIsEditingProvider(false);
 

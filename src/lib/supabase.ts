@@ -1406,4 +1406,233 @@ export class DatabaseService {
       pendingTasks: pendingTasksResult.count || 0
     };
   }
+
+  static async createSubflowFromPayer(payer: Payer): Promise<Subflow> {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    // Build prerequisites from dependent payers
+    const prerequisites = payer.dependent_on_payer_ids && payer.dependent_on_payer_ids.length > 0
+      ? JSON.stringify(payer.dependent_on_payer_ids.map(id => `payer_approved:${id}`))
+      : '[]';
+
+    // Create the subflow
+    const subflowData = {
+      workflow_id: null,
+      name: `${payer.name} Application Process`,
+      purpose: `Complete application process for ${payer.name} credentialing`,
+      prerequisites: prerequisites,
+      dependencies: payer.dependent_on_payer_ids && payer.dependent_on_payer_ids.length > 0
+        ? `Requires: ${payer.dependent_on_payer_ids.length} payer(s) to be approved first`
+        : 'No dependencies',
+      exit_condition: 'Provider loaded in system',
+      status: 'not_started' as const,
+      order_index: payer.priority_base || 100,
+      is_template: true,
+      payer_id: payer.id
+    };
+
+    const { data: subflow, error: subflowError } = await supabase
+      .from('subflows')
+      .insert(subflowData)
+      .select()
+      .single();
+
+    if (subflowError) throw subflowError;
+
+    // Create payer_subflows link
+    const { error: linkError } = await supabase
+      .from('payer_subflows')
+      .insert({
+        payer_id: payer.id,
+        subflow_id: subflow.id,
+        is_primary: true
+      });
+
+    if (linkError) throw linkError;
+
+    // Create task templates
+    await this.createTaskTemplatesForPayer(payer, subflow.id);
+
+    return subflow;
+  }
+
+  static async createTaskTemplatesForPayer(payer: Payer, subflowId?: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    const templates: Omit<PayerTaskTemplate, 'id' | 'created_at' | 'updated_at'>[] = [];
+
+    // Create document tasks
+    if (payer.required_documents && payer.required_documents.length > 0) {
+      for (const doc of payer.required_documents) {
+        templates.push({
+          payer_id: payer.id,
+          title_template: `Obtain ${doc}`,
+          description_template: `Collect ${doc} document required for ${payer.name} application`,
+          task_type: 'document',
+          trigger_condition: 'on_provider_assign',
+          priority_modifier: 0,
+          due_date_offset_days: null
+        });
+      }
+    }
+
+    // Create provider info task
+    if (payer.required_provider_fields && payer.required_provider_fields.length > 0) {
+      templates.push({
+        payer_id: payer.id,
+        title_template: `Complete Provider Information for ${payer.name}`,
+        description_template: `Ensure the following fields are completed: ${payer.required_provider_fields.join(', ')}`,
+        task_type: 'info',
+        trigger_condition: 'on_provider_assign',
+        priority_modifier: -10,
+        due_date_offset_days: null
+      });
+    }
+
+    // Create submission task
+    templates.push({
+      payer_id: payer.id,
+      title_template: `Submit ${payer.name} Application`,
+      description_template: `Submit completed application to ${payer.name}`,
+      task_type: 'submit',
+      trigger_condition: 'prerequisites_met',
+      priority_modifier: 5,
+      due_date_offset_days: null
+    });
+
+    // Create approval tracking task
+    templates.push({
+      payer_id: payer.id,
+      title_template: `Track ${payer.name} Approval`,
+      description_template: `Monitor approval status for ${payer.name} application`,
+      task_type: 'approval',
+      trigger_condition: 'on_submission',
+      priority_modifier: 10,
+      due_date_offset_days: payer.days_to_approve || 30
+    });
+
+    // Create loading task
+    templates.push({
+      payer_id: payer.id,
+      title_template: `Confirm ${payer.name} Loading`,
+      description_template: `Verify provider is loaded in ${payer.name} system`,
+      task_type: 'loading',
+      trigger_condition: 'on_approval',
+      priority_modifier: 15,
+      due_date_offset_days: payer.days_to_load || 60
+    });
+
+    const { error } = await supabase
+      .from('payer_task_templates')
+      .insert(templates);
+
+    if (error) throw error;
+  }
+
+  static async getPayerTaskTemplates(payerId: string): Promise<PayerTaskTemplate[]> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('payer_task_templates')
+      .select('*')
+      .eq('payer_id', payerId);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getPayerSubflow(payerId: string): Promise<Subflow | null> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('payer_subflows')
+      .select(`
+        subflow:subflows(*)
+      `)
+      .eq('payer_id', payerId)
+      .eq('is_primary', true)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.subflow || null;
+  }
+
+  static async handleApplicationStatusChange(
+    applicationId: string,
+    oldStatus: string,
+    newStatus: string
+  ): Promise<void> {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    // Get the application with related data
+    const { data: application, error } = await supabase
+      .from('provider_payer_applications')
+      .select(`
+        *,
+        payer:payers(*),
+        provider:providers(*)
+      `)
+      .eq('id', applicationId)
+      .single();
+
+    if (error || !application) return;
+
+    // Import TaskGenerationService dynamically to avoid circular dependency
+    const { TaskGenerationService } = await import('../services/TaskGenerationService');
+
+    // Generate new tasks based on status change
+    if (newStatus === 'submitted' && oldStatus === 'not_started') {
+      // Create approval tracking task
+      await TaskGenerationService.generateTasksForProviderPayer(
+        application.provider,
+        application.payer,
+        application
+      );
+    } else if (newStatus === 'approved' && oldStatus === 'submitted') {
+      // Create loading task and check dependent payers
+      await TaskGenerationService.generateTasksForProviderPayer(
+        application.provider,
+        application.payer,
+        application
+      );
+
+      // Check if any other payers can now be submitted
+      await this.checkAndUnlockDependentPayers(application.provider.id, application.payer_id);
+    }
+  }
+
+  private static async checkAndUnlockDependentPayers(providerId: string, approvedPayerId: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    // Find all payers that depend on this one
+    const { data: dependentPayers } = await supabase
+      .from('payers')
+      .select('*')
+      .contains('dependent_on_payer_ids', [approvedPayerId]);
+
+    if (!dependentPayers || dependentPayers.length === 0) return;
+
+    const provider = await this.getProvider(providerId);
+    if (!provider) return;
+
+    // Import TaskGenerationService
+    const { TaskGenerationService } = await import('../services/TaskGenerationService');
+
+    // For each dependent payer, check if all prerequisites are now met
+    for (const payer of dependentPayers) {
+      const application = await supabase
+        .from('provider_payer_applications')
+        .select('*')
+        .eq('provider_id', providerId)
+        .eq('payer_id', payer.id)
+        .maybeSingle();
+
+      if (application.data && application.data.status === 'not_started') {
+        // Generate submission tasks if prerequisites are now met
+        await TaskGenerationService.generateTasksForProviderPayer(
+          provider,
+          payer,
+          application.data
+        );
+      }
+    }
+  }
 }

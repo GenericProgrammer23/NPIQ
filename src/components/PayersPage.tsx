@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { usePayers, useProviders, useProviderPayerApplications } from '../hooks/useDatabase';
 import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle } from 'lucide-react';
-import { Payer } from '../lib/supabase';
+import { Payer, DatabaseService } from '../lib/supabase';
+import { CreateSubflowModal } from './CreateSubflowModal';
 
 interface PayersPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -16,6 +17,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingPayer, setEditingPayer] = useState<Payer | null>(null);
   const [showBulkAssign, setShowBulkAssign] = useState<string | null>(null);
+  const [showSubflowModal, setShowSubflowModal] = useState<Payer | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -66,15 +68,31 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
 
       const newPayer = await createPayer(payerData);
 
+      setShowAddForm(false);
+      resetForm();
+
+      // Show subflow creation modal
+      setShowSubflowModal(newPayer);
+
       if (bulkAssignData.addToWorkflows) {
         setShowBulkAssign(newPayer.id);
       }
-
-      setShowAddForm(false);
-      resetForm();
     } catch (err) {
       console.error('Failed to create payer:', err);
       alert('Failed to create payer. Please try again.');
+    }
+  };
+
+  const handleCreateSubflow = async () => {
+    if (!showSubflowModal) return;
+
+    try {
+      await DatabaseService.createSubflowFromPayer(showSubflowModal);
+      alert(`Subflow created successfully for ${showSubflowModal.name}!`);
+      setShowSubflowModal(null);
+    } catch (err) {
+      console.error('Failed to create subflow:', err);
+      throw err;
     }
   };
 
@@ -831,6 +849,14 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {showSubflowModal && (
+        <CreateSubflowModal
+          payer={showSubflowModal}
+          onCreateSubflow={handleCreateSubflow}
+          onSkip={() => setShowSubflowModal(null)}
+        />
       )}
     </div>
   );
