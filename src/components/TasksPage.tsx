@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTasks, useWorkflows, useProviders, useSubflows } from '../hooks/useDatabase';
-import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2, Edit } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2, Edit, ExternalLink } from 'lucide-react';
+import { supabase, Provider } from '../lib/supabase';
+import { ProviderDetailModal } from './ProviderDetailModal';
 
 interface TasksPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -19,6 +20,9 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   const [statusFilter, setStatusFilter] = useState('pending');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [customFields, setCustomFields] = useState<any[]>([]);
+  const [showProviderModal, setShowProviderModal] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [highlightMissingFields, setHighlightMissingFields] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: '',
