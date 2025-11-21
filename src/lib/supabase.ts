@@ -1635,4 +1635,51 @@ export class DatabaseService {
       }
     }
   }
+
+  static async getPriorityRules(organizationId: string): Promise<PriorityRule[]> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('priority_rules')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .order('order_index');
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async createPriorityRule(rule: Omit<PriorityRule, 'id' | 'created_at' | 'updated_at'>): Promise<PriorityRule> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('priority_rules')
+      .insert(rule)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updatePriorityRule(id: string, updates: Partial<PriorityRule>): Promise<PriorityRule> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('priority_rules')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async deletePriorityRule(id: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { error } = await supabase
+      .from('priority_rules')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
 }

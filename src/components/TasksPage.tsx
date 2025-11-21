@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTasks, useWorkflows, useProviders, useSubflows } from '../hooks/useDatabase';
-import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2, Edit, ExternalLink } from 'lucide-react';
+import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2, Edit, ExternalLink, Info } from 'lucide-react';
 import { supabase, Provider } from '../lib/supabase';
 import { ProviderDetailModal } from './ProviderDetailModal';
+import { PriorityCalculationService } from '../services/PriorityCalculationService';
 
 interface TasksPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -313,7 +314,10 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const tasksByProvider = filteredTasks.reduce((acc, task) => {
+  // Sort tasks by computed priority
+  const sortedTasks = PriorityCalculationService.sortTasksByPriority(filteredTasks);
+
+  const tasksByProvider = sortedTasks.reduce((acc, task) => {
     if (!task.provider_id) return acc;
 
     const providerKey = task.provider_id;
@@ -503,6 +507,11 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
+                          {task.computed_priority && (
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-dark-cyan text-white text-xs font-bold">
+                              {task.computed_priority <= 20 ? '!' : task.computed_priority <= 50 ? '↑' : ''}
+                            </span>
+                          )}
                           <h4 className="text-base font-semibold text-navy dark:text-white">{task.title}</h4>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(task.status)}`}>
                             {task.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
@@ -510,6 +519,14 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
                             {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                           </span>
+                          {task.priority_reason && (
+                            <div className="group relative">
+                              <Info className="h-4 w-4 text-navy/40 dark:text-cream/40 cursor-help" />
+                              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-navy dark:bg-dark-cyan text-white text-xs rounded-lg shadow-lg z-10">
+                                {task.priority_reason}
+                              </div>
+                            </div>
+                          )}
                           {task.due_date && isOverdue(task.due_date) && task.status !== 'completed' && (
                             <span className="flex items-center text-red-600 text-xs">
                               <AlertCircle className="h-3 w-3 mr-1" />
