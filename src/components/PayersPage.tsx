@@ -132,19 +132,34 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
         ? bulkAssignData.selectedProviders
         : providers.map(p => p.id);
 
+      let assignedCount = 0;
+      let skippedCount = 0;
+
       for (const providerId of selectedProviderIds) {
         const existingApp = applications.find(
           app => app.provider_id === providerId && app.payer_id === showBulkAssign
         );
 
         if (!existingApp) {
-          await createApplication({
-            provider_id: providerId,
-            payer_id: showBulkAssign,
-            application_submission_date: bulkAssignData.submissionDate || undefined,
-            status: bulkAssignData.submissionDate ? 'submitted' : 'not_started',
-            notes: ''
-          });
+          try {
+            await createApplication({
+              provider_id: providerId,
+              payer_id: showBulkAssign,
+              application_submission_date: bulkAssignData.submissionDate || undefined,
+              status: bulkAssignData.submissionDate ? 'submitted' : 'not_started',
+              notes: ''
+            });
+            assignedCount++;
+          } catch (appErr: any) {
+            // If duplicate key error, skip silently
+            if (appErr?.message?.includes('duplicate key') || appErr?.code === '23505') {
+              skippedCount++;
+            } else {
+              throw appErr;
+            }
+          }
+        } else {
+          skippedCount++;
         }
       }
 
@@ -155,7 +170,10 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
         addToWorkflows: false
       });
 
-      alert(`Payer assigned to ${selectedProviderIds.length} provider(s)`);
+      const message = assignedCount > 0
+        ? `Payer assigned to ${assignedCount} provider(s)${skippedCount > 0 ? ` (${skippedCount} already assigned)` : ''}`
+        : `All selected providers already have this payer assigned`;
+      alert(message);
     } catch (err) {
       console.error('Failed to bulk assign payer:', err);
       alert('Failed to assign payer to providers. Please try again.');

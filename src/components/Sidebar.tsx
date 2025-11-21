@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, MapPin, Workflow, CheckSquare, Wifi, WifiOff, Building, Settings, GitBranch, CreditCard } from 'lucide-react';
+import { Home, Users, MapPin, Workflow, CheckSquare, Wifi, WifiOff, Building, Settings, GitBranch, CreditCard, BookOpen } from 'lucide-react';
 
 interface SidebarProps {
   currentPage: string;
@@ -10,6 +10,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isOnline }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'guide', label: 'User Guide', icon: BookOpen },
     { id: 'providers', label: 'Providers', icon: Users },
     { id: 'locations', label: 'Locations', icon: MapPin },
     { id: 'payers', label: 'Payers', icon: CreditCard },

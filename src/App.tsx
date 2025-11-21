@@ -2,6 +2,7 @@ import React from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthWrapper } from './components/AuthWrapper';
 import { Dashboard } from './components/Dashboard';
+import { GuidePage } from './components/GuidePage';
 import { ProvidersPage } from './components/ProvidersPage';
 import { LocationsPage } from './components/LocationsPage';
 import { PayersPage } from './components/PayersPage';
@@ -29,6 +30,8 @@ function App() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'guide':
+        return <GuidePage />;
       case 'providers':
         return <ProvidersPage initialFilter={pageFilter} />;
       case 'locations':

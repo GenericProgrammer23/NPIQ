@@ -115,16 +115,21 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
       };
 
       await DatabaseService.updateProvider(provider.id, cleanedData);
-      await onUpdate();
       setIsEditingProvider(false);
 
-      // Check if missing fields were filled and ask to complete tasks
+      // Check if missing fields were filled
       const filledFields = highlightMissingFields.filter(field => {
         return providerData[field as keyof typeof providerData] && providerData[field as keyof typeof providerData] !== '';
       });
 
+      // Close modal and refresh
+      onClose();
+      await onUpdate();
+
       if (filledFields.length > 0) {
-        alert(`Great! You've completed ${filledFields.length} required field(s). Related tasks can now be marked as complete.`);
+        setTimeout(() => {
+          alert(`Great! You've completed ${filledFields.length} required field(s). Related tasks can now be marked as complete.`);
+        }, 300);
       }
     } catch (err) {
       console.error('Failed to update provider:', err);
