@@ -28,8 +28,8 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
   });
   const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
 
-  // Get subflows for selected workflow
-  const { subflows, updateSubflow, emitTasksForSubflow } = useSubflows(selectedWorkflow || undefined);
+  // Get subflows for selected workflow (template subflows only, not instances)
+  const { subflows, updateSubflow, emitTasksForSubflow } = useSubflows(selectedWorkflow || undefined, null);
 
   // Handle initial filter from dashboard
   React.useEffect(() => {

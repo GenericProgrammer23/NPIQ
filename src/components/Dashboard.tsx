@@ -145,13 +145,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
-            <h2 className="text-xl font-semibold text-navy dark:text-white mb-4 flex items-center">
-              <Workflow className="h-5 w-5 mr-2" />
-              Active Workflow Instances
-            </h2>
+      <div className="space-y-6 mb-6">
+        <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
+          <h2 className="text-xl font-semibold text-navy dark:text-white mb-4 flex items-center">
+            <Workflow className="h-5 w-5 mr-2" />
+            Active Workflow Instances
+          </h2>
 
             {instancesLoading ? (
               <div className="space-y-4">
@@ -240,12 +239,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
                 })}
               </div>
             )}
-          </div>
         </div>
 
-        <div>
-          <CalendarWidget />
-        </div>
+        <CalendarWidget />
       </div>
 
       <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6 mb-6">

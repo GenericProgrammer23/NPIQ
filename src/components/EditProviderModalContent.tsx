@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, ProviderPayerApplication } from '../lib/supabase';
 import { useProviderPayerApplications, usePayers } from '../hooks/useDatabase';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, Edit2 } from 'lucide-react';
 import { DatabaseService } from '../lib/supabase';
 
 interface EditProviderModalContentProps {
@@ -232,7 +232,7 @@ export const EditProviderModalContent: React.FC<EditProviderModalContentProps> =
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Approved</th>
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Loaded</th>
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Effective Date</th>
-                      {editingApp && <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Actions</th>}
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white w-20"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -302,8 +302,8 @@ export const EditProviderModalContent: React.FC<EditProviderModalContentProps> =
                               </span>
                             )}
                           </td>
-                          {isEditing && (
-                            <td className="py-3 px-4 text-center">
+                          <td className="py-3 px-4 text-center">
+                            {isEditing ? (
                               <div className="flex gap-2 justify-center">
                                 <button
                                   type="button"
@@ -323,8 +323,17 @@ export const EditProviderModalContent: React.FC<EditProviderModalContentProps> =
                                   Cancel
                                 </button>
                               </div>
-                            </td>
-                          )}
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setEditingApp(app.id)}
+                                className="p-1 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-dark-cyan/20 rounded transition-colors"
+                                title="Edit dates"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}

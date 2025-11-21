@@ -302,15 +302,48 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   };
 
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = 
+    const matchesSearch =
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (task.provider && `${task.provider.first_name} ${task.provider.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
-    
+
     return matchesSearch && matchesStatus && matchesPriority;
   });
+
+  const tasksByProvider = filteredTasks.reduce((acc, task) => {
+    if (!task.provider_id) return acc;
+
+    const providerKey = task.provider_id;
+    if (!acc[providerKey]) {
+      acc[providerKey] = {
+        provider: task.provider,
+        tasks: []
+      };
+    }
+    acc[providerKey].tasks.push(task);
+    return acc;
+  }, {} as Record<string, { provider: any; tasks: any[] }>);
+
+  const handleProviderClick = (providerId: string, taskTitle?: string) => {
+    const provider = providers.find(p => p.id === providerId);
+    if (!provider) return;
+
+    setSelectedProvider(provider);
+    if (taskTitle && taskTitle.includes('Obtain Provider Information')) {
+      const missingFields: string[] = [];
+      if (!provider.email) missingFields.push('email');
+      if (!provider.phone) missingFields.push('phone');
+      if (!provider.license_number) missingFields.push('license_number');
+      if (!provider.specialty) missingFields.push('specialty');
+      setHighlightMissingFields(missingFields);
+    } else {
+      setHighlightMissingFields([]);
+    }
+    setShowProviderModal(true);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -421,107 +454,146 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         </div>
       </div>
 
-      {/* Tasks List */}
-      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30">
-        {filteredTasks.length === 0 ? (
-          <div className="p-8 text-center">
+      {/* Tasks Grouped by Provider */}
+      <div className="space-y-4">
+        {Object.keys(tasksByProvider).length === 0 ? (
+          <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-8 text-center">
             <CheckSquare className="h-12 w-12 text-navy/30 dark:text-cream/30 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No tasks found</h3>
             <p className="text-navy/60 dark:text-cream/60">
-              {tasks.length === 0 
+              {tasks.length === 0
                 ? "Get started by creating your first task"
                 : "Try adjusting your search or filter criteria"
               }
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-navy/10 dark:divide-dark-cyan/20">
-            {filteredTasks.map((task) => (
-              <div key={task.id} className="p-6 hover:bg-navy/5 dark:hover:bg-navy-dark/50 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-lg font-semibold text-navy dark:text-white">{task.title}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(task.status)}`}>
-                        {task.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
-                        {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                      </span>
-                      {task.due_date && isOverdue(task.due_date) && task.status !== 'completed' && (
-                        <span className="flex items-center text-red-600 text-xs">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          Overdue
-                        </span>
-                      )}
+          Object.entries(tasksByProvider).map(([providerId, { provider, tasks: providerTasks }]) => (
+            <div key={providerId} className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 overflow-hidden">
+              <div
+                className="bg-dark-cyan/10 dark:bg-dark-cyan/20 p-4 cursor-pointer hover:bg-dark-cyan/15 dark:hover:bg-dark-cyan/30 transition-colors"
+                onClick={() => handleProviderClick(providerId)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-dark-cyan/30 flex items-center justify-center">
+                      <User className="h-5 w-5 text-dark-cyan" />
                     </div>
-                    
-                    {task.description && (
-                      <p className="text-navy/70 dark:text-cream/70 mb-3">{task.description}</p>
-                    )}
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-navy/70 dark:text-cream/70">
-                      {task.workflow && (
-                        <div className="flex items-center">
-                          <CheckSquare className="h-4 w-4 mr-2" />
-                          <span className="text-navy/70 dark:text-cream/70">
-                            {task.workflow.name}
-                            {task.subflow && (
-                              <>
-                                <span className="mx-2 text-navy/40 dark:text-cream/40">→</span>
-                                <span className="font-medium text-navy dark:text-white">{task.subflow.name}</span>
-                              </>
-                            )}
-                          </span>
-                        </div>
-                      )}
-                      {task.provider && (
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 mr-2" />
-                          {task.provider.first_name} {task.provider.last_name}
-                        </div>
-                      )}
-                      {task.due_date && (
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Due {new Date(task.due_date).toLocaleDateString()}
-                        </div>
-                      )}
+                    <div>
+                      <h3 className="text-lg font-bold text-navy dark:text-white">
+                        {provider?.first_name} {provider?.last_name}
+                      </h3>
+                      <p className="text-sm text-navy/60 dark:text-cream/60">
+                        {providerTasks.length} {providerTasks.length === 1 ? 'task' : 'tasks'} •
+                        {' '}{providerTasks.filter(t => t.status === 'completed').length} completed
+                      </p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2 ml-4">
-                    <select
-                      value={task.status}
-                      onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                      className="px-3 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-sm focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="rejected">Rejected</option>
-                    </select>
-                    <button
-                      onClick={() => handleEditTask(task)}
-                      className="p-2 text-dark-cyan hover:text-dark-cyan/80 hover:bg-dark-cyan/10 dark:hover:bg-dark-cyan/20 rounded-lg transition-colors"
-                      title="Edit Task"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTask(task.id)}
-                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                      title="Delete Task"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <ExternalLink className="h-5 w-5 text-navy/40 dark:text-cream/40" />
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="divide-y divide-navy/10 dark:divide-dark-cyan/20">
+                {providerTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="p-4 hover:bg-navy/5 dark:hover:bg-navy-dark/50 transition-colors cursor-pointer"
+                    onClick={() => handleProviderClick(providerId, task.title)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="text-base font-semibold text-navy dark:text-white">{task.title}</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(task.status)}`}>
+                            {task.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                          </span>
+                          {task.due_date && isOverdue(task.due_date) && task.status !== 'completed' && (
+                            <span className="flex items-center text-red-600 text-xs">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Overdue
+                            </span>
+                          )}
+                        </div>
+
+                        {task.description && (
+                          <p className="text-sm text-navy/70 dark:text-cream/70 mb-2">{task.description}</p>
+                        )}
+
+                        <div className="flex items-center gap-4 text-xs text-navy/60 dark:text-cream/60">
+                          {task.workflow && (
+                            <div className="flex items-center">
+                              <CheckSquare className="h-3 w-3 mr-1" />
+                              {task.workflow.name}
+                              {task.subflow && ` → ${task.subflow.name}`}
+                            </div>
+                          )}
+                          {task.due_date && (
+                            <div className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              Due {new Date(task.due_date).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
+                        <select
+                          value={task.status}
+                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                          className="px-2 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-xs focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditTask(task);
+                          }}
+                          className="p-1.5 text-dark-cyan hover:text-dark-cyan/80 hover:bg-dark-cyan/10 dark:hover:bg-dark-cyan/20 rounded transition-colors"
+                          title="Edit Task"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTask(task.id);
+                          }}
+                          className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                          title="Delete Task"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
         )}
       </div>
+
+      {showProviderModal && selectedProvider && (
+        <ProviderDetailModal
+          provider={selectedProvider}
+          onClose={() => {
+            setShowProviderModal(false);
+            setSelectedProvider(null);
+            setHighlightMissingFields([]);
+          }}
+          onUpdate={() => {
+            refetch();
+          }}
+          highlightMissingFields={highlightMissingFields}
+        />
+      )}
 
       {/* Add Task Modal */}
       {showAddForm && (

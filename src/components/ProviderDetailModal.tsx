@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, Payer, ProviderPayerApplication } from '../lib/supabase';
 import { useProviderPayerApplications, usePayers } from '../hooks/useDatabase';
-import { X, CheckCircle, Clock, AlertCircle, Ban } from 'lucide-react';
+import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2 } from 'lucide-react';
 import { DatabaseService } from '../lib/supabase';
 
 interface ProviderDetailModalProps {
   provider: Provider;
   onClose: () => void;
   onUpdate: () => void;
+  highlightMissingFields?: string[];
 }
 
 export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   provider,
   onClose,
-  onUpdate
+  onUpdate,
+  highlightMissingFields = []
 }) => {
   const { applications, loading: appsLoading, refetch: refetchApplications } = useProviderPayerApplications({
     providerId: provider.id
@@ -101,18 +103,48 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
+          {highlightMissingFields.length > 0 && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">Missing Required Information</h4>
+                  <p className="text-sm text-red-700 dark:text-red-400">
+                    Please complete the following fields: {highlightMissingFields.map(f => f.replace('_', ' ')).join(', ')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Email</label>
+            <div className={highlightMissingFields.includes('email') ? 'bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border-2 border-red-300 dark:border-red-700' : ''}>
+              <label className="text-sm font-medium text-navy/70 dark:text-gray-400 flex items-center gap-1">
+                Email
+                {highlightMissingFields.includes('email') && <span className="text-red-600">*</span>}
+              </label>
               <p className="text-navy dark:text-white">{provider.email || 'N/A'}</p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Phone</label>
+            <div className={highlightMissingFields.includes('phone') ? 'bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border-2 border-red-300 dark:border-red-700' : ''}>
+              <label className="text-sm font-medium text-navy/70 dark:text-gray-400 flex items-center gap-1">
+                Phone
+                {highlightMissingFields.includes('phone') && <span className="text-red-600">*</span>}
+              </label>
               <p className="text-navy dark:text-white">{provider.phone || 'N/A'}</p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-navy/70 dark:text-gray-400">License Number</label>
+            <div className={highlightMissingFields.includes('license_number') ? 'bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border-2 border-red-300 dark:border-red-700' : ''}>
+              <label className="text-sm font-medium text-navy/70 dark:text-gray-400 flex items-center gap-1">
+                License Number
+                {highlightMissingFields.includes('license_number') && <span className="text-red-600">*</span>}
+              </label>
               <p className="text-navy dark:text-white">{provider.license_number || 'N/A'}</p>
+            </div>
+            <div className={highlightMissingFields.includes('specialty') ? 'bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border-2 border-red-300 dark:border-red-700' : ''}>
+              <label className="text-sm font-medium text-navy/70 dark:text-gray-400 flex items-center gap-1">
+                Specialty
+                {highlightMissingFields.includes('specialty') && <span className="text-red-600">*</span>}
+              </label>
+              <p className="text-navy dark:text-white">{provider.specialty || 'N/A'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Status</label>
@@ -141,7 +173,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Approved</th>
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Loaded</th>
                       <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Effective Date</th>
-                      {editingApp && <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white">Actions</th>}
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-navy dark:text-white w-20"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -222,8 +254,8 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                               </span>
                             )}
                           </td>
-                          {isEditing && (
-                            <td className="py-3 px-4 text-center">
+                          <td className="py-3 px-4 text-center">
+                            {isEditing ? (
                               <div className="flex gap-2 justify-center">
                                 <button
                                   onClick={() => handleUpdateApplication(app.id)}
@@ -241,8 +273,16 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                                   Cancel
                                 </button>
                               </div>
-                            </td>
-                          )}
+                            ) : (
+                              <button
+                                onClick={() => setEditingApp(app.id)}
+                                className="p-1 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-dark-cyan/20 rounded transition-colors"
+                                title="Edit dates"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}

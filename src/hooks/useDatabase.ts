@@ -124,7 +124,7 @@ export function useLocations(organizationId?: string) {
 }
 
 // Custom hook for subflows
-export function useSubflows(workflowId?: string) {
+export function useSubflows(workflowId?: string, instanceId?: string | null) {
   const [subflows, setSubflows] = useState<Subflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +134,11 @@ export function useSubflows(workflowId?: string) {
       try {
         setLoading(true);
         const data = await DatabaseService.getSubflows(workflowId);
-        setSubflows(data);
+        // Filter by instance_id if provided
+        const filtered = instanceId !== undefined
+          ? data.filter(s => s.instance_id === instanceId)
+          : data.filter(s => s.instance_id === null);
+        setSubflows(filtered);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch subflows');
@@ -144,7 +148,7 @@ export function useSubflows(workflowId?: string) {
     }
 
     fetchSubflows();
-  }, [workflowId]);
+  }, [workflowId, instanceId]);
 
   const createSubflow = async (subflow: Omit<Subflow, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -173,7 +177,10 @@ export function useSubflows(workflowId?: string) {
       await DatabaseService.emitSubflowTasks(subflowId, providerId);
       // Refresh subflows to get updated status
       const data = await DatabaseService.getSubflows(workflowId);
-      setSubflows(data);
+      const filtered = instanceId !== undefined
+        ? data.filter(s => s.instance_id === instanceId)
+        : data.filter(s => s.instance_id === null);
+      setSubflows(filtered);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to emit tasks for subflow');
       throw err;
@@ -190,7 +197,12 @@ export function useSubflows(workflowId?: string) {
     refetch: () => {
       setLoading(true);
       DatabaseService.getSubflows(workflowId)
-        .then(setSubflows)
+        .then(data => {
+          const filtered = instanceId !== undefined
+            ? data.filter(s => s.instance_id === instanceId)
+            : data.filter(s => s.instance_id === null);
+          setSubflows(filtered);
+        })
         .catch(err => setError(err.message))
         .finally(() => setLoading(false));
     }
