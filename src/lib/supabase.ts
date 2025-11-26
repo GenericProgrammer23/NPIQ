@@ -73,6 +73,7 @@ export interface Provider {
   specialty?: string;
   license_number?: string;
   license_expiry?: string;
+  credentialing_loaded_date?: string;
   status: 'active' | 'pending' | 'expired' | 'suspended';
   created_at: string;
   updated_at: string;
@@ -118,8 +119,10 @@ export interface Task {
   workflow_id?: string;
   subflow_id?: string;
   provider_id?: string;
+  payer_id?: string;
   location_id?: string;
   instance_id?: string;
+  task_template_id?: string;
   title: string;
   description?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
@@ -130,6 +133,8 @@ export interface Task {
   due_date?: string;
   assigned_to?: string;
   completed_at?: string;
+  auto_generated?: boolean;
+  last_updated_by_system?: string;
   created_at: string;
   updated_at: string;
   workflow?: Workflow;
@@ -254,6 +259,9 @@ export interface PayerTaskTemplate {
   trigger_condition?: string;
   priority_modifier?: number;
   due_date_offset_days?: number;
+  prevents_duplication?: boolean;
+  completion_triggers_template_ids?: string[];
+  parent_task_type?: string;
   created_at: string;
   updated_at: string;
   payer?: Payer;
@@ -832,7 +840,7 @@ export class DatabaseService {
     workflowId?: string;
     subflowId?: string;
     providerId?: string;
-    status?: string;
+    status?: string | string[];
     assignedTo?: string;
   }): Promise<Task[]> {
     if (!supabase) return [];
@@ -856,15 +864,36 @@ export class DatabaseService {
       query = query.eq('provider_id', filters.providerId);
     }
     if (filters?.status) {
-      query = query.eq('status', filters.status);
+      if (Array.isArray(filters.status)) {
+        query = query.in('status', filters.status);
+      } else {
+        query = query.eq('status', filters.status);
+      }
     }
     if (filters?.assignedTo) {
       query = query.eq('assigned_to', filters.assignedTo);
     }
 
-    const { data, error } = await query;
+    const { data, error} = await query;
     if (error) throw error;
     return data || [];
+  }
+
+  static async getTask(id: string): Promise<Task | null> {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        workflow:workflows(*),
+        subflow:subflows(*),
+        provider:providers(*)
+      `)
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   }
 
   static async createTask(task: Omit<Task, 'id' | 'created_at' | 'updated_at'>): Promise<Task> {
@@ -1500,6 +1529,19 @@ export class DatabaseService {
       due_date_offset_days: null
     });
 
+    // Create "Attach Approval Evidence" task (triggered by submit completion)
+    templates.push({
+      payer_id: payer.id,
+      title_template: `Attach Approval Evidence for ${payer.name}`,
+      description_template: `Upload or attach evidence of ${payer.name} application approval`,
+      task_type: 'document',
+      trigger_condition: 'on_task_complete:submit',
+      parent_task_type: 'submit',
+      priority_modifier: 8,
+      due_date_offset_days: null,
+      prevents_duplication: true
+    });
+
     // Create approval tracking task
     templates.push({
       payer_id: payer.id,
@@ -1508,7 +1550,20 @@ export class DatabaseService {
       task_type: 'approval',
       trigger_condition: 'on_submission',
       priority_modifier: 10,
-      due_date_offset_days: payer.days_to_approve || 30
+      due_date_offset_days: payer.days_to_approve || 30,
+      prevents_duplication: true
+    });
+
+    // Create "Enter Provider in Prompt" task (triggered by approval)
+    templates.push({
+      payer_id: payer.id,
+      title_template: `Enter Provider Information in Prompt for ${payer.name}`,
+      description_template: `Update provider credentialing status in EMR system for ${payer.name}`,
+      task_type: 'loading',
+      trigger_condition: 'on_approval',
+      priority_modifier: 12,
+      due_date_offset_days: null,
+      prevents_duplication: true
     });
 
     // Create loading task
@@ -1519,7 +1574,8 @@ export class DatabaseService {
       task_type: 'loading',
       trigger_condition: 'on_approval',
       priority_modifier: 15,
-      due_date_offset_days: payer.days_to_load || 60
+      due_date_offset_days: payer.days_to_load || 60,
+      prevents_duplication: true
     });
 
     const { error } = await supabase
@@ -1575,8 +1631,18 @@ export class DatabaseService {
 
     if (error || !application) return;
 
-    // Import TaskGenerationService dynamically to avoid circular dependency
+    // Import services dynamically to avoid circular dependency
     const { TaskGenerationService } = await import('../services/TaskGenerationService');
+    const { DynamicTaskUpdateService } = await import('../services/DynamicTaskUpdateService');
+
+    // Auto-complete submit task if submission date is entered
+    if (application.application_submission_date) {
+      await DynamicTaskUpdateService.checkAndAutoCompleteSubmitTask(
+        application.provider_id,
+        application.payer_id,
+        application.application_submission_date
+      );
+    }
 
     // Generate new tasks based on status change
     if (newStatus === 'submitted' && oldStatus === 'not_started') {

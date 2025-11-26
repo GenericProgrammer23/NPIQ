@@ -293,6 +293,26 @@ export const GuidePage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <h3 className="font-semibold text-lg mb-3 mt-6">Visualizing Workflows</h3>
+        <p className="mb-4">
+          After creating a payer and its subflow, you can view an interactive flowchart of the entire workflow:
+        </p>
+        <ol className="space-y-2 list-decimal list-inside mb-4">
+          <li>Go to the <strong>Payers</strong> page</li>
+          <li>Find your payer card</li>
+          <li>Click the blue <strong>workflow icon</strong> (Git Branch) in the top-right corner</li>
+          <li>Interactive flowchart opens showing:
+            <ul className="ml-6 mt-2 space-y-1 list-disc list-inside text-sm">
+              <li>Prerequisites (dependencies on other payers)</li>
+              <li>Initial phase tasks (documents, info)</li>
+              <li>Submission task</li>
+              <li>Post-submission tasks (evidence, tracking)</li>
+              <li>Approval phase tasks (loading, EMR entry)</li>
+              <li>Color-coded status for each task (if viewing provider-specific workflow)</li>
+            </ul>
+          </li>
+        </ol>
       </Section>
 
       <Section id="tasks" title="Working with Tasks">

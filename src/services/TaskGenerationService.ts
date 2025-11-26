@@ -72,10 +72,26 @@ export class TaskGenerationService {
     // Get payer subflow if exists
     const subflow = await DatabaseService.getPayerSubflow(payer.id);
 
+    // Check if task already exists (prevent duplication)
+    if (template.prevents_duplication !== false) {
+      const existingTasks = await DatabaseService.getTasks({ providerId: provider.id });
+      const duplicate = existingTasks.find(t =>
+        t.payer_id === payer.id &&
+        t.title === template.title_template &&
+        t.status !== 'completed'
+      );
+      if (duplicate) {
+        console.log(`Task already exists: ${template.title_template}`);
+        return;
+      }
+    }
+
     await DatabaseService.createTask({
       title: template.title_template,
       description: template.description_template || '',
       provider_id: provider.id,
+      payer_id: payer.id,
+      task_template_id: template.id,
       subflow_id: subflow?.id,
       status: 'pending',
       priority: this.mapComputedToManualPriority(computedPriority),
@@ -83,6 +99,7 @@ export class TaskGenerationService {
       priority_reason: priorityReason,
       blocks_payers: payer.is_always_required ? [] : [payer.id],
       due_date: dueDate,
+      auto_generated: true,
       organization_id: provider.organization_id
     });
   }
@@ -201,6 +218,65 @@ export class TaskGenerationService {
       if (application.payer) {
         await this.generateTasksForProviderPayer(provider, application.payer, application);
       }
+    }
+  }
+
+  /**
+   * Handles task completion and triggers dependent tasks
+   */
+  static async handleTaskCompletion(taskId: string): Promise<{ tasksCreated: number; taskTitles: string[] }> {
+    try {
+      const task = await DatabaseService.getTask(taskId);
+      if (!task || !task.provider_id || !task.payer_id) {
+        return { tasksCreated: 0, taskTitles: [] };
+      }
+
+      const provider = await DatabaseService.getProvider(task.provider_id);
+      const payer = await DatabaseService.getPayer(task.payer_id);
+      const application = (await DatabaseService.getProviderPayerApplications(task.provider_id))
+        .find(app => app.payer_id === task.payer_id);
+
+      if (!provider || !payer || !application) {
+        return { tasksCreated: 0, taskTitles: [] };
+      }
+
+      // Get all templates for this payer
+      const templates = await DatabaseService.getPayerTaskTemplates(payer.id);
+
+      // Find templates that should be triggered by this task completion
+      const triggeredTemplates = templates.filter(template => {
+        if (!template.trigger_condition) return false;
+
+        // Check for task-type-based triggers
+        if (template.trigger_condition.startsWith('on_task_complete:')) {
+          const triggerType = template.trigger_condition.split(':')[1];
+
+          // Match by task type
+          if (task.title.toLowerCase().includes(triggerType)) {
+            return true;
+          }
+
+          // Match by parent_task_type if specified
+          if (template.parent_task_type && task.title.toLowerCase().includes(template.parent_task_type)) {
+            return true;
+          }
+        }
+
+        return false;
+      });
+
+      const createdTasks: string[] = [];
+
+      // Create tasks from triggered templates
+      for (const template of triggeredTemplates) {
+        await this.createTaskFromTemplate(template, provider, payer, application);
+        createdTasks.push(template.title_template);
+      }
+
+      return { tasksCreated: createdTasks.length, taskTitles: createdTasks };
+    } catch (error) {
+      console.error('Error handling task completion:', error);
+      return { tasksCreated: 0, taskTitles: [] };
     }
   }
 }

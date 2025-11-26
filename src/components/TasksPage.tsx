@@ -4,6 +4,8 @@ import { CheckSquare, Plus, Search, Filter, Calendar, User, AlertCircle, Trash2,
 import { supabase, Provider } from '../lib/supabase';
 import { ProviderDetailModal } from './ProviderDetailModal';
 import { PriorityCalculationService } from '../services/PriorityCalculationService';
+import { TaskGenerationService } from '../services/TaskGenerationService';
+import { DynamicTaskUpdateService } from '../services/DynamicTaskUpdateService';
 
 interface TasksPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -199,12 +201,31 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
     }
   };
 
-  const handleStatusChange = async (taskId: string, newStatus: string) => {
+  const handleStatusChange = async (taskId: string, newStatus: string, task?: any) => {
     try {
-      await updateTask(taskId, { 
+      // Handle special case for "Enter Provider in Prompt" task
+      if (newStatus === 'completed' && task && task.title.includes('Enter Provider Information in Prompt') && task.provider_id) {
+        await DynamicTaskUpdateService.completeLoadingTask(taskId, task.provider_id);
+        await refetch();
+        alert('✓ Provider credentialing loaded date has been updated!');
+        return;
+      }
+
+      // Update task status
+      await updateTask(taskId, {
         status: newStatus as any,
         completed_at: newStatus === 'completed' ? new Date().toISOString() : null
       });
+
+      // If task completed, trigger dependent tasks
+      if (newStatus === 'completed') {
+        const result = await TaskGenerationService.handleTaskCompletion(taskId);
+        await refetch();
+
+        if (result.tasksCreated > 0) {
+          alert(`✓ Task completed!\n\n${result.tasksCreated} new task(s) created:\n${result.taskTitles.join('\n')}`);
+        }
+      }
     } catch (err) {
       console.error('Failed to update task:', err);
     }
@@ -559,7 +580,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
                       <div className="flex items-center gap-2 ml-4" onClick={(e) => e.stopPropagation()}>
                         <select
                           value={task.status}
-                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                          onChange={(e) => handleStatusChange(task.id, e.target.value, task)}
                           className="px-2 py-1 border border-navy/20 dark:border-dark-cyan/30 rounded text-xs focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
                         >
                           <option value="pending">Pending</option>

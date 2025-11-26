@@ -3,6 +3,7 @@ import { Provider, Payer, ProviderPayerApplication } from '../lib/supabase';
 import { useProviderPayerApplications, usePayers, useLocations } from '../hooks/useDatabase';
 import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save } from 'lucide-react';
 import { DatabaseService } from '../lib/supabase';
+import { DynamicTaskUpdateService } from '../services/DynamicTaskUpdateService';
 
 interface ProviderDetailModalProps {
   provider: Provider;
@@ -117,18 +118,24 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
       await DatabaseService.updateProvider(provider.id, cleanedData);
       setIsEditingProvider(false);
 
-      // Check if missing fields were filled
-      const filledFields = highlightMissingFields.filter(field => {
-        return providerData[field as keyof typeof providerData] && providerData[field as keyof typeof providerData] !== '';
-      });
+      // Update related provider info tasks dynamically
+      const updateResult = await DynamicTaskUpdateService.updateRelatedProviderInfoTasks(provider.id);
 
       // Close modal and refresh
       onClose();
       await onUpdate();
 
-      if (filledFields.length > 0) {
+      // Show notification about task updates
+      if (updateResult.tasksCompleted > 0) {
         setTimeout(() => {
-          alert(`Great! You've completed ${filledFields.length} required field(s). Related tasks can now be marked as complete.`);
+          alert(`✓ ${updateResult.tasksCompleted} task(s) auto-completed!\n\nAll required fields are now filled.`);
+        }, 300);
+      } else if (updateResult.tasksUpdated > 0) {
+        const stillMissingMsg = updateResult.results
+          .map(r => `${r.payerName}: ${r.stillMissing.join(', ')}`)
+          .join('\n');
+        setTimeout(() => {
+          alert(`Task(s) updated!\n\nStill missing:\n${stillMissingMsg}`);
         }, 300);
       }
     } catch (err) {

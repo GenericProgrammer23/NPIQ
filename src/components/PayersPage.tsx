@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { usePayers, useProviders, useProviderPayerApplications } from '../hooks/useDatabase';
-import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle, GitBranch } from 'lucide-react';
 import { Payer, DatabaseService } from '../lib/supabase';
 import { CreateSubflowModal } from './CreateSubflowModal';
+import { PayerFlowchartModal } from './PayerFlowchartModal';
 
 interface PayersPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -18,6 +19,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
   const [editingPayer, setEditingPayer] = useState<Payer | null>(null);
   const [showBulkAssign, setShowBulkAssign] = useState<string | null>(null);
   const [showSubflowModal, setShowSubflowModal] = useState<Payer | null>(null);
+  const [showFlowchart, setShowFlowchart] = useState<Payer | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -335,6 +337,13 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                 </div>
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={() => setShowFlowchart(payer)}
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
+                  title="View Workflow"
+                >
+                  <GitBranch className="h-4 w-4" />
+                </button>
                 <button
                   onClick={() => openEditForm(payer)}
                   className="p-2 text-dark-cyan dark:text-dark-cyan hover:bg-dark-cyan/10 dark:hover:bg-dark-cyan/20 rounded transition-colors"
@@ -874,6 +883,14 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
           payer={showSubflowModal}
           onCreateSubflow={handleCreateSubflow}
           onSkip={() => setShowSubflowModal(null)}
+        />
+      )}
+
+      {showFlowchart && (
+        <PayerFlowchartModal
+          payerId={showFlowchart.id}
+          payerName={showFlowchart.name}
+          onClose={() => setShowFlowchart(null)}
         />
       )}
     </div>
