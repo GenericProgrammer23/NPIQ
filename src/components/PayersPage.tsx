@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { usePayers, useProviders, useProviderPayerApplications } from '../hooks/useDatabase';
-import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle, GitBranch } from 'lucide-react';
+import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle, GitBranch, Eye, Edit3 } from 'lucide-react';
 import { Payer, DatabaseService } from '../lib/supabase';
 import { CreateSubflowModal } from './CreateSubflowModal';
 import { PayerFlowchartModal } from './PayerFlowchartModal';
 
 interface PayersPageProps {
   initialFilter?: { type: string; value: string } | null;
+  onNavigate?: (page: string, filter?: any) => void;
 }
 
-export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
+export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigate }) => {
   const { payers, loading, error, createPayer, updatePayer, deletePayer } = usePayers();
   const { providers } = useProviders();
   const { applications, createApplication } = useProviderPayerApplications();
@@ -340,9 +341,23 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter }) => {
                 <button
                   onClick={() => setShowFlowchart(payer)}
                   className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
-                  title="View Workflow"
+                  title="View Legacy Flowchart"
                 >
                   <GitBranch className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onNavigate?.('workflow-designer', { type: 'payer', value: payer.id, mode: 'view' })}
+                  className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded transition-colors"
+                  title="View Visual Workflow"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onNavigate?.('workflow-designer', { type: 'payer', value: payer.id, mode: 'edit' })}
+                  className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors"
+                  title="Design Visual Workflow"
+                >
+                  <Edit3 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => openEditForm(payer)}

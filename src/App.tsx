@@ -12,6 +12,7 @@ import { TasksPage } from './components/TasksPage';
 import { AdminSettingsPage } from './components/AdminSettingsPage';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowEngine } from './components/WorkflowEngine';
+import { WorkflowDesignerPage } from './components/workflow/WorkflowDesignerPage';
 import { DatabaseService } from './lib/supabase';
 import Diagnostics from './components/Diagnostics';
 import { DarkModeToggle } from './components/DarkModeToggle';
@@ -19,11 +20,11 @@ import { useProviders } from './hooks/useDatabase';
 
 function App() {
   const [currentPage, setCurrentPage] = React.useState('dashboard');
-  const [pageFilter, setPageFilter] = React.useState<{ type: string; value: string } | null>(null);
+  const [pageFilter, setPageFilter] = React.useState<{ type: string; value: string; mode?: string } | null>(null);
   const [isOnline] = React.useState(DatabaseService.isConfigured());
   const { providers } = useProviders();
 
-  const handlePageChange = (page: string, filter?: { type: string; value: string }) => {
+  const handlePageChange = (page: string, filter?: { type: string; value: string; mode?: string }) => {
     setCurrentPage(page);
     setPageFilter(filter || null);
   };
@@ -37,9 +38,17 @@ function App() {
       case 'locations':
         return <LocationsPage initialFilter={pageFilter} />;
       case 'payers':
-        return <PayersPage initialFilter={pageFilter} />;
+        return <PayersPage initialFilter={pageFilter} onNavigate={handlePageChange} />;
       case 'workflows':
         return <WorkflowsPage initialFilter={pageFilter} />;
+      case 'workflow-designer':
+        return (
+          <WorkflowDesignerPage
+            payerId={pageFilter?.value}
+            mode={pageFilter?.mode as 'view' | 'edit'}
+            onBack={() => handlePageChange('payers')}
+          />
+        );
       case 'subflows':
         return <SubflowsPage initialFilter={pageFilter} />;
       case 'tasks':
