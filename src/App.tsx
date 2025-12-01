@@ -20,11 +20,11 @@ import { useProviders } from './hooks/useDatabase';
 
 function App() {
   const [currentPage, setCurrentPage] = React.useState('dashboard');
-  const [pageFilter, setPageFilter] = React.useState<{ type: string; value: string; mode?: string } | null>(null);
+  const [pageFilter, setPageFilter] = React.useState<any>(null);
   const [isOnline] = React.useState(DatabaseService.isConfigured());
   const { providers } = useProviders();
 
-  const handlePageChange = (page: string, filter?: { type: string; value: string; mode?: string }) => {
+  const handlePageChange = (page: string, filter?: any) => {
     setCurrentPage(page);
     setPageFilter(filter || null);
   };
@@ -45,12 +45,14 @@ function App() {
         return (
           <WorkflowDesignerPage
             payerId={pageFilter?.value}
+            subflowId={pageFilter?.subflowId}
+            editMode={pageFilter?.editMode as 'payer' | 'subflow'}
             mode={pageFilter?.mode as 'view' | 'edit'}
-            onBack={() => handlePageChange('payers')}
+            onBack={() => handlePageChange(pageFilter?.editMode === 'subflow' ? 'subflows' : 'payers')}
           />
         );
       case 'subflows':
-        return <SubflowsPage initialFilter={pageFilter} />;
+        return <SubflowsPage onNavigate={handlePageChange} />;
       case 'tasks':
         return <TasksPage initialFilter={pageFilter} />;
       case 'admin':
