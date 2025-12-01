@@ -348,14 +348,14 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
                 <button
                   onClick={() => onNavigate?.('workflow-designer', { type: 'payer', value: payer.id, mode: 'view' })}
                   className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded transition-colors"
-                  title="View Visual Workflow"
+                  title="View Credentialing Flow (Read-only)"
                 >
                   <Eye className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => onNavigate?.('workflow-designer', { type: 'payer', value: payer.id, mode: 'edit' })}
                   className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors"
-                  title="Design Visual Workflow"
+                  title="Design Credentialing Flow"
                 >
                   <Edit3 className="h-4 w-4" />
                 </button>

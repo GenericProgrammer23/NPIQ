@@ -183,6 +183,51 @@ export const UpdateProviderFieldNode: React.FC<NodeProps> = (props) => {
   );
 };
 
+export const ExecuteSubflowNode: React.FC<NodeProps> = (props) => {
+  const def = NODE_TYPE_DEFINITIONS.execute_subflow;
+  return (
+    <BaseWorkflowNode
+      {...props}
+      icon={def.icon as any}
+      color={def.color}
+      label={def.label}
+      inputs={def.inputs}
+      outputs={def.outputs}
+      isSelected={props.selected}
+    />
+  );
+};
+
+export const CheckSubflowStatusNode: React.FC<NodeProps> = (props) => {
+  const def = NODE_TYPE_DEFINITIONS.check_subflow_status;
+  return (
+    <BaseWorkflowNode
+      {...props}
+      icon={def.icon as any}
+      color={def.color}
+      label={def.label}
+      inputs={def.inputs}
+      outputs={def.outputs}
+      isSelected={props.selected}
+    />
+  );
+};
+
+export const ExecuteWorkflowTemplateNode: React.FC<NodeProps> = (props) => {
+  const def = NODE_TYPE_DEFINITIONS.execute_workflow_template;
+  return (
+    <BaseWorkflowNode
+      {...props}
+      icon={def.icon as any}
+      color={def.color}
+      label={def.label}
+      inputs={def.inputs}
+      outputs={def.outputs}
+      isSelected={props.selected}
+    />
+  );
+};
+
 export const nodeTypes = {
   start: StartNode,
   complete: CompleteNode,
@@ -195,5 +240,8 @@ export const nodeTypes = {
   branch: BranchNode,
   parallel_tasks: ParallelTasksNode,
   auto_complete_task: AutoCompleteTaskNode,
-  update_provider_field: UpdateProviderFieldNode
+  update_provider_field: UpdateProviderFieldNode,
+  execute_subflow: ExecuteSubflowNode,
+  check_subflow_status: CheckSubflowStatusNode,
+  execute_workflow_template: ExecuteWorkflowTemplateNode
 };

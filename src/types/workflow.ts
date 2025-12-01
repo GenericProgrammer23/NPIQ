@@ -12,7 +12,10 @@ export type WorkflowNodeType =
   | 'branch'
   | 'parallel_tasks'
   | 'auto_complete_task'
-  | 'update_provider_field';
+  | 'update_provider_field'
+  | 'execute_subflow'
+  | 'check_subflow_status'
+  | 'execute_workflow_template';
 
 export type WorkflowExecutionStatus =
   | 'running'
@@ -140,7 +143,10 @@ export type NodeConfig =
   | BranchConfig
   | ParallelTasksConfig
   | AutoCompleteTaskConfig
-  | UpdateProviderFieldConfig;
+  | UpdateProviderFieldConfig
+  | ExecuteSubflowConfig
+  | CheckSubflowStatusConfig
+  | ExecuteWorkflowTemplateConfig;
 
 export interface BaseNodeConfig {
   type: WorkflowNodeType;
@@ -171,8 +177,20 @@ export interface PrerequisiteCheckConfig extends BaseNodeConfig {
 
 export interface DependencyCheckConfig extends BaseNodeConfig {
   type: 'dependency_check';
-  required_payers: string[];
-  required_status: 'approved' | 'loaded';
+  dependency_type: 'payer' | 'subflow' | 'workflow_template' | 'task';
+
+  required_payers?: string[];
+  required_payer_status?: 'approved' | 'loaded';
+
+  required_subflows?: string[];
+  required_subflow_status?: 'not_started' | 'in_progress' | 'complete';
+
+  required_workflow_templates?: string[];
+  required_workflow_status?: 'active' | 'completed';
+
+  required_task_titles?: string[];
+  required_task_status?: 'completed';
+
   check_type: 'all' | 'any';
   block_if_not_met: boolean;
 }
@@ -255,11 +273,34 @@ export interface NodeTypeDefinition {
   label: string;
   icon: string;
   color: string;
-  category: 'flow' | 'prerequisites' | 'tasks' | 'dates' | 'data';
+  category: 'flow' | 'prerequisites' | 'tasks' | 'dates' | 'data' | 'components';
   description: string;
   inputs: string[];
   outputs: string[];
   defaultConfig: Partial<NodeConfig>;
+}
+
+export interface ExecuteSubflowConfig extends BaseNodeConfig {
+  type: 'execute_subflow';
+  subflow_id: string;
+  subflow_name?: string;
+  wait_for_completion: boolean;
+  pass_context: boolean;
+  timeout_days?: number;
+}
+
+export interface CheckSubflowStatusConfig extends BaseNodeConfig {
+  type: 'check_subflow_status';
+  required_subflows: string[];
+  required_status: 'not_started' | 'in_progress' | 'complete';
+  check_type: 'all' | 'any';
+}
+
+export interface ExecuteWorkflowTemplateConfig extends BaseNodeConfig {
+  type: 'execute_workflow_template';
+  workflow_template_id: string;
+  workflow_template_name?: string;
+  wait_for_completion: boolean;
 }
 
 export const NODE_TYPE_DEFINITIONS: Record<WorkflowNodeType, NodeTypeDefinition> = {
@@ -314,15 +355,61 @@ export const NODE_TYPE_DEFINITIONS: Record<WorkflowNodeType, NodeTypeDefinition>
     icon: 'GitBranch',
     color: '#ec4899',
     category: 'prerequisites',
-    description: 'Checks if other payers are approved/loaded',
+    description: 'Checks if payers, subflows, workflows, or tasks are completed',
     inputs: ['default'],
     outputs: ['met', 'not_met'],
     defaultConfig: {
       type: 'dependency_check',
-      required_payers: [],
-      required_status: 'approved',
+      dependency_type: 'payer',
       check_type: 'all',
       block_if_not_met: true
+    }
+  },
+  execute_subflow: {
+    type: 'execute_subflow',
+    label: 'Execute Subflow',
+    icon: 'Play',
+    color: '#8b5cf6',
+    category: 'components',
+    description: 'Executes a reusable subflow component',
+    inputs: ['default'],
+    outputs: ['default'],
+    defaultConfig: {
+      type: 'execute_subflow',
+      subflow_id: '',
+      wait_for_completion: true,
+      pass_context: true
+    }
+  },
+  check_subflow_status: {
+    type: 'check_subflow_status',
+    label: 'Check Subflow Status',
+    icon: 'ListChecks',
+    color: '#10b981',
+    category: 'components',
+    description: 'Checks if subflows are completed',
+    inputs: ['default'],
+    outputs: ['met', 'not_met'],
+    defaultConfig: {
+      type: 'check_subflow_status',
+      required_subflows: [],
+      required_status: 'complete',
+      check_type: 'all'
+    }
+  },
+  execute_workflow_template: {
+    type: 'execute_workflow_template',
+    label: 'Execute Workflow Template',
+    icon: 'Workflow',
+    color: '#3b82f6',
+    category: 'components',
+    description: 'Executes a reusable workflow template',
+    inputs: ['default'],
+    outputs: ['default'],
+    defaultConfig: {
+      type: 'execute_workflow_template',
+      workflow_template_id: '',
+      wait_for_completion: true
     }
   },
   generate_task: {
