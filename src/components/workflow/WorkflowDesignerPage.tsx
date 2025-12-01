@@ -14,7 +14,7 @@ import ReactFlow, {
   MarkerType
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Save, Play, Eye, Edit3, ArrowLeft, Undo, Redo } from 'lucide-react';
+import { Save, Play, Eye, Edit3, ArrowLeft, Undo, Redo, ChevronRight, Home } from 'lucide-react';
 
 import { NodePalette } from './NodePalette';
 import { NodeConfigPanel } from './NodeConfigPanel';
@@ -22,18 +22,33 @@ import { nodeTypes } from './CustomNodes';
 import { WorkflowNodeType, NODE_TYPE_DEFINITIONS } from '../../types/workflow';
 import { WorkflowDatabaseService } from '../../lib/workflowDatabase';
 
+interface BreadcrumbItem {
+  label: string;
+  type: 'home' | 'workflow' | 'subflow';
+  id?: string;
+}
+
 interface WorkflowDesignerPageProps {
   payerId?: string;
+  subflowId?: string;
   mode?: 'view' | 'edit';
+  editMode?: 'payer' | 'subflow';
   onBack?: () => void;
+  onNavigateToSubflow?: (subflowId: string) => void;
 }
 
 export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
   payerId: initialPayerId,
+  subflowId: initialSubflowId,
   mode: initialMode = 'edit',
-  onBack
+  editMode: initialEditMode = 'payer',
+  onBack,
+  onNavigateToSubflow
 }) => {
   const [payerId, setPayerId] = useState(initialPayerId);
+  const [subflowId, setSubflowId] = useState(initialSubflowId);
+  const [editMode, setEditMode] = useState(initialEditMode);
+  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
 
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
@@ -55,10 +70,13 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
 
   useEffect(() => {
     if (payerId) {
-      loadWorkflow();
       loadPayerInfo();
     }
   }, [payerId]);
+
+  useEffect(() => {
+    loadWorkflow();
+  }, [payerId, subflowId, editMode]);
 
   const loadPayers = async () => {
     try {
@@ -84,6 +102,14 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
   };
 
   const loadWorkflow = async () => {
+    if (editMode === 'subflow' && subflowId) {
+      await loadSubflow();
+    } else if (editMode === 'payer' && payerId) {
+      await loadPayerWorkflow();
+    }
+  };
+
+  const loadPayerWorkflow = async () => {
     if (!payerId) return;
 
     try {
@@ -105,8 +131,89 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
         setNodes([]);
         setEdges([]);
       }
+
+      updateBreadcrumbs();
     } catch (error) {
       console.error('Error loading workflow:', error);
+    }
+  };
+
+  const loadSubflow = async () => {
+    if (!subflowId) return;
+
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      const { data: subflow, error } = await supabase
+        .from('subflows')
+        .select('*')
+        .eq('id', subflowId)
+        .single();
+
+      if (error) throw error;
+
+      if (subflow) {
+        if (subflow.workflow_data) {
+          setNodes(subflow.workflow_data.nodes || []);
+          setEdges(subflow.workflow_data.edges || []);
+        } else {
+          const { SubflowMigrationService } = await import('../../services/SubflowMigrationService');
+          const { nodes: migratedNodes, edges: migratedEdges } = await SubflowMigrationService.migrateSubflowToVisual(subflow);
+          setNodes(migratedNodes);
+          setEdges(migratedEdges);
+        }
+
+        setWorkflowName(subflow.name);
+        setWorkflowId(subflow.id);
+
+        const maxId = (subflow.workflow_data?.nodes || []).reduce((max: number, node: any) => {
+          const idNum = parseInt(node.id.replace('node_', '').replace('start-', '').replace('complete-', '').replace('task-', '').replace('prereq-', '').replace('dep-', ''));
+          return idNum > max ? idNum : max;
+        }, 0);
+        nodeIdCounter.current = maxId + 1;
+      }
+
+      updateBreadcrumbs();
+    } catch (error) {
+      console.error('Error loading subflow:', error);
+    }
+  };
+
+  const updateBreadcrumbs = () => {
+    const crumbs: BreadcrumbItem[] = [
+      { label: 'Workflows', type: 'home' }
+    ];
+
+    if (editMode === 'payer' && payerName) {
+      crumbs.push({
+        label: payerName,
+        type: 'workflow',
+        id: payerId
+      });
+    } else if (editMode === 'subflow' && workflowName) {
+      if (payerName) {
+        crumbs.push({
+          label: payerName,
+          type: 'workflow',
+          id: payerId
+        });
+      }
+      crumbs.push({
+        label: workflowName,
+        type: 'subflow',
+        id: subflowId
+      });
+    }
+
+    setBreadcrumbs(crumbs);
+  };
+
+  const handleDiveIntoSubflow = async (targetSubflowId: string) => {
+    if (onNavigateToSubflow) {
+      onNavigateToSubflow(targetSubflowId);
+    } else {
+      setSubflowId(targetSubflowId);
+      setEditMode('subflow');
+      await loadSubflow();
     }
   };
 
@@ -202,8 +309,6 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
   }, []);
 
   const handleSaveWorkflow = async () => {
-    if (!payerId) return;
-
     setIsSaving(true);
     try {
       const workflowData = {
@@ -211,29 +316,48 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
         edges
       };
 
-      const { DatabaseService } = await import('../../lib/supabase');
-      const organizationId = 'default-org';
+      if (editMode === 'subflow' && subflowId) {
+        const { supabase } = await import('../../lib/supabase');
+        const { error } = await supabase
+          .from('subflows')
+          .update({
+            workflow_data: workflowData,
+            metadata: {
+              ...{ viewport: reactFlowInstance?.getViewport() },
+              last_edited_at: new Date().toISOString(),
+              version: 1
+            },
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', subflowId);
 
-      if (workflowId) {
-        await WorkflowDatabaseService.updateWorkflowDefinition(workflowId, {
-          workflow_data: workflowData,
-          name: workflowName,
-          updated_at: new Date().toISOString()
-        });
-      } else {
-        const newWorkflow = await WorkflowDatabaseService.createWorkflowDefinition({
-          payer_id: payerId,
-          organization_id: organizationId,
-          name: workflowName || `${payerName} Workflow`,
-          workflow_data: workflowData,
-          version: 1,
-          effective_from_date: new Date().toISOString().split('T')[0],
-          is_active: true
-        });
-        setWorkflowId(newWorkflow.id);
+        if (error) throw error;
+        alert('Subflow saved successfully!');
+      } else if (editMode === 'payer' && payerId) {
+        const { DatabaseService } = await import('../../lib/supabase');
+        const organizationId = 'default-org';
+
+        if (workflowId) {
+          await WorkflowDatabaseService.updateWorkflowDefinition(workflowId, {
+            workflow_data: workflowData,
+            name: workflowName,
+            updated_at: new Date().toISOString()
+          });
+        } else {
+          const newWorkflow = await WorkflowDatabaseService.createWorkflowDefinition({
+            payer_id: payerId,
+            organization_id: organizationId,
+            name: workflowName || `${payerName} Workflow`,
+            workflow_data: workflowData,
+            version: 1,
+            effective_from_date: new Date().toISOString().split('T')[0],
+            is_active: true
+          });
+          setWorkflowId(newWorkflow.id);
+        }
+
+        alert('Workflow saved successfully!');
       }
-
-      alert('Workflow saved successfully!');
     } catch (error) {
       console.error('Error saving workflow:', error);
       alert('Error saving workflow');
@@ -254,39 +378,70 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-          )}
-
-          {!payerId ? (
-            <div className="flex items-center gap-3 flex-1">
-              <label className="text-sm font-medium text-gray-700">Select Payer:</label>
-              <select
-                value={payerId || ''}
-                onChange={(e) => setPayerId(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm min-w-[200px]"
+        <div className="flex flex-col gap-2 flex-1">
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <option value="">Choose a payer...</option>
-                {payers.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-          ) : (
-            <div>
-              <h1 className="text-xl font-semibold text-gray-800">
-                {workflowName || `${payerName} Workflow`}
-              </h1>
-              <div className="text-sm text-gray-500">
-                {payerName} • {isViewMode ? 'View Mode' : 'Edit Mode'}
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+            )}
+
+            {!payerId && !subflowId ? (
+              <div className="flex items-center gap-3 flex-1">
+                <label className="text-sm font-medium text-gray-700">Select Payer:</label>
+                <select
+                  value={payerId || ''}
+                  onChange={(e) => setPayerId(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm min-w-[200px]"
+                >
+                  <option value="">Choose a payer...</option>
+                  {payers.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
               </div>
-            </div>
+            ) : (
+              <div>
+                <h1 className="text-xl font-semibold text-gray-800">
+                  {workflowName || `${payerName} ${editMode === 'subflow' ? 'Subflow' : 'Workflow'}`}
+                </h1>
+                <div className="text-sm text-gray-500">
+                  {editMode === 'subflow' ? 'Subflow' : payerName} • {isViewMode ? 'View Mode' : 'Edit Mode'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {breadcrumbs.length > 0 && (
+            <nav className="flex items-center gap-2 text-sm">
+              {breadcrumbs.map((crumb, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <ChevronRight className="w-4 h-4 text-gray-400" />}
+                  <button
+                    onClick={() => {
+                      if (crumb.type === 'home' && onBack) {
+                        onBack();
+                      } else if (crumb.type === 'workflow' && crumb.id) {
+                        setEditMode('payer');
+                        setSubflowId(undefined);
+                        loadPayerWorkflow();
+                      }
+                    }}
+                    className={`flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition-colors ${
+                      index === breadcrumbs.length - 1
+                        ? 'text-gray-900 font-medium'
+                        : 'text-gray-600'
+                    }`}
+                  >
+                    {crumb.type === 'home' && <Home className="w-3 h-3" />}
+                    {crumb.label}
+                  </button>
+                </React.Fragment>
+              ))}
+            </nav>
           )}
         </div>
 
@@ -353,6 +508,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
             selectedNode={selectedNode}
             onClose={() => setSelectedNode(null)}
             onSave={handleSaveNodeConfig}
+            onDiveIntoSubflow={handleDiveIntoSubflow}
           />
         )}
       </div>

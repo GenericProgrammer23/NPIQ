@@ -88,11 +88,19 @@ function getConfigSummary(config: any): string {
     case 'wait_for_date':
       return `Wait for ${config.date_field || 'date'}`;
     case 'dependency_check':
-      return `Check ${config.required_payers?.length || 0} payers`;
+      const depType = config.dependency_type || 'payer';
+      const count = config[`required_${depType === 'payer' ? 'payers' : depType === 'subflow' ? 'subflows' : depType === 'workflow_template' ? 'workflow_templates' : 'task_titles'}`]?.length || 0;
+      return `Check ${count} ${depType}${count !== 1 ? 's' : ''}`;
     case 'auto_complete_task':
       return config.task_title_pattern || 'Auto-complete';
     case 'update_provider_field':
       return `Update ${config.field_name || 'field'}`;
+    case 'execute_subflow':
+      return config.subflow_name || 'Execute subflow';
+    case 'check_subflow_status':
+      return `Check ${config.required_subflows?.length || 0} subflows`;
+    case 'execute_workflow_template':
+      return config.workflow_template_name || 'Execute template';
     default:
       return '';
   }
