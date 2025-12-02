@@ -59,6 +59,23 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ onNavigate }) => {
     }
 
     try {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
+        alert('You must be logged in to create subflows');
+        return;
+      }
+
+      const { data: membership, error: membershipError } = await supabase
+        .from('org_members')
+        .select('organization_id')
+        .eq('user_id', user.data.user.id)
+        .maybeSingle();
+
+      if (membershipError || !membership) {
+        alert('Could not find your organization membership');
+        return;
+      }
+
       const { SubflowMigrationService } = await import('../services/SubflowMigrationService');
       const emptyWorkflow = SubflowMigrationService.createEmptyVisualWorkflow();
 
@@ -67,6 +84,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ onNavigate }) => {
         .insert({
           name: newSubflowName,
           purpose: newSubflowPurpose || null,
+          organization_id: membership.organization_id,
           status: 'not_started',
           is_reusable: true,
           workflow_data: emptyWorkflow,

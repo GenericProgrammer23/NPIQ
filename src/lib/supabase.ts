@@ -148,6 +148,7 @@ export interface Subflow {
   id: string;
   workflow_id?: string;
   instance_id?: string;
+  organization_id?: string;
   name: string;
   purpose?: string;
   prerequisites: string;
@@ -157,6 +158,12 @@ export interface Subflow {
   order_index: number;
   is_template?: boolean;
   payer_id?: string;
+  is_reusable?: boolean;
+  execution_count?: number;
+  last_executed_at?: string;
+  tags?: string[];
+  workflow_data?: any;
+  metadata?: any;
   created_at: string;
   updated_at: string;
   workflow?: Workflow;
@@ -949,6 +956,21 @@ export class DatabaseService {
     const { data, error } = await query;
     if (error) throw error;
     return data || [];
+  }
+
+  static async getPayer(payerId: string): Promise<Payer | null> {
+    if (!supabase) return null;
+    const { data, error } = await supabase
+      .from('payers')
+      .select(`
+        *,
+        organization:organizations(*)
+      `)
+      .eq('id', payerId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   }
 
   static async createPayer(payer: Omit<Payer, 'id' | 'created_at' | 'updated_at'>): Promise<Payer> {
