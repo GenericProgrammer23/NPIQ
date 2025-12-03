@@ -1,6 +1,7 @@
 import { Node, Edge } from 'reactflow';
 import { WorkflowDatabaseService } from '../lib/workflowDatabase';
 import { DatabaseService } from '../lib/supabase';
+import { processTemplate, type TemplateContext } from '../utils/templateVariables';
 import type {
   WorkflowDefinition,
   WorkflowExecutionInstance,
@@ -8,6 +9,9 @@ import type {
   PrerequisiteCheckConfig,
   GenerateTaskConfig,
   WaitForDateConfig,
+  WaitForDocumentConfig,
+  WaitForProfileFieldConfig,
+  SendNotificationConfig,
   AutoCompleteTaskConfig,
   UpdateProviderFieldConfig
 } from '../types/workflow';
@@ -120,6 +124,39 @@ export class WorkflowExecutionService {
             });
             return;
           }
+          break;
+        case 'wait_for_document':
+          result = await this.handleWaitForDocument(instance, node);
+          if (result.waiting) {
+            await WorkflowDatabaseService.updateNodeExecution(nodeExec.id, {
+              status: 'waiting',
+              result_data: result
+            });
+            await WorkflowDatabaseService.updateWorkflowExecution(instanceId, {
+              status: 'waiting_for_prerequisite',
+              current_node_id: nodeId
+            });
+            return;
+          }
+          nextHandle = result.uploaded ? 'uploaded' : 'timeout';
+          break;
+        case 'wait_for_profile_field':
+          result = await this.handleWaitForProfileField(instance, node);
+          if (result.waiting) {
+            await WorkflowDatabaseService.updateNodeExecution(nodeExec.id, {
+              status: 'waiting',
+              result_data: result
+            });
+            await WorkflowDatabaseService.updateWorkflowExecution(instanceId, {
+              status: 'waiting_for_prerequisite',
+              current_node_id: nodeId
+            });
+            return;
+          }
+          nextHandle = result.filled ? 'filled' : 'timeout';
+          break;
+        case 'send_notification':
+          result = await this.handleSendNotification(instance, node);
           break;
         case 'auto_complete_task':
           result = await this.handleAutoCompleteTask(instance, node);
@@ -256,12 +293,19 @@ export class WorkflowExecutionService {
   private static async handleGenerateTask(instance: WorkflowExecutionInstance, node: Node): Promise<any> {
     const config = node.data.config as GenerateTaskConfig;
 
+    // Build template context for variable substitution
+    const context = await this.buildTemplateContext(instance);
+
+    // Process templates in title and description
+    const taskTitle = processTemplate(config.task_title, context);
+    const taskDescription = processTemplate(config.task_description, context);
+
     // Check for duplicates if enabled
     if (config.prevent_duplicates) {
       const existingTasks = await DatabaseService.getTasks({ providerId: instance.provider_id });
       const duplicate = existingTasks.find(t =>
         t.payer_id === instance.payer_id &&
-        t.title === config.task_title &&
+        t.title === taskTitle &&
         t.status !== 'completed'
       );
 
@@ -272,8 +316,8 @@ export class WorkflowExecutionService {
 
     // Create task
     const task = await DatabaseService.createTask({
-      title: config.task_title,
-      description: config.task_description,
+      title: taskTitle,
+      description: taskDescription,
       provider_id: instance.provider_id,
       payer_id: instance.payer_id,
       status: 'pending',
@@ -374,6 +418,157 @@ export class WorkflowExecutionService {
     });
 
     return { completed: true };
+  }
+
+  /**
+   * Node Handler: WAIT FOR DOCUMENT
+   */
+  private static async handleWaitForDocument(instance: WorkflowExecutionInstance, node: Node): Promise<any> {
+    const config = node.data.config as WaitForDocumentConfig;
+
+    // Check if document has been uploaded
+    // Note: This requires a documents table in the database
+    // For now, we'll return a waiting state
+    // TODO: Implement document checking logic when documents table is available
+
+    return {
+      waiting: true,
+      document_type: config.document_type,
+      auto_complete_task: config.auto_complete_task_on_upload
+    };
+  }
+
+  /**
+   * Node Handler: WAIT FOR PROFILE FIELD
+   */
+  private static async handleWaitForProfileField(instance: WorkflowExecutionInstance, node: Node): Promise<any> {
+    const config = node.data.config as WaitForProfileFieldConfig;
+
+    // Get provider or location data
+    let entity: any = null;
+    if (config.entity_type === 'provider') {
+      const providers = await DatabaseService.getProviders();
+      entity = providers.find(p => p.id === instance.provider_id);
+    } else {
+      // TODO: Add location lookup when needed
+    }
+
+    if (!entity) {
+      return { waiting: true, reason: 'Entity not found' };
+    }
+
+    // Check if required fields are filled
+    const checkResults = config.required_fields.map(fieldName => {
+      const value = entity[fieldName];
+      return value !== null && value !== undefined && value !== '';
+    });
+
+    const allFilled = config.check_type === 'all'
+      ? checkResults.every(r => r)
+      : checkResults.some(r => r);
+
+    if (!allFilled) {
+      return {
+        waiting: true,
+        required_fields: config.required_fields,
+        check_type: config.check_type
+      };
+    }
+
+    // Fields are filled, auto-complete task if configured
+    if (config.auto_complete_task_on_fill && config.task_title_pattern) {
+      const context = await this.buildTemplateContext(instance);
+      const taskTitle = processTemplate(config.task_title_pattern, context);
+
+      const tasks = await DatabaseService.getTasks({ providerId: instance.provider_id });
+      const matchingTask = tasks.find(t =>
+        t.title === taskTitle &&
+        t.payer_id === instance.payer_id &&
+        t.status !== 'completed'
+      );
+
+      if (matchingTask) {
+        await DatabaseService.updateTask(matchingTask.id, { status: 'completed' });
+      }
+    }
+
+    return { filled: true, waiting: false };
+  }
+
+  /**
+   * Node Handler: SEND NOTIFICATION
+   */
+  private static async handleSendNotification(instance: WorkflowExecutionInstance, node: Node): Promise<any> {
+    const config = node.data.config as SendNotificationConfig;
+
+    // Build template context for variable substitution
+    const context = await this.buildTemplateContext(instance);
+
+    // Process templates in subject and message
+    const subject = processTemplate(config.subject, context);
+    const message = processTemplate(config.message, context);
+
+    // TODO: Implement actual notification sending
+    // For now, just log the notification
+    console.log('Send Notification:', {
+      type: config.notification_type,
+      recipient_type: config.recipient_type,
+      subject,
+      message,
+      include_task_link: config.include_task_link
+    });
+
+    return {
+      notification_sent: true,
+      subject,
+      message,
+      type: config.notification_type
+    };
+  }
+
+  /**
+   * Build template context for variable substitution
+   */
+  private static async buildTemplateContext(instance: WorkflowExecutionInstance): Promise<TemplateContext> {
+    // Get provider data
+    const providers = await DatabaseService.getProviders();
+    const provider = providers.find(p => p.id === instance.provider_id);
+
+    // Get payer data
+    const payers = await DatabaseService.getPayers();
+    const payer = payers.find(p => p.id === instance.payer_id);
+
+    // Get organization data
+    const orgs = await DatabaseService.getOrganizations();
+    const organization = orgs.find(o => o.id === instance.organization_id);
+
+    // TODO: Add location data when needed
+
+    return {
+      provider: provider ? {
+        id: provider.id,
+        first_name: provider.first_name,
+        last_name: provider.last_name,
+        email: provider.email || '',
+        phone: provider.phone || '',
+        specialty: provider.specialty || '',
+        license_number: provider.license_number || ''
+      } : undefined,
+      payer: payer ? {
+        id: payer.id,
+        name: payer.name,
+        type: payer.type || '',
+        workflow_state: payer.workflow_state || ''
+      } : undefined,
+      organization: organization ? {
+        id: organization.id,
+        name: organization.name
+      } : undefined,
+      dates: {
+        current_date: new Date().toISOString().split('T')[0]
+      },
+      custom: instance.execution_context.variables || {}
+    };
   }
 
   /**
