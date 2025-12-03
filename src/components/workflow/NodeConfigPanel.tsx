@@ -1148,7 +1148,26 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
     { value: 'status', label: 'Status', type: 'text' },
   ];
 
-  const availableFields = entityType === 'provider' ? providerFields : locationFields;
+  const providerPayerFields = [
+    { value: 'application_submission_date', label: 'Submission Date', type: 'date' },
+    { value: 'application_approved_date', label: 'Approval Date', type: 'date' },
+    { value: 'provider_loaded_date', label: 'Loaded Date', type: 'date' },
+    { value: 'effective_date', label: 'Effective Date', type: 'date' },
+    { value: 'status', label: 'Application Status', type: 'text' },
+  ];
+
+  const locationPayerFields = [
+    { value: 'application_submission_date', label: 'Submission Date', type: 'date' },
+    { value: 'application_approved_date', label: 'Approval Date', type: 'date' },
+    { value: 'location_loaded_date', label: 'Loaded Date', type: 'date' },
+    { value: 'status', label: 'Application Status', type: 'text' },
+  ];
+
+  const availableFields =
+    entityType === 'provider' ? providerFields :
+    entityType === 'location' ? locationFields :
+    entityType === 'provider_payer' ? providerPayerFields :
+    locationPayerFields;
 
   const addField = (fieldValue?: string) => {
     const fieldToAdd = fieldValue || newField.trim();
@@ -1180,6 +1199,8 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
         >
           <option value="provider">Provider</option>
           <option value="location">Location</option>
+          <option value="provider_payer">Provider-Payer Application</option>
+          <option value="location_payer">Location-Payer Application</option>
         </select>
       </div>
 
