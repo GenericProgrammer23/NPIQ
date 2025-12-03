@@ -1124,11 +1124,39 @@ const WaitForDocumentForm: React.FC<{ config: any; updateConfig: (u: any) => voi
 
 const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
   const [newField, setNewField] = React.useState('');
+  const [showAvailableFields, setShowAvailableFields] = React.useState(false);
 
-  const addField = () => {
-    if (newField.trim()) {
+  const entityType = config.entity_type || 'provider';
+
+  const providerFields = [
+    { value: 'first_name', label: 'First Name', type: 'text' },
+    { value: 'last_name', label: 'Last Name', type: 'text' },
+    { value: 'email', label: 'Email', type: 'email' },
+    { value: 'phone', label: 'Phone', type: 'text' },
+    { value: 'phone_number', label: 'Phone Number', type: 'text' },
+    { value: 'specialty', label: 'Specialty', type: 'text' },
+    { value: 'license_number', label: 'License Number', type: 'text' },
+    { value: 'license_expiry', label: 'License Expiry', type: 'date' },
+    { value: 'status', label: 'Status', type: 'text' },
+  ];
+
+  const locationFields = [
+    { value: 'name', label: 'Name', type: 'text' },
+    { value: 'address', label: 'Address', type: 'text' },
+    { value: 'phone_number', label: 'Phone Number', type: 'text' },
+    { value: 'departments', label: 'Departments', type: 'number' },
+    { value: 'status', label: 'Status', type: 'text' },
+  ];
+
+  const availableFields = entityType === 'provider' ? providerFields : locationFields;
+
+  const addField = (fieldValue?: string) => {
+    const fieldToAdd = fieldValue || newField.trim();
+    if (fieldToAdd) {
       const currentFields = config.required_fields || [];
-      updateConfig({ required_fields: [...currentFields, newField.trim()] });
+      if (!currentFields.includes(fieldToAdd)) {
+        updateConfig({ required_fields: [...currentFields, fieldToAdd] });
+      }
       setNewField('');
     }
   };
@@ -1146,7 +1174,7 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
           Entity Type
         </label>
         <select
-          value={config.entity_type || 'provider'}
+          value={entityType}
           onChange={(e) => updateConfig({ entity_type: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
         >
@@ -1159,18 +1187,50 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Required Fields
         </label>
-        <div className="space-y-2 mb-2">
-          {(config.required_fields || []).map((field: string, index: number) => (
-            <div key={index} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
-              <code className="text-sm flex-1">{field}</code>
-              <button
-                onClick={() => removeField(index)}
-                className="text-red-600 hover:text-red-700"
-              >
-                <X className="w-4 h-4" />
-              </button>
+
+        <button
+          onClick={() => setShowAvailableFields(!showAvailableFields)}
+          className="mb-2 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+        >
+          {showAvailableFields ? '▼' : '▶'} Show available fields
+        </button>
+
+        {showAvailableFields && (
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-xs font-medium text-blue-900 mb-2">Click to add:</p>
+            <div className="flex flex-wrap gap-2">
+              {availableFields.map((field) => (
+                <button
+                  key={field.value}
+                  onClick={() => addField(field.value)}
+                  className="px-2 py-1 bg-white border border-blue-300 rounded text-xs hover:bg-blue-100 transition-colors"
+                  disabled={(config.required_fields || []).includes(field.value)}
+                >
+                  <span className="font-medium">{field.label}</span>
+                  <span className="text-gray-500 ml-1">({field.value})</span>
+                </button>
+              ))}
             </div>
-          ))}
+          </div>
+        )}
+
+        <div className="space-y-2 mb-2">
+          {(config.required_fields || []).map((field: string, index: number) => {
+            const fieldInfo = availableFields.find(f => f.value === field);
+            return (
+              <div key={index} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
+                <code className="text-sm flex-1">
+                  {fieldInfo ? `${fieldInfo.label} (${field})` : field}
+                </code>
+                <button
+                  onClick={() => removeField(index)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          })}
         </div>
         <div className="flex gap-2">
           <input
@@ -1178,11 +1238,11 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
             value={newField}
             onChange={(e) => setNewField(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && addField()}
-            placeholder="e.g., license_number, email"
+            placeholder="Or type custom field name"
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
           />
           <button
-            onClick={addField}
+            onClick={() => addField()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
           >
             Add
