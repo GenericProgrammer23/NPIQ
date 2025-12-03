@@ -64,12 +64,18 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
         return <GenerateTaskForm config={config} updateConfig={updateConfig} isDueDateVersion={selectedNode.type === 'generate_task_with_due_date'} />;
       case 'wait_for_date':
         return <WaitForDateForm config={config} updateConfig={updateConfig} />;
+      case 'wait_for_document':
+        return <WaitForDocumentForm config={config} updateConfig={updateConfig} />;
+      case 'wait_for_profile_field':
+        return <WaitForProfileFieldForm config={config} updateConfig={updateConfig} />;
       case 'calculate_due_date':
         return <CalculateDueDateForm config={config} updateConfig={updateConfig} />;
       case 'auto_complete_task':
         return <AutoCompleteTaskForm config={config} updateConfig={updateConfig} />;
       case 'update_provider_field':
         return <UpdateProviderFieldForm config={config} updateConfig={updateConfig} />;
+      case 'send_notification':
+        return <SendNotificationForm config={config} updateConfig={updateConfig} />;
       case 'complete':
         return <CompleteNodeForm config={config} updateConfig={updateConfig} />;
       case 'dependency_check':
@@ -226,6 +232,17 @@ const PrerequisiteCheckForm: React.FC<{ config: any; updateConfig: (u: any) => v
 };
 
 const GenerateTaskForm: React.FC<{ config: any; updateConfig: (u: any) => void; isDueDateVersion: boolean }> = ({ config, updateConfig, isDueDateVersion }) => {
+  const [showVariables, setShowVariables] = React.useState(false);
+
+  const templateVariables = [
+    { var: '{{provider.full_name}}', desc: 'Provider full name' },
+    { var: '{{provider.first_name}}', desc: 'Provider first name' },
+    { var: '{{provider.last_name}}', desc: 'Provider last name' },
+    { var: '{{payer.name}}', desc: 'Payer name (e.g., Medicare)' },
+    { var: '{{location.name}}', desc: 'Location name' },
+    { var: '{{current_date}}', desc: 'Current date' }
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -236,9 +253,10 @@ const GenerateTaskForm: React.FC<{ config: any; updateConfig: (u: any) => void; 
           type="text"
           value={config.task_title || ''}
           onChange={(e) => updateConfig({ task_title: e.target.value })}
-          placeholder="Submit Application"
+          placeholder="{{provider.full_name}} {{payer.name}} Application"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
         />
+        <p className="text-xs text-gray-500 mt-1">Use template variables like {`{{provider.full_name}}`}</p>
       </div>
 
       <div>
@@ -248,10 +266,27 @@ const GenerateTaskForm: React.FC<{ config: any; updateConfig: (u: any) => void; 
         <textarea
           value={config.task_description || ''}
           onChange={(e) => updateConfig({ task_description: e.target.value })}
-          placeholder="Task details..."
+          placeholder="Complete {{payer.name}} application for {{provider.full_name}}"
           rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
         />
+        <button
+          type="button"
+          onClick={() => setShowVariables(!showVariables)}
+          className="text-xs text-blue-600 hover:text-blue-700 mt-1"
+        >
+          {showVariables ? 'Hide' : 'Show'} available variables
+        </button>
+        {showVariables && (
+          <div className="mt-2 p-3 bg-blue-50 rounded-lg space-y-1">
+            {templateVariables.map((tv, idx) => (
+              <div key={idx} className="text-xs">
+                <code className="text-blue-700 font-medium">{tv.var}</code>
+                <span className="text-gray-600 ml-2">- {tv.desc}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
@@ -988,6 +1023,337 @@ const CompleteNodeForm: React.FC<{ config: any; updateConfig: (u: any) => void }
           />
           <span className="text-sm font-medium text-gray-700">
             Trigger notifications on completion
+          </span>
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const WaitForDocumentForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Document Type *
+        </label>
+        <input
+          type="text"
+          value={config.document_type || ''}
+          onChange={(e) => updateConfig({ document_type: e.target.value })}
+          placeholder="e.g., License, CV, Certificate"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Document Name (Optional)
+        </label>
+        <input
+          type="text"
+          value={config.document_name || ''}
+          onChange={(e) => updateConfig({ document_name: e.target.value })}
+          placeholder="Specific document name"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        />
+      </div>
+
+      <div>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={config.auto_complete_task_on_upload !== false}
+            onChange={(e) => updateConfig({ auto_complete_task_on_upload: e.target.checked })}
+            className="rounded border-gray-300"
+          />
+          <span className="text-sm font-medium text-gray-700">
+            Auto-complete task when document uploaded
+          </span>
+        </label>
+      </div>
+
+      {config.auto_complete_task_on_upload !== false && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Task Title Pattern (to match)
+          </label>
+          <input
+            type="text"
+            value={config.task_title_pattern || ''}
+            onChange={(e) => updateConfig({ task_title_pattern: e.target.value })}
+            placeholder="e.g., Upload {{document_type}}"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+          <p className="text-xs text-gray-500 mt-1">Use template variables for dynamic matching</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Timeout (days)
+          </label>
+          <input
+            type="number"
+            value={config.timeout_days || ''}
+            onChange={(e) => updateConfig({ timeout_days: parseInt(e.target.value) || undefined })}
+            placeholder="30"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Timeout Action
+          </label>
+          <select
+            value={config.timeout_action || 'alert'}
+            onChange={(e) => updateConfig({ timeout_action: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="alert">Alert</option>
+            <option value="continue">Continue</option>
+            <option value="fail">Fail Workflow</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
+  const [newField, setNewField] = React.useState('');
+
+  const addField = () => {
+    if (newField.trim()) {
+      const currentFields = config.required_fields || [];
+      updateConfig({ required_fields: [...currentFields, newField.trim()] });
+      setNewField('');
+    }
+  };
+
+  const removeField = (index: number) => {
+    const currentFields = [...(config.required_fields || [])];
+    currentFields.splice(index, 1);
+    updateConfig({ required_fields: currentFields });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Entity Type
+        </label>
+        <select
+          value={config.entity_type || 'provider'}
+          onChange={(e) => updateConfig({ entity_type: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          <option value="provider">Provider</option>
+          <option value="location">Location</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Required Fields
+        </label>
+        <div className="space-y-2 mb-2">
+          {(config.required_fields || []).map((field: string, index: number) => (
+            <div key={index} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
+              <code className="text-sm flex-1">{field}</code>
+              <button
+                onClick={() => removeField(index)}
+                className="text-red-600 hover:text-red-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newField}
+            onChange={(e) => setNewField(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && addField()}
+            placeholder="e.g., license_number, email"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+          <button
+            onClick={addField}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Check Type
+        </label>
+        <select
+          value={config.check_type || 'all'}
+          onChange={(e) => updateConfig({ check_type: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          <option value="all">All fields required</option>
+          <option value="any">Any field required</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={config.auto_complete_task_on_fill !== false}
+            onChange={(e) => updateConfig({ auto_complete_task_on_fill: e.target.checked })}
+            className="rounded border-gray-300"
+          />
+          <span className="text-sm font-medium text-gray-700">
+            Auto-complete task when fields filled
+          </span>
+        </label>
+      </div>
+
+      {config.auto_complete_task_on_fill !== false && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Task Title Pattern (to match)
+          </label>
+          <input
+            type="text"
+            value={config.task_title_pattern || ''}
+            onChange={(e) => updateConfig({ task_title_pattern: e.target.value })}
+            placeholder="e.g., Complete {{provider.first_name}} profile"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Timeout (days)
+          </label>
+          <input
+            type="number"
+            value={config.timeout_days || ''}
+            onChange={(e) => updateConfig({ timeout_days: parseInt(e.target.value) || undefined })}
+            placeholder="30"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Timeout Action
+          </label>
+          <select
+            value={config.timeout_action || 'alert'}
+            onChange={(e) => updateConfig({ timeout_action: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="alert">Alert</option>
+            <option value="continue">Continue</option>
+            <option value="fail">Fail Workflow</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SendNotificationForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Notification Type
+        </label>
+        <select
+          value={config.notification_type || 'in_app'}
+          onChange={(e) => updateConfig({ notification_type: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          <option value="in_app">In-App Only</option>
+          <option value="email">Email Only</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Recipient Type
+        </label>
+        <select
+          value={config.recipient_type || 'assigned_user'}
+          onChange={(e) => updateConfig({ recipient_type: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          <option value="assigned_user">Assigned User</option>
+          <option value="role">By Role</option>
+          <option value="specific_user">Specific User</option>
+        </select>
+      </div>
+
+      {config.recipient_type === 'role' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Role
+          </label>
+          <select
+            value={config.recipient_role || 'admin'}
+            onChange={(e) => updateConfig({ recipient_role: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="user">User</option>
+          </select>
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Subject
+        </label>
+        <input
+          type="text"
+          value={config.subject || ''}
+          onChange={(e) => updateConfig({ subject: e.target.value })}
+          placeholder="e.g., Task Ready: {{payer.name}} Application"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        />
+        <p className="text-xs text-gray-500 mt-1">Supports template variables</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Message
+        </label>
+        <textarea
+          value={config.message || ''}
+          onChange={(e) => updateConfig({ message: e.target.value })}
+          placeholder="e.g., The {{payer.name}} application for {{provider.full_name}} is ready for review."
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        />
+        <p className="text-xs text-gray-500 mt-1">Supports template variables</p>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={config.include_task_link || false}
+            onChange={(e) => updateConfig({ include_task_link: e.target.checked })}
+            className="rounded border-gray-300"
+          />
+          <span className="text-sm font-medium text-gray-700">
+            Include link to related task
           </span>
         </label>
       </div>

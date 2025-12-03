@@ -8,11 +8,14 @@ export type WorkflowNodeType =
   | 'generate_task'
   | 'generate_task_with_due_date'
   | 'wait_for_date'
+  | 'wait_for_document'
+  | 'wait_for_profile_field'
   | 'calculate_due_date'
   | 'branch'
   | 'parallel_tasks'
   | 'auto_complete_task'
   | 'update_provider_field'
+  | 'send_notification'
   | 'execute_subflow'
   | 'check_subflow_status'
   | 'execute_workflow_template';
@@ -139,11 +142,14 @@ export type NodeConfig =
   | GenerateTaskConfig
   | GenerateTaskWithDueDateConfig
   | WaitForDateConfig
+  | WaitForDocumentConfig
+  | WaitForProfileFieldConfig
   | CalculateDueDateConfig
   | BranchConfig
   | ParallelTasksConfig
   | AutoCompleteTaskConfig
   | UpdateProviderFieldConfig
+  | SendNotificationConfig
   | ExecuteSubflowConfig
   | CheckSubflowStatusConfig
   | ExecuteWorkflowTemplateConfig;
@@ -266,6 +272,38 @@ export interface UpdateProviderFieldConfig extends BaseNodeConfig {
   value_source: 'static' | 'current_date' | 'variable';
   static_value?: string;
   variable_name?: string;
+}
+
+export interface WaitForDocumentConfig extends BaseNodeConfig {
+  type: 'wait_for_document';
+  document_type: string;
+  document_name?: string;
+  auto_complete_task_on_upload: boolean;
+  task_title_pattern?: string;
+  timeout_days?: number;
+  timeout_action?: 'alert' | 'continue' | 'fail';
+}
+
+export interface WaitForProfileFieldConfig extends BaseNodeConfig {
+  type: 'wait_for_profile_field';
+  entity_type: 'provider' | 'location';
+  required_fields: string[];
+  check_type: 'all' | 'any';
+  auto_complete_task_on_fill: boolean;
+  task_title_pattern?: string;
+  timeout_days?: number;
+  timeout_action?: 'alert' | 'continue' | 'fail';
+}
+
+export interface SendNotificationConfig extends BaseNodeConfig {
+  type: 'send_notification';
+  notification_type: 'email' | 'in_app' | 'both';
+  recipient_type: 'assigned_user' | 'role' | 'specific_user';
+  recipient_role?: 'admin' | 'manager' | 'user';
+  recipient_user_id?: string;
+  subject: string;
+  message: string;
+  include_task_link: boolean;
 }
 
 export interface NodeTypeDefinition {
@@ -539,6 +577,57 @@ export const NODE_TYPE_DEFINITIONS: Record<WorkflowNodeType, NodeTypeDefinition>
       type: 'update_provider_field',
       field_name: '',
       value_source: 'current_date'
+    }
+  },
+  wait_for_document: {
+    type: 'wait_for_document',
+    label: 'Wait for Document',
+    icon: 'FileText',
+    color: '#f59e0b',
+    category: 'prerequisites',
+    description: 'Pauses workflow until a document is uploaded, optionally auto-completing task',
+    inputs: ['default'],
+    outputs: ['uploaded', 'timeout'],
+    defaultConfig: {
+      type: 'wait_for_document',
+      document_type: '',
+      auto_complete_task_on_upload: true,
+      task_title_pattern: ''
+    }
+  },
+  wait_for_profile_field: {
+    type: 'wait_for_profile_field',
+    label: 'Wait for Profile Field',
+    icon: 'UserCheck',
+    color: '#f59e0b',
+    category: 'prerequisites',
+    description: 'Pauses workflow until provider/location fields are filled, optionally auto-completing task',
+    inputs: ['default'],
+    outputs: ['filled', 'timeout'],
+    defaultConfig: {
+      type: 'wait_for_profile_field',
+      entity_type: 'provider',
+      required_fields: [],
+      check_type: 'all',
+      auto_complete_task_on_upload: true
+    }
+  },
+  send_notification: {
+    type: 'send_notification',
+    label: 'Send Notification',
+    icon: 'Bell',
+    color: '#06b6d4',
+    category: 'flow',
+    description: 'Sends an email or in-app notification to users',
+    inputs: ['default'],
+    outputs: ['default'],
+    defaultConfig: {
+      type: 'send_notification',
+      notification_type: 'in_app',
+      recipient_type: 'assigned_user',
+      subject: '',
+      message: '',
+      include_task_link: false
     }
   }
 };
