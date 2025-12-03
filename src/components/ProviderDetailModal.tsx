@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, Payer, ProviderPayerApplication } from '../lib/supabase';
 import { useProviderPayerApplications, usePayers, useLocations } from '../hooks/useDatabase';
-import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save } from 'lucide-react';
+import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save, FileText } from 'lucide-react';
 import { DatabaseService } from '../lib/supabase';
 import { DynamicTaskUpdateService } from '../services/DynamicTaskUpdateService';
+import { DocumentUpload } from './DocumentUpload';
+import { DocumentList } from './DocumentList';
 
 interface ProviderDetailModalProps {
   provider: Provider;
@@ -43,6 +45,8 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
     status: provider.status
   });
   const [savingProvider, setSavingProvider] = useState(false);
+  const [documentRefresh, setDocumentRefresh] = useState(0);
+  const [showDocuments, setShowDocuments] = useState(false);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -480,6 +484,40 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-navy dark:text-white flex items-center gap-2">
+                <FileText className="w-6 h-6" />
+                Documents
+              </h3>
+              <button
+                onClick={() => setShowDocuments(!showDocuments)}
+                className="px-4 py-2 bg-dark-cyan hover:bg-dark-cyan/90 text-white rounded-lg font-medium transition-colors"
+              >
+                {showDocuments ? 'Hide Documents' : 'Show Documents'}
+              </button>
+            </div>
+
+            {showDocuments && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <DocumentUpload
+                    providerId={provider.id}
+                    organizationId={provider.organization_id}
+                    onUploadComplete={() => setDocumentRefresh(prev => prev + 1)}
+                  />
+                </div>
+                <div className="lg:col-span-2">
+                  <DocumentList
+                    providerId={provider.id}
+                    organizationId={provider.organization_id}
+                    refreshTrigger={documentRefresh}
+                  />
+                </div>
               </div>
             )}
           </div>

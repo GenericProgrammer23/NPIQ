@@ -1163,11 +1163,24 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
     { value: 'status', label: 'Application Status', type: 'text' },
   ];
 
+  const documentFields = [
+    { value: 'License', label: 'License', type: 'document' },
+    { value: 'Certification', label: 'Certification', type: 'document' },
+    { value: 'Insurance', label: 'Insurance (Malpractice)', type: 'document' },
+    { value: 'Identification', label: 'Identification', type: 'document' },
+    { value: 'Education', label: 'Education', type: 'document' },
+    { value: 'References', label: 'References', type: 'document' },
+    { value: 'Background Check', label: 'Background Check', type: 'document' },
+    { value: 'Immunization', label: 'Immunization Records', type: 'document' },
+    { value: 'Other', label: 'Other Documents', type: 'document' },
+  ];
+
   const availableFields =
     entityType === 'provider' ? providerFields :
     entityType === 'location' ? locationFields :
     entityType === 'provider_payer' ? providerPayerFields :
-    locationPayerFields;
+    entityType === 'location_payer' ? locationPayerFields :
+    documentFields;
 
   const addField = (fieldValue?: string) => {
     const fieldToAdd = fieldValue || newField.trim();
@@ -1201,6 +1214,7 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
           <option value="location">Location</option>
           <option value="provider_payer">Provider-Payer Application</option>
           <option value="location_payer">Location-Payer Application</option>
+          <option value="document">Document Categories</option>
         </select>
       </div>
 
