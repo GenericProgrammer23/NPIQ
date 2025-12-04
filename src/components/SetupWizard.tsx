@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { DatabaseService } from '../lib/supabase';
-import { Building, MapPin, Users, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { DatabaseService, supabase } from '../lib/supabase';
+import { Building, MapPin, Users, CheckCircle, AlertCircle, Loader, LogOut } from 'lucide-react';
 
 interface SetupWizardProps {
   onComplete: () => void;
@@ -135,6 +135,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }, 2000);
   };
 
+  const handleSignOut = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+  };
+
   const steps = [
     { number: 1, title: 'Create Organization', icon: Building },
     { number: 2, title: 'Add Location', icon: MapPin },
@@ -144,7 +150,16 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
   return (
     <div className="min-h-screen bg-navy flex items-center justify-center p-4">
-      <div className="bg-navy-light rounded-lg border border-dark-cyan/20 p-8 w-full max-w-2xl">
+      <div className="bg-navy-light rounded-lg border border-dark-cyan/20 p-8 w-full max-w-2xl relative">
+        <button
+          onClick={handleSignOut}
+          className="absolute top-4 right-4 text-cream/60 hover:text-cream flex items-center gap-2 text-sm"
+          title="Sign out and use a different account"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </button>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-cream mb-2">Welcome to NPIQ</h1>
           <p className="text-cream/70">Let's set up your healthcare credentialing system</p>
