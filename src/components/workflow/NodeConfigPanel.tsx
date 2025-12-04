@@ -881,17 +881,25 @@ const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => voi
 
 const ExecuteSubflowForm: React.FC<{ config: any; updateConfig: (u: any) => void; onDiveIntoSubflow?: (subflowId: string) => void }> = ({ config, updateConfig, onDiveIntoSubflow }) => {
   const [subflows, setSubflows] = React.useState<any[]>([]);
+  const organizationId = 'default-org';
 
   React.useEffect(() => {
     loadSubflows();
   }, []);
 
   const loadSubflows = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('subflows')
-      .select('id, name, purpose, payer_id, payers(name)')
+      .select('id, name, purpose, payer_id, payers(name), organization_id')
+      .or(`organization_id.eq.${organizationId},payer_id.not.is.null`)
       .eq('is_reusable', true)
       .order('name');
+
+    if (error) {
+      console.error('Error loading subflows:', error);
+      setSubflows([]);
+      return;
+    }
     setSubflows(data || []);
   };
 
@@ -991,17 +999,25 @@ const ExecuteSubflowForm: React.FC<{ config: any; updateConfig: (u: any) => void
 
 const CheckSubflowStatusForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
   const [subflows, setSubflows] = React.useState<any[]>([]);
+  const organizationId = 'default-org';
 
   React.useEffect(() => {
     loadSubflows();
   }, []);
 
   const loadSubflows = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('subflows')
-      .select('id, name, payer_id, payers(name)')
+      .select('id, name, payer_id, payers(name), organization_id')
+      .or(`organization_id.eq.${organizationId},payer_id.not.is.null`)
       .eq('is_reusable', true)
       .order('name');
+
+    if (error) {
+      console.error('Error loading subflows:', error);
+      setSubflows([]);
+      return;
+    }
     setSubflows(data || []);
   };
 
