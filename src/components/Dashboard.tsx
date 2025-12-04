@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDashboardStats, useWorkflowInstances, useWorkflows } from '../hooks/useDatabase';
 import { Users, MapPin, Workflow, CheckSquare, Plus, TrendingUp, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
 import { CalendarWidget } from './CalendarWidget';
 import { WorkflowInstanceDetailModal } from './WorkflowInstanceDetailModal';
 import { WorkflowInstance } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 interface DashboardProps {
   onPageChange: (page: string, filter?: { type: string; value: string }) => void;
@@ -14,6 +15,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
   const { instances, loading: instancesLoading } = useWorkflowInstances({ status: 'active' });
   const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(new Set());
   const [selectedInstance, setSelectedInstance] = useState<WorkflowInstance | null>(null);
+
+  useEffect(() => {
+    const autoAddUserToOrg = async () => {
+      try {
+        await supabase.rpc('auto_add_user_to_provider_org');
+      } catch (err) {
+        console.log('Could not auto-add user to org:', err);
+      }
+    };
+    autoAddUserToOrg();
+  }, []);
 
   const toggleWorkflow = (workflowType: string) => {
     setExpandedWorkflows(prev => {

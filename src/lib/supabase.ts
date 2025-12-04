@@ -625,6 +625,25 @@ export class DatabaseService {
     return data || [];
   }
 
+  static async getWorkflowSubflows(workflowId: string): Promise<any[]> {
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('workflow_subflows')
+      .select(`
+        order_index,
+        subflows (
+          id,
+          name,
+          payer_id
+        )
+      `)
+      .eq('workflow_id', workflowId)
+      .order('order_index');
+
+    if (error) throw error;
+    return (data || []).map((ws: any) => ws.subflows);
+  }
+
   static async createSubflow(subflow: Omit<Subflow, 'id' | 'created_at' | 'updated_at'>): Promise<Subflow> {
     if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase

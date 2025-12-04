@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, Payer, ProviderPayerApplication } from '../lib/supabase';
 import { useProviderPayerApplications, usePayers, useLocations } from '../hooks/useDatabase';
-import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save, FileText } from 'lucide-react';
+import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save, FileText, Plus } from 'lucide-react';
 import { DatabaseService } from '../lib/supabase';
 import { DynamicTaskUpdateService } from '../services/DynamicTaskUpdateService';
 import { DocumentUpload } from './DocumentUpload';
@@ -48,6 +48,63 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   const [savingProvider, setSavingProvider] = useState(false);
   const [documentRefresh, setDocumentRefresh] = useState(0);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [showAssignWorkflow, setShowAssignWorkflow] = useState(false);
+  const [availableWorkflows, setAvailableWorkflows] = useState<any[]>([]);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string>('');
+  const [assigningWorkflow, setAssigningWorkflow] = useState(false);
+
+  useEffect(() => {
+    const loadWorkflows = async () => {
+      try {
+        const workflows = await DatabaseService.getWorkflows(provider.organization_id);
+        setAvailableWorkflows(workflows.filter((w: any) => w.status === 'active'));
+      } catch (err) {
+        console.error('Failed to load workflows:', err);
+      }
+    };
+    if (showAssignWorkflow) {
+      loadWorkflows();
+    }
+  }, [showAssignWorkflow, provider.organization_id]);
+
+  const handleAssignWorkflow = async () => {
+    if (!selectedWorkflow) return;
+
+    setAssigningWorkflow(true);
+    try {
+      const workflow = await DatabaseService.getWorkflow(selectedWorkflow);
+
+      const subflowsData = await DatabaseService.getWorkflowSubflows(selectedWorkflow);
+      const payerIds = new Set<string>();
+
+      for (const subflow of subflowsData) {
+        if (subflow.payer_id) {
+          payerIds.add(subflow.payer_id);
+        }
+      }
+
+      for (const payerId of payerIds) {
+        const existingApp = applications.find(app => app.payer_id === payerId);
+        if (!existingApp) {
+          await DatabaseService.createProviderPayerApplication({
+            provider_id: provider.id,
+            payer_id: payerId,
+            organization_id: provider.organization_id,
+            status: 'not_started'
+          });
+        }
+      }
+
+      await refetchApplications();
+      setShowAssignWorkflow(false);
+      setSelectedWorkflow('');
+    } catch (err) {
+      console.error('Failed to assign workflow:', err);
+      alert('Failed to assign workflow. Please try again.');
+    } finally {
+      setAssigningWorkflow(false);
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -518,6 +575,64 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                     organizationId={provider.organization_id}
                     refreshTrigger={documentRefresh}
                   />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-navy dark:text-white">Assign Workflow</h3>
+              <button
+                onClick={() => setShowAssignWorkflow(!showAssignWorkflow)}
+                className="px-4 py-2 bg-dark-cyan hover:bg-dark-cyan/90 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                {showAssignWorkflow ? 'Cancel' : 'Assign Workflow'}
+              </button>
+            </div>
+
+            {showAssignWorkflow && (
+              <div className="bg-gray-50 dark:bg-navy/50 rounded-lg p-4">
+                <p className="text-sm text-navy/70 dark:text-gray-300 mb-4">
+                  Assigning a workflow will automatically create payer applications for all payers in the workflow.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-navy dark:text-white mb-2">
+                      Select Workflow
+                    </label>
+                    <select
+                      value={selectedWorkflow}
+                      onChange={(e) => setSelectedWorkflow(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-dark-cyan"
+                    >
+                      <option value="">-- Select a workflow --</option>
+                      {availableWorkflows.map((workflow) => (
+                        <option key={workflow.id} value={workflow.id}>
+                          {workflow.name} - {workflow.type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAssignWorkflow}
+                      disabled={!selectedWorkflow || assigningWorkflow}
+                      className="px-4 py-2 bg-dark-cyan hover:bg-dark-cyan/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {assigningWorkflow ? 'Assigning...' : 'Assign'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAssignWorkflow(false);
+                        setSelectedWorkflow('');
+                      }}
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-navy dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
