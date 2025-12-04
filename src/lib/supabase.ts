@@ -320,12 +320,18 @@ export class DatabaseService {
 
   // Check if user has any organizations
   static async hasUserOrganizations(): Promise<boolean> {
-    if (!supabase) return false;
+    if (!supabase) {
+      console.log('hasUserOrganizations: No supabase client');
+      return false;
+    }
     try {
       const user = await this.getCurrentUser();
-      if (!user) return false;
+      if (!user) {
+        console.log('hasUserOrganizations: No user logged in');
+        return false;
+      }
 
-      console.log('Checking organizations for user:', user.id);
+      console.log('hasUserOrganizations: Checking for user:', user.id);
 
       const { data: memberData, error: memberError } = await supabase
         .from('org_members')
@@ -333,26 +339,48 @@ export class DatabaseService {
         .eq('user_id', user.id)
         .limit(1);
 
+      console.log('hasUserOrganizations: org_members query result:', {
+        memberData,
+        memberError,
+        hasData: memberData && memberData.length > 0
+      });
+
+      if (memberError) {
+        console.error('hasUserOrganizations: Error querying org_members:', memberError);
+      }
+
       if (!memberError && memberData && memberData.length > 0) {
-        console.log('User found in org_members');
+        console.log('hasUserOrganizations: User found in org_members, returning true');
         return true;
       }
+
+      console.log('hasUserOrganizations: User not in org_members, checking organizations');
 
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('id')
         .limit(1);
 
+      console.log('hasUserOrganizations: organizations query result:', {
+        orgData,
+        orgError,
+        hasData: orgData && orgData.length > 0
+      });
+
+      if (orgError) {
+        console.error('hasUserOrganizations: Error querying organizations:', orgError);
+      }
+
       if (!orgError && orgData && orgData.length > 0) {
-        console.log('User has access to organizations, auto-adding to org_members');
+        console.log('hasUserOrganizations: User has access to organizations, auto-adding to org_members');
         await supabase.rpc('auto_add_user_to_provider_org');
         return true;
       }
 
-      console.log('No organizations found for user');
+      console.log('hasUserOrganizations: No organizations found, returning false');
       return false;
     } catch (error) {
-      console.error('Failed to check user organizations:', error);
+      console.error('hasUserOrganizations: Exception caught:', error);
       return false;
     }
   }
