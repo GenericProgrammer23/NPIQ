@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Plus, X, MoveUp, MoveDown, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { analyzeSubflowNodes, aggregateWorkflowRequirements, SubflowRequirements } from '../utils/workflowNodeAnalyzer';
 
 interface WorkflowComposerProps {
   workflowId: string;
@@ -16,6 +17,8 @@ interface Subflow {
   prerequisites: string;
   dependencies: string;
   exit_condition: string;
+  workflow_data: { nodes: any[]; edges: any[] } | null;
+  analyzedRequirements?: SubflowRequirements;
 }
 
 interface AggregatedRequirement {
@@ -55,7 +58,8 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
             status,
             prerequisites,
             dependencies,
-            exit_condition
+            exit_condition,
+            workflow_data
           )
         `)
         .eq('workflow_id', workflowId)
@@ -63,10 +67,15 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
 
       if (error) throw error;
 
-      const subflows = (data || []).map((ws: any) => ({
-        ...ws.subflows,
-        order_index: ws.order_index
-      }));
+      const subflows = (data || []).map((ws: any) => {
+        const subflow = {
+          ...ws.subflows,
+          order_index: ws.order_index
+        };
+
+        subflow.analyzedRequirements = analyzeSubflowNodes(subflow.workflow_data);
+        return subflow;
+      });
 
       setWorkflowSubflows(subflows);
       analyzeRequirements(subflows);
@@ -97,25 +106,20 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
     const reqMap = new Map<string, AggregatedRequirement>();
 
     subflows.forEach(subflow => {
-      try {
-        const prereqs = JSON.parse(subflow.prerequisites || '[]');
-        if (Array.isArray(prereqs)) {
-          prereqs.forEach((req: any) => {
-            const key = `${req.entity_type}:${req.field}`;
-            if (!reqMap.has(key)) {
-              reqMap.set(key, {
-                field: req.field,
-                entityType: req.entity_type,
-                requiredBySubflows: [],
-                isMet: false
-              });
-            }
-            reqMap.get(key)!.requiredBySubflows.push(subflow.name);
+      if (!subflow.analyzedRequirements) return;
+
+      subflow.analyzedRequirements.requiredFields.forEach(req => {
+        const key = `${req.entity}:${req.field}`;
+        if (!reqMap.has(key)) {
+          reqMap.set(key, {
+            field: req.field,
+            entityType: req.entity,
+            requiredBySubflows: [],
+            isMet: false
           });
         }
-      } catch (error) {
-        console.error('Error parsing prerequisites:', error);
-      }
+        reqMap.get(key)!.requiredBySubflows.push(subflow.name);
+      });
     });
 
     setAggregatedReqs(Array.from(reqMap.values()));
@@ -225,50 +229,25 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
                   {subflow.purpose && (
                     <p className="text-sm text-navy/70 dark:text-gray-300 mt-1">{subflow.purpose}</p>
                   )}
-                  <div className="grid grid-cols-3 gap-3 mt-3 text-xs">
+                  <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
                     <div className="bg-white dark:bg-navy rounded p-2">
-                      <span className="font-medium text-navy/60 dark:text-gray-400">Prerequisites:</span>
+                      <span className="font-medium text-navy/60 dark:text-gray-400">Required Fields:</span>
                       <div className="text-navy dark:text-white mt-1">
-                        {(() => {
-                          try {
-                            const prereqs = JSON.parse(subflow.prerequisites);
-                            return Array.isArray(prereqs) && prereqs.length > 0
-                              ? prereqs.map((p: any) => `${p.entity}.${p.field}`).join(', ')
-                              : 'None';
-                          } catch {
-                            return subflow.prerequisites || 'None';
-                          }
-                        })()}
+                        {subflow.analyzedRequirements && subflow.analyzedRequirements.requiredFields.length > 0
+                          ? subflow.analyzedRequirements.requiredFields
+                              .map(f => `${f.entity}.${f.field}`)
+                              .join(', ')
+                          : 'None'}
                       </div>
                     </div>
                     <div className="bg-white dark:bg-navy rounded p-2">
-                      <span className="font-medium text-navy/60 dark:text-gray-400">Dependencies:</span>
+                      <span className="font-medium text-navy/60 dark:text-gray-400">Subflow Dependencies:</span>
                       <div className="text-navy dark:text-white mt-1">
-                        {(() => {
-                          try {
-                            const deps = JSON.parse(subflow.dependencies);
-                            return Array.isArray(deps) && deps.length > 0
-                              ? deps.join(', ')
-                              : 'None';
-                          } catch {
-                            return subflow.dependencies || 'None';
-                          }
-                        })()}
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-navy rounded p-2">
-                      <span className="font-medium text-navy/60 dark:text-gray-400">Exit Condition:</span>
-                      <div className="text-navy dark:text-white mt-1">
-                        {(() => {
-                          try {
-                            const conditions = JSON.parse(subflow.exit_condition);
-                            return Array.isArray(conditions) && conditions.length > 0
-                              ? conditions.join(', ')
-                              : 'All tasks complete';
-                          } catch {
-                            return subflow.exit_condition || 'All tasks complete';
-                          }
-                        })()}
+                        {subflow.analyzedRequirements && subflow.analyzedRequirements.requiredSubflows.length > 0
+                          ? subflow.analyzedRequirements.requiredSubflows
+                              .map(s => s.subflowName || s.subflowId)
+                              .join(', ')
+                          : 'None'}
                       </div>
                     </div>
                   </div>
