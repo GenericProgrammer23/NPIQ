@@ -14,7 +14,7 @@ import ReactFlow, {
   MarkerType
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Save, Play, Eye, Edit3, ArrowLeft, Undo, Redo, ChevronRight, Home } from 'lucide-react';
+import { Save, Play, Eye, Edit3, ArrowLeft, Undo, Redo, ChevronRight, Home, GitBranch } from 'lucide-react';
 
 import { NodePalette } from './NodePalette';
 import { NodeConfigPanel } from './NodeConfigPanel';
@@ -308,6 +308,98 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
     setSelectedNode(null);
   }, []);
 
+  const handleAutoLayout = useCallback(() => {
+    if (nodes.length === 0) return;
+
+    const nodeWidth = 250;
+    const nodeHeight = 100;
+    const horizontalSpacing = 100;
+    const verticalSpacing = 150;
+
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    const layers: string[][] = [];
+    const visited = new Set<string>();
+    const inDegree = new Map<string, number>();
+
+    nodes.forEach(node => {
+      inDegree.set(node.id, 0);
+    });
+
+    edges.forEach(edge => {
+      const count = inDegree.get(edge.target) || 0;
+      inDegree.set(edge.target, count + 1);
+    });
+
+    const queue: string[] = [];
+    nodes.forEach(node => {
+      if ((inDegree.get(node.id) || 0) === 0) {
+        queue.push(node.id);
+      }
+    });
+
+    while (queue.length > 0) {
+      const currentLayer: string[] = [];
+      const nextQueue: string[] = [];
+
+      queue.forEach(nodeId => {
+        if (!visited.has(nodeId)) {
+          visited.add(nodeId);
+          currentLayer.push(nodeId);
+
+          edges.forEach(edge => {
+            if (edge.source === nodeId) {
+              const targetCount = inDegree.get(edge.target) || 0;
+              inDegree.set(edge.target, targetCount - 1);
+              if (targetCount - 1 === 0) {
+                nextQueue.push(edge.target);
+              }
+            }
+          });
+        }
+      });
+
+      if (currentLayer.length > 0) {
+        layers.push(currentLayer);
+      }
+      queue.length = 0;
+      queue.push(...nextQueue);
+    }
+
+    nodes.forEach(node => {
+      if (!visited.has(node.id)) {
+        layers.push([node.id]);
+      }
+    });
+
+    const layoutedNodes = nodes.map(node => {
+      let layerIndex = 0;
+      let positionInLayer = 0;
+
+      for (let i = 0; i < layers.length; i++) {
+        const pos = layers[i].indexOf(node.id);
+        if (pos !== -1) {
+          layerIndex = i;
+          positionInLayer = pos;
+          break;
+        }
+      }
+
+      const layerWidth = layers[layerIndex].length;
+      const totalWidth = layerWidth * (nodeWidth + horizontalSpacing);
+      const startX = -totalWidth / 2;
+
+      return {
+        ...node,
+        position: {
+          x: startX + positionInLayer * (nodeWidth + horizontalSpacing),
+          y: layerIndex * (nodeHeight + verticalSpacing)
+        }
+      };
+    });
+
+    setNodes(layoutedNodes);
+  }, [nodes, edges]);
+
   const handleSaveWorkflow = async () => {
     setIsSaving(true);
     try {
@@ -464,14 +556,24 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
           </button>
 
           {!isViewMode && (
-            <button
-              onClick={handleSaveWorkflow}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
-            >
-              <Save className="w-4 h-4" />
-              {isSaving ? 'Saving...' : 'Save Workflow'}
-            </button>
+            <>
+              <button
+                onClick={handleAutoLayout}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                title="Auto-arrange nodes"
+              >
+                <GitBranch className="w-4 h-4" />
+                Auto Layout
+              </button>
+              <button
+                onClick={handleSaveWorkflow}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? 'Saving...' : 'Save Workflow'}
+              </button>
+            </>
           )}
         </div>
       </div>

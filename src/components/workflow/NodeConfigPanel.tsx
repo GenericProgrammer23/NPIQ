@@ -62,6 +62,8 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
       case 'generate_task':
       case 'generate_task_with_due_date':
         return <GenerateTaskForm config={config} updateConfig={updateConfig} isDueDateVersion={selectedNode.type === 'generate_task_with_due_date'} />;
+      case 'parallel_tasks':
+        return <ParallelTasksForm config={config} updateConfig={updateConfig} />;
       case 'wait_for_date':
         return <WaitForDateForm config={config} updateConfig={updateConfig} />;
       case 'wait_for_document':
@@ -365,6 +367,136 @@ const GenerateTaskForm: React.FC<{ config: any; updateConfig: (u: any) => void; 
             Prevent duplicate tasks
           </span>
         </label>
+      </div>
+    </div>
+  );
+};
+
+const ParallelTasksForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
+  const tasks = config.tasks || [];
+
+  const addTask = () => {
+    updateConfig({
+      tasks: [...tasks, { title: '', description: '', type: 'document', priority: 'medium' }]
+    });
+  };
+
+  const removeTask = (index: number) => {
+    updateConfig({
+      tasks: tasks.filter((_: any, i: number) => i !== index)
+    });
+  };
+
+  const updateTask = (index: number, field: string, value: any) => {
+    const newTasks = [...tasks];
+    newTasks[index] = { ...newTasks[index], [field]: value };
+    updateConfig({ tasks: newTasks });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-700">
+          Parallel Tasks ({tasks.length})
+        </label>
+        <button
+          type="button"
+          onClick={addTask}
+          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+        >
+          + Add Task
+        </button>
+      </div>
+
+      {tasks.length === 0 && (
+        <div className="text-sm text-gray-500 italic text-center py-4 border border-dashed border-gray-300 rounded">
+          No tasks defined. Click "Add Task" to create parallel tasks.
+        </div>
+      )}
+
+      {tasks.map((task: any, index: number) => (
+        <div key={index} className="p-3 border border-gray-300 rounded-lg space-y-3 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-700">Task #{index + 1}</span>
+            <button
+              type="button"
+              onClick={() => removeTask(index)}
+              className="text-red-600 hover:text-red-700 text-xs"
+            >
+              Remove
+            </button>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Title *</label>
+            <input
+              type="text"
+              value={task.title || ''}
+              onChange={(e) => updateTask(index, 'title', e.target.value)}
+              placeholder="Task title"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={task.description || ''}
+              onChange={(e) => updateTask(index, 'description', e.target.value)}
+              placeholder="Task description"
+              rows={2}
+              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+              <select
+                value={task.type || 'document'}
+                onChange={(e) => updateTask(index, 'type', e.target.value)}
+                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              >
+                <option value="document">Document</option>
+                <option value="info">Info</option>
+                <option value="submit">Submit</option>
+                <option value="approval">Approval</option>
+                <option value="loading">Loading</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
+              <select
+                value={task.priority || 'medium'}
+                onChange={(e) => updateTask(index, 'priority', e.target.value)}
+                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <div>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={config.wait_for_all !== false}
+            onChange={(e) => updateConfig({ wait_for_all: e.target.checked })}
+            className="rounded border-gray-300"
+          />
+          <span className="text-sm font-medium text-gray-700">
+            Wait for all tasks to complete
+          </span>
+        </label>
+        <p className="text-xs text-gray-500 ml-6 mt-1">
+          If unchecked, workflow continues when any task is complete
+        </p>
       </div>
     </div>
   );

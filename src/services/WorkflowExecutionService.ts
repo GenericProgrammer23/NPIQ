@@ -13,7 +13,8 @@ import type {
   WaitForProfileFieldConfig,
   SendNotificationConfig,
   AutoCompleteTaskConfig,
-  UpdateProviderFieldConfig
+  UpdateProviderFieldConfig,
+  ParallelTasksConfig
 } from '../types/workflow';
 
 export class WorkflowExecutionService {
@@ -109,6 +110,10 @@ export class WorkflowExecutionService {
         case 'generate_task':
         case 'generate_task_with_due_date':
           result = await this.handleGenerateTask(instance, node);
+          break;
+        case 'parallel_tasks':
+          result = await this.handleParallelTasks(instance, node);
+          nextHandle = result.allComplete ? 'all_complete' : 'any_complete';
           break;
         case 'wait_for_date':
           result = await this.handleWaitForDate(instance, node);
@@ -329,6 +334,65 @@ export class WorkflowExecutionService {
     const generatedTaskIds = [...(instance.execution_context.generatedTaskIds || []), task.id];
 
     return { taskId: task.id, generatedTaskIds };
+  }
+
+  /**
+   * Node Handler: PARALLEL_TASKS
+   */
+  private static async handleParallelTasks(instance: WorkflowExecutionInstance, node: Node): Promise<any> {
+    const config = node.data.config as ParallelTasksConfig;
+
+    if (!config.tasks || config.tasks.length === 0) {
+      return { allComplete: true, anyComplete: false, tasksCreated: 0 };
+    }
+
+    const context = await this.buildTemplateContext(instance);
+    const createdTaskIds: string[] = [];
+
+    for (const taskConfig of config.tasks) {
+      const taskTitle = processTemplate(taskConfig.title, context);
+      const taskDescription = processTemplate(taskConfig.description, context);
+
+      const existingTasks = await DatabaseService.getTasks({ providerId: instance.provider_id });
+      const duplicate = existingTasks.find(t =>
+        t.payer_id === instance.payer_id &&
+        t.title === taskTitle &&
+        t.status !== 'completed'
+      );
+
+      if (!duplicate) {
+        const task = await DatabaseService.createTask({
+          title: taskTitle,
+          description: taskDescription,
+          provider_id: instance.provider_id,
+          payer_id: instance.payer_id,
+          status: 'pending',
+          priority: taskConfig.priority as any,
+          organization_id: instance.organization_id
+        });
+        createdTaskIds.push(task.id);
+      } else {
+        createdTaskIds.push(duplicate.id);
+      }
+    }
+
+    const tasks = await DatabaseService.getTasks({ providerId: instance.provider_id });
+    const relevantTasks = tasks.filter(t => createdTaskIds.includes(t.id));
+    const completedTasks = relevantTasks.filter(t => t.status === 'completed');
+
+    const allComplete = completedTasks.length === relevantTasks.length;
+    const anyComplete = completedTasks.length > 0;
+
+    const generatedTaskIds = [...(instance.execution_context.generatedTaskIds || []), ...createdTaskIds];
+
+    return {
+      allComplete,
+      anyComplete,
+      tasksCreated: createdTaskIds.length,
+      completedCount: completedTasks.length,
+      totalCount: relevantTasks.length,
+      generatedTaskIds
+    };
   }
 
   /**
