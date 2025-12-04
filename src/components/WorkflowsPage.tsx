@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useWorkflows, useSubflows, useProviders } from '../hooks/useDatabase';
-import { Workflow, Plus, Search, CreditCard as Edit, Eye, Play, Archive, CheckCircle, Clock, AlertCircle, CheckSquare } from 'lucide-react';
+import { useWorkflows, useProviders } from '../hooks/useDatabase';
+import { Workflow, Plus, Search, CreditCard as Edit, Eye, Play, Archive } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Subflow } from '../lib/supabase';
 import { WorkflowComposer } from './WorkflowComposer';
 
 interface WorkflowsPageProps {
@@ -29,8 +28,6 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
   });
   const [customFieldData, setCustomFieldData] = useState<Record<string, any>>({});
 
-  // Get subflows for selected workflow (template subflows only, not instances)
-  const { subflows, updateSubflow, emitTasksForSubflow } = useSubflows(selectedWorkflow || undefined, null);
 
   // Handle initial filter from dashboard
   React.useEffect(() => {
@@ -258,59 +255,6 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
     setSelectedWorkflow(selectedWorkflow === workflowId ? null : workflowId);
   };
 
-  const getSubflowStatusIcon = (status: string) => {
-    switch (status) {
-      case 'complete': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'not_started': return <AlertCircle className="h-4 w-4 text-gray-400" />;
-      default: return <AlertCircle className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  const checkPrerequisites = (subflow: Subflow): boolean => {
-    // Simple prerequisite checking - in practice you'd parse the prerequisites string
-    if (subflow.prerequisites.includes('Provider Baseline')) {
-      const baselineSubflow = subflows.find(s => s.name === 'Provider Baseline');
-      return baselineSubflow?.status === 'complete';
-    }
-    if (subflow.prerequisites.includes('provider')) {
-      // Check if we have a provider with basic info
-      return providers.length > 0 && providers.some(p => p.first_name && p.last_name && p.specialty);
-    }
-    return true;
-  };
-
-  const checkDependencies = (subflow: Subflow): boolean => {
-    if (!subflow.dependencies) return true;
-    
-    // Simple dependency checking
-    if (subflow.dependencies.includes('Provider Baseline Complete')) {
-      const baselineSubflow = subflows.find(s => s.name === 'Provider Baseline');
-      return baselineSubflow?.status === 'complete';
-    }
-    if (subflow.dependencies.includes('AHCCCS Complete')) {
-      const ahcccsSubflow = subflows.find(s => s.name === 'AHCCCS Enrollment');
-      return ahcccsSubflow?.status === 'complete';
-    }
-    return true;
-  };
-
-  const handleStartSubflow = async (subflowId: string) => {
-    try {
-      const providerId = providers.length > 0 ? providers[0].id : undefined;
-      await emitTasksForSubflow(subflowId, providerId);
-    } catch (err) {
-      console.error('Failed to start subflow:', err);
-    }
-  };
-
-  const handleCompleteSubflow = async (subflowId: string) => {
-    try {
-      await updateSubflow(subflowId, { status: 'complete' });
-    } catch (err) {
-      console.error('Failed to complete subflow:', err);
-    }
-  };
 
   const filteredWorkflows = workflows.filter(workflow => {
     const matchesSearch = 
@@ -485,136 +429,6 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                         window.location.reload();
                       }}
                     />
-
-                    <div className="mt-8 border-t border-navy/10 dark:border-dark-cyan/20 pt-6">
-                      <h4 className="text-lg font-semibold text-navy dark:text-white mb-4">Subflow Details</h4>
-                      <div className="space-y-4">
-                      {subflows.map((subflow) => {
-                        const prereqsMet = checkPrerequisites(subflow);
-                        const depsMet = checkDependencies(subflow);
-                        const canStart = prereqsMet && depsMet && subflow.status === 'not_started';
-                        const canComplete = subflow.status === 'in_progress';
-
-                        return (
-                          <div key={subflow.id} className="bg-navy-dark dark:bg-navy-light border border-dark-cyan/30 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-dark-cyan/20 flex items-center justify-center">
-                                  {getSubflowStatusIcon(subflow.status)}
-                                </div>
-                                <h5 className="text-lg font-semibold text-cream">{subflow.name}</h5>
-                                <span className="text-xs px-2 py-1 rounded-full bg-dark-cyan/20 text-dark-cyan font-medium">
-                                  {subflow.status.replace('_', ' ')}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {canStart && (
-                                  <button
-                                    onClick={() => handleStartSubflow(subflow.id)}
-                                    className="px-3 py-1 bg-goldenrod text-navy text-sm rounded font-medium hover:bg-goldenrod/90 transition-colors"
-                                  >
-                                    Start
-                                  </button>
-                                )}
-                                {canComplete && (
-                                  <button
-                                    onClick={() => handleCompleteSubflow(subflow.id)}
-                                    className="px-3 py-1 bg-green-600 text-white text-sm rounded font-medium hover:bg-green-700 transition-colors"
-                                  >
-                                    Complete
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {subflow.purpose && (
-                              <p className="text-sm text-cream/80 mb-3">{subflow.purpose}</p>
-                            )}
-                            
-                            <div className="grid grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <h6 className="font-medium text-cream mb-1">Prerequisites</h6>
-                                <div className="flex items-center gap-1">
-                                  <span className={`w-3 h-3 rounded-full ${prereqsMet ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                  <span className="text-cream/70 text-xs">
-                                    {(() => {
-                                      try {
-                                        const prereqs = JSON.parse(subflow.prerequisites);
-                                        return Array.isArray(prereqs) ? `${prereqs.length} checks` : 'None';
-                                      } catch {
-                                        return subflow.prerequisites ? '1 check' : 'None';
-                                      }
-                                    })()}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <h6 className="font-medium text-cream mb-1">Dependencies</h6>
-                                <div className="flex items-center gap-1">
-                                  <span className={`w-3 h-3 rounded-full ${depsMet ? 'bg-green-500' : 'bg-orange-500'}`}></span>
-                                  <span className="text-cream/70 text-xs">
-                                    {(() => {
-                                      try {
-                                        const deps = JSON.parse(subflow.dependencies);
-                                        return Array.isArray(deps) && deps.length > 0 ? `${deps.length} deps` : 'None';
-                                      } catch {
-                                        return subflow.dependencies ? '1 dep' : 'None';
-                                      }
-                                    })()}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <h6 className="font-medium text-cream mb-1">Exit Condition</h6>
-                                <span className="text-cream/70 text-xs">
-                                  {(() => {
-                                    try {
-                                      const conditions = JSON.parse(subflow.exit_condition);
-                                      return Array.isArray(conditions) && conditions.length > 0 ? `${conditions.length} conditions` : 'Tasks complete';
-                                    } catch {
-                                      return subflow.exit_condition ? '1 condition' : 'Tasks complete';
-                                    }
-                                  })()}
-                                </span>
-                              </div>
-                              
-                              <div>
-                                <h6 className="font-medium text-cream mb-1">Tasks</h6>
-                                <span className="text-cream/70 text-xs">
-                                  {subflow.tasks?.length || 0} tasks
-                                  {subflow.tasks && subflow.tasks.length > 0 && (
-                                    <span className="ml-1 text-green-400">
-                                      ({subflow.tasks.filter((t: any) => t.status === 'completed').length} done)
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {subflow.status === 'not_started' && !canStart && (
-                              <div className="mt-2 text-xs text-orange-400">
-                                Waiting for prerequisites and dependencies
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                      
-                      {subflows.length === 0 && (
-                        <div className="text-center py-8">
-                          <div className="text-cream/30 mb-2">
-                            <CheckSquare className="h-12 w-12 mx-auto" />
-                          </div>
-                          <h6 className="text-lg font-medium text-cream mb-2">No subflows defined</h6>
-                          <p className="text-cream/60">
-                            This workflow doesn't have any subflows configured yet.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    </div>
                   </div>
                 )}
               </div>
