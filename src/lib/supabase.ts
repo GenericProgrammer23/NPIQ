@@ -324,21 +324,33 @@ export class DatabaseService {
     try {
       const user = await this.getCurrentUser();
       if (!user) return false;
-      
+
       console.log('Checking organizations for user:', user.id);
-      const { data, error } = await supabase
+
+      const { data: memberData, error: memberError } = await supabase
         .from('org_members')
         .select('organization_id')
         .eq('user_id', user.id)
         .limit(1);
-      
-      if (error) {
-        console.error('Error checking user organizations:', error);
-        return false;
+
+      if (!memberError && memberData && memberData.length > 0) {
+        console.log('User found in org_members');
+        return true;
       }
-      
-      console.log('Organization check result:', data);
-      return !error && (data?.length || 0) > 0;
+
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('id')
+        .limit(1);
+
+      if (!orgError && orgData && orgData.length > 0) {
+        console.log('User has access to organizations, auto-adding to org_members');
+        await supabase.rpc('auto_add_user_to_provider_org');
+        return true;
+      }
+
+      console.log('No organizations found for user');
+      return false;
     } catch (error) {
       console.error('Failed to check user organizations:', error);
       return false;
