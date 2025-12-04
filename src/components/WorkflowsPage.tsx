@@ -3,6 +3,7 @@ import { useWorkflows, useSubflows, useProviders } from '../hooks/useDatabase';
 import { Workflow, Plus, Search, CreditCard as Edit, Eye, Play, Archive, CheckCircle, Clock, AlertCircle, CheckSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Subflow } from '../lib/supabase';
+import { WorkflowComposer } from './WorkflowComposer';
 
 interface WorkflowsPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -477,8 +478,17 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                 {/* Subflows Section */}
                 {selectedWorkflow === workflow.id && (
                   <div className="mt-6 border-t border-navy/10 dark:border-dark-cyan/20 pt-6">
-                    <h4 className="text-lg font-semibold text-navy dark:text-white mb-4">Subflows</h4>
-                    <div className="space-y-4">
+                    <WorkflowComposer
+                      workflowId={workflow.id}
+                      organizationId={workflow.organization_id}
+                      onUpdate={() => {
+                        window.location.reload();
+                      }}
+                    />
+
+                    <div className="mt-8 border-t border-navy/10 dark:border-dark-cyan/20 pt-6">
+                      <h4 className="text-lg font-semibold text-navy dark:text-white mb-4">Subflow Details</h4>
+                      <div className="space-y-4">
                       {subflows.map((subflow) => {
                         const prereqsMet = checkPrerequisites(subflow);
                         const depsMet = checkDependencies(subflow);
@@ -603,6 +613,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                           </p>
                         </div>
                       )}
+                    </div>
                     </div>
                   </div>
                 )}

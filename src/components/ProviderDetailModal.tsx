@@ -6,6 +6,7 @@ import { DatabaseService } from '../lib/supabase';
 import { DynamicTaskUpdateService } from '../services/DynamicTaskUpdateService';
 import { DocumentUpload } from './DocumentUpload';
 import { DocumentList } from './DocumentList';
+import { ProviderWorkflowStatus } from './ProviderWorkflowStatus';
 
 interface ProviderDetailModalProps {
   provider: Provider;
@@ -520,6 +521,14 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+            <h3 className="text-xl font-semibold text-navy dark:text-white mb-4">Workflow Progress</h3>
+            <ProviderWorkflowStatus
+              providerId={provider.id}
+              organizationId={provider.organization_id}
+            />
           </div>
         </div>
 
