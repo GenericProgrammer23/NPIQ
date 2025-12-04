@@ -69,7 +69,6 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
         .select('*')
         .eq('organization_id', organizationId)
         .eq('is_reusable', true)
-        .eq('is_template', true)
         .is('workflow_id', null)
         .order('name');
 
