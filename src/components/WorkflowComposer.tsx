@@ -5,7 +5,6 @@ import { Plus, X, MoveUp, MoveDown, AlertTriangle, CheckCircle, Clock } from 'lu
 interface WorkflowComposerProps {
   workflowId: string;
   organizationId: string;
-  onUpdate: () => void;
 }
 
 interface Subflow {
@@ -28,14 +27,14 @@ interface AggregatedRequirement {
 
 export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
   workflowId,
-  organizationId,
-  onUpdate
+  organizationId
 }) => {
   const [workflowSubflows, setWorkflowSubflows] = useState<Subflow[]>([]);
   const [availableSubflows, setAvailableSubflows] = useState<Subflow[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [aggregatedReqs, setAggregatedReqs] = useState<AggregatedRequirement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'flowchart'>('list');
 
   useEffect(() => {
     loadWorkflowSubflows();
@@ -46,15 +45,31 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('subflows')
-        .select('*')
+        .from('workflow_subflows')
+        .select(`
+          order_index,
+          subflows (
+            id,
+            name,
+            purpose,
+            status,
+            prerequisites,
+            dependencies,
+            exit_condition
+          )
+        `)
         .eq('workflow_id', workflowId)
-        .eq('is_template', true)
         .order('order_index');
 
       if (error) throw error;
-      setWorkflowSubflows(data || []);
-      analyzeRequirements(data || []);
+
+      const subflows = (data || []).map((ws: any) => ({
+        ...ws.subflows,
+        order_index: ws.order_index
+      }));
+
+      setWorkflowSubflows(subflows);
+      analyzeRequirements(subflows);
     } catch (error) {
       console.error('Error loading workflow subflows:', error);
     } finally {
@@ -69,7 +84,6 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
         .select('*')
         .eq('organization_id', organizationId)
         .eq('is_reusable', true)
-        .is('workflow_id', null)
         .order('name');
 
       if (error) throw error;
@@ -111,38 +125,18 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
     try {
       const maxOrder = workflowSubflows.reduce((max, sf) => Math.max(max, sf.order_index), -1);
 
-      const { data: originalSubflow, error: fetchError } = await supabase
-        .from('subflows')
-        .select('*')
-        .eq('id', subflowId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const { data, error } = await supabase
-        .from('subflows')
+      const { error } = await supabase
+        .from('workflow_subflows')
         .insert({
           workflow_id: workflowId,
-          organization_id: organizationId,
-          name: originalSubflow.name,
-          purpose: originalSubflow.purpose,
-          prerequisites: originalSubflow.prerequisites,
-          dependencies: originalSubflow.dependencies,
-          exit_condition: originalSubflow.exit_condition,
-          is_template: true,
-          is_reusable: false,
-          order_index: maxOrder + 1,
-          workflow_data: originalSubflow.workflow_data,
-          metadata: originalSubflow.metadata
-        })
-        .select()
-        .single();
+          subflow_id: subflowId,
+          order_index: maxOrder + 1
+        });
 
       if (error) throw error;
 
       setShowAddModal(false);
       loadWorkflowSubflows();
-      onUpdate();
     } catch (error) {
       console.error('Error adding subflow:', error);
       alert('Failed to add subflow');
@@ -154,14 +148,14 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
 
     try {
       const { error } = await supabase
-        .from('subflows')
+        .from('workflow_subflows')
         .delete()
-        .eq('id', subflowId);
+        .eq('workflow_id', workflowId)
+        .eq('subflow_id', subflowId);
 
       if (error) throw error;
 
       loadWorkflowSubflows();
-      onUpdate();
     } catch (error) {
       console.error('Error removing subflow:', error);
       alert('Failed to remove subflow');
@@ -178,30 +172,140 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
     try {
       const updates = [
         {
-          id: workflowSubflows[currentIndex].id,
+          subflow_id: workflowSubflows[currentIndex].id,
           order_index: targetIndex
         },
         {
-          id: workflowSubflows[targetIndex].id,
+          subflow_id: workflowSubflows[targetIndex].id,
           order_index: currentIndex
         }
       ];
 
       for (const update of updates) {
         const { error } = await supabase
-          .from('subflows')
+          .from('workflow_subflows')
           .update({ order_index: update.order_index })
-          .eq('id', update.id);
+          .eq('workflow_id', workflowId)
+          .eq('subflow_id', update.subflow_id);
 
         if (error) throw error;
       }
 
       loadWorkflowSubflows();
-      onUpdate();
     } catch (error) {
       console.error('Error reordering subflows:', error);
       alert('Failed to reorder subflows');
     }
+  };
+
+  const renderFlowchartView = () => {
+    if (workflowSubflows.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <p>No subflows added yet</p>
+          <p className="text-sm mt-2">Click "Add Subflow" to build your workflow</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center space-y-4 py-4">
+        {workflowSubflows.map((subflow, index) => (
+          <div key={subflow.id} className="w-full max-w-2xl relative">
+            {index > 0 && (
+              <div className="absolute left-1/2 -top-4 w-0.5 h-4 bg-dark-cyan/50 transform -translate-x-1/2" />
+            )}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-navy-light dark:to-navy-dark border-2 border-dark-cyan/40 rounded-lg p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="bg-dark-cyan text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h5 className="font-semibold text-navy dark:text-white text-lg">{subflow.name}</h5>
+                  {subflow.purpose && (
+                    <p className="text-sm text-navy/70 dark:text-gray-300 mt-1">{subflow.purpose}</p>
+                  )}
+                  <div className="grid grid-cols-3 gap-3 mt-3 text-xs">
+                    <div className="bg-white dark:bg-navy rounded p-2">
+                      <span className="font-medium text-navy/60 dark:text-gray-400">Prerequisites:</span>
+                      <div className="text-navy dark:text-white mt-1">
+                        {(() => {
+                          try {
+                            const prereqs = JSON.parse(subflow.prerequisites);
+                            return Array.isArray(prereqs) && prereqs.length > 0
+                              ? prereqs.map((p: any) => `${p.entity}.${p.field}`).join(', ')
+                              : 'None';
+                          } catch {
+                            return subflow.prerequisites || 'None';
+                          }
+                        })()}
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-navy rounded p-2">
+                      <span className="font-medium text-navy/60 dark:text-gray-400">Dependencies:</span>
+                      <div className="text-navy dark:text-white mt-1">
+                        {(() => {
+                          try {
+                            const deps = JSON.parse(subflow.dependencies);
+                            return Array.isArray(deps) && deps.length > 0
+                              ? deps.join(', ')
+                              : 'None';
+                          } catch {
+                            return subflow.dependencies || 'None';
+                          }
+                        })()}
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-navy rounded p-2">
+                      <span className="font-medium text-navy/60 dark:text-gray-400">Exit Condition:</span>
+                      <div className="text-navy dark:text-white mt-1">
+                        {(() => {
+                          try {
+                            const conditions = JSON.parse(subflow.exit_condition);
+                            return Array.isArray(conditions) && conditions.length > 0
+                              ? conditions.join(', ')
+                              : 'All tasks complete';
+                          } catch {
+                            return subflow.exit_condition || 'All tasks complete';
+                          }
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {index > 0 && (
+                    <button
+                      onClick={() => moveSubflow(subflow.id, 'up')}
+                      className="p-1 text-navy/60 dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-white/50 dark:hover:bg-navy/50 rounded transition-colors"
+                      title="Move up"
+                    >
+                      <MoveUp className="w-4 h-4" />
+                    </button>
+                  )}
+                  {index < workflowSubflows.length - 1 && (
+                    <button
+                      onClick={() => moveSubflow(subflow.id, 'down')}
+                      className="p-1 text-navy/60 dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-white/50 dark:hover:bg-navy/50 rounded transition-colors"
+                      title="Move down"
+                    >
+                      <MoveDown className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => removeSubflowFromWorkflow(subflow.id)}
+                    className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                    title="Remove"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -213,13 +317,37 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
             {workflowSubflows.length} subflow{workflowSubflows.length !== 1 ? 's' : ''} in this workflow
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-dark-cyan hover:bg-dark-cyan/90 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Subflow
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-white dark:bg-navy-light border border-gray-200 dark:border-dark-cyan/30 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-dark-cyan text-white'
+                  : 'text-navy/60 dark:text-gray-400 hover:text-navy dark:hover:text-white'
+              }`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('flowchart')}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                viewMode === 'flowchart'
+                  ? 'bg-dark-cyan text-white'
+                  : 'text-navy/60 dark:text-gray-400 hover:text-navy dark:hover:text-white'
+              }`}
+            >
+              Flowchart
+            </button>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-dark-cyan hover:bg-dark-cyan/90 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Subflow
+          </button>
+        </div>
       </div>
 
       {aggregatedReqs.length > 0 && (
@@ -259,6 +387,8 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
           <div className="text-center py-8">
             <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
+        ) : viewMode === 'flowchart' ? (
+          renderFlowchartView()
         ) : workflowSubflows.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p>No subflows added yet</p>

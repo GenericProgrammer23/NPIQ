@@ -9,7 +9,7 @@ interface WorkflowsPageProps {
 }
 
 export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) => {
-  const { workflows, loading, error, createWorkflow } = useWorkflows(undefined, true);
+  const { workflows, loading, error, createWorkflow, updateWorkflow: updateWorkflowHook } = useWorkflows(undefined, true);
   const { providers } = useProviders();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -140,23 +140,11 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
     try {
       const updateData = {
         ...formData,
-        ...sanitizedCustomFieldData // Include sanitized custom field data
+        ...sanitizedCustomFieldData
       };
-      
-      // We need to add updateWorkflow to the hook
-      // For now, we'll use the supabase client directly
-      if (supabase) {
-        const { error } = await supabase
-          .from('workflows')
-          .update(updateData)
-          .eq('id', editingWorkflow.id);
-        
-        if (error) throw error;
-        
-        // Refresh the page to show updated data
-        window.location.reload();
-      }
-      
+
+      await updateWorkflowHook(editingWorkflow.id, updateData);
+
       setShowEditForm(false);
       setEditingWorkflow(null);
       setFormData({
@@ -425,9 +413,6 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                     <WorkflowComposer
                       workflowId={workflow.id}
                       organizationId={workflow.organization_id}
-                      onUpdate={() => {
-                        window.location.reload();
-                      }}
                     />
                   </div>
                 )}
