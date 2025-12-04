@@ -233,7 +233,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
     const edge: Edge = {
       ...connection,
       id: `edge_${Date.now()}`,
-      type: 'default',
+      type: 'smoothstep',
       animated: false,
       markerEnd: {
         type: MarkerType.ArrowClosed,
@@ -311,10 +311,10 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
   const handleAutoLayout = useCallback(() => {
     if (nodes.length === 0) return;
 
-    const nodeWidth = 250;
+    const nodeWidth = 280;
     const nodeHeight = 100;
-    const horizontalSpacing = 100;
-    const verticalSpacing = 150;
+    const horizontalSpacing = 150;
+    const verticalSpacing = 180;
 
     const nodeMap = new Map(nodes.map(n => [n.id, n]));
     const layers: string[][] = [];
@@ -384,20 +384,27 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
         }
       }
 
-      const layerWidth = layers[layerIndex].length;
-      const totalWidth = layerWidth * (nodeWidth + horizontalSpacing);
-      const startX = -totalWidth / 2;
+      const nodesInLayer = layers[layerIndex].length;
+      const totalLayerWidth = nodesInLayer * nodeWidth + (nodesInLayer - 1) * horizontalSpacing;
+      const startX = -totalLayerWidth / 2;
+      const xPosition = startX + positionInLayer * (nodeWidth + horizontalSpacing);
 
       return {
         ...node,
         position: {
-          x: startX + positionInLayer * (nodeWidth + horizontalSpacing),
-          y: layerIndex * (nodeHeight + verticalSpacing)
+          x: xPosition,
+          y: 100 + layerIndex * (nodeHeight + verticalSpacing)
         }
       };
     });
 
+    const updatedEdges = edges.map(edge => ({
+      ...edge,
+      type: 'smoothstep'
+    }));
+
     setNodes(layoutedNodes);
+    setEdges(updatedEdges);
   }, [nodes, edges]);
 
   const handleSaveWorkflow = async () => {
