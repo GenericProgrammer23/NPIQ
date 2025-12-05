@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2, CreditCard as Edit } from 'lucide-react';
+import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2, CreditCard as Edit, HardDrive } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { setupDocumentStorage } from '../lib/setupStorage';
 
 interface CustomField {
   id: string;
@@ -20,6 +21,8 @@ export const AdminSettingsPage: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingField, setEditingField] = useState<CustomField | null>(null);
+  const [settingUpStorage, setSettingUpStorage] = useState(false);
+  const [storageStatus, setStorageStatus] = useState<'unknown' | 'ready' | 'not_ready'>('unknown');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +34,7 @@ export const AdminSettingsPage: React.FC = () => {
 
   useEffect(() => {
     loadCustomFields();
+    checkStorageStatus();
   }, []);
 
   const loadCustomFields = async () => {
@@ -49,10 +53,37 @@ export const AdminSettingsPage: React.FC = () => {
       setCustomFields(data || []);
     } catch (err) {
       console.error('Failed to load custom fields:', err);
-      // Don't show error if table doesn't exist yet
       setCustomFields([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkStorageStatus = async () => {
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'provider-documents');
+      setStorageStatus(bucketExists ? 'ready' : 'not_ready');
+    } catch (err) {
+      console.error('Failed to check storage status:', err);
+      setStorageStatus('not_ready');
+    }
+  };
+
+  const handleSetupStorage = async () => {
+    setSettingUpStorage(true);
+    try {
+      const result = await setupDocumentStorage();
+      if (result.success) {
+        showMessage('Storage bucket created successfully! Document uploads are now enabled.', 'success');
+        setStorageStatus('ready');
+      } else {
+        showMessage(result.error || 'Failed to setup storage', 'error');
+      }
+    } catch (err) {
+      showMessage('Failed to setup storage bucket', 'error');
+    } finally {
+      setSettingUpStorage(false);
     }
   };
 
@@ -405,6 +436,81 @@ export const AdminSettingsPage: React.FC = () => {
           <span className="text-green-800 dark:text-green-400">{success}</span>
         </div>
       )}
+
+      {/* Storage Setup Section */}
+      <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 mb-6">
+        <div className="p-6 border-b border-navy/10 dark:border-dark-cyan/30">
+          <h2 className="text-xl font-semibold text-navy dark:text-white flex items-center">
+            <HardDrive className="h-5 w-5 mr-2" />
+            Document Storage
+          </h2>
+          <p className="text-navy/60 dark:text-cream/60 mt-1">
+            Configure storage for provider documents
+          </p>
+        </div>
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="text-lg font-medium text-navy dark:text-white">Storage Bucket Status</h3>
+                {storageStatus === 'ready' && (
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200 flex items-center gap-1">
+                    <CheckCircle className="h-4 w-4" />
+                    Ready
+                  </span>
+                )}
+                {storageStatus === 'not_ready' && (
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-1">
+                    <AlertCircle className="h-4 w-4" />
+                    Not Configured
+                  </span>
+                )}
+                {storageStatus === 'unknown' && (
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                    Checking...
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-navy/70 dark:text-cream/70">
+                {storageStatus === 'ready' && 'Document uploads are enabled and ready to use.'}
+                {storageStatus === 'not_ready' && 'Storage bucket needs to be created to enable document uploads.'}
+                {storageStatus === 'unknown' && 'Checking storage configuration...'}
+              </p>
+              {storageStatus === 'not_ready' && (
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-400">
+                    Click the button to create the storage bucket. This will:
+                  </p>
+                  <ul className="text-sm text-blue-800 dark:text-blue-400 list-disc list-inside mt-2 space-y-1">
+                    <li>Create a private storage bucket for provider documents</li>
+                    <li>Configure file size limits (10MB max)</li>
+                    <li>Set allowed file types (PDF, DOC, DOCX, JPG, PNG)</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+            {storageStatus === 'not_ready' && (
+              <button
+                onClick={handleSetupStorage}
+                disabled={settingUpStorage}
+                className="ml-4 px-4 py-2 bg-goldenrod hover:bg-goldenrod/90 disabled:bg-goldenrod/50 text-navy dark:text-navy rounded-lg font-medium flex items-center gap-2"
+              >
+                {settingUpStorage ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-navy/30 border-t-navy rounded-full animate-spin" />
+                    Setting up...
+                  </>
+                ) : (
+                  <>
+                    <HardDrive className="h-4 w-4" />
+                    Setup Storage
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Custom Fields by Table */}
       <div className="space-y-6">
