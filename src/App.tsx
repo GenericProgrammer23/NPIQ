@@ -6,14 +6,12 @@ import { GuidePage } from './components/GuidePage';
 import { ProvidersPage } from './components/ProvidersPage';
 import { LocationsPage } from './components/LocationsPage';
 import { PayersPage } from './components/PayersPage';
-import { WorkflowsPage } from './components/WorkflowsPage';
-import { SubflowsPage } from './components/SubflowsPage';
 import { TasksPage } from './components/TasksPage';
 import { ActionsPage } from './components/ActionsPage';
+import { ActionTemplatesPage } from './components/ActionTemplatesPage';
 import { AdminSettingsPage } from './components/AdminSettingsPage';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowEngine } from './components/WorkflowEngine';
-import { WorkflowDesignerPage } from './components/workflow/WorkflowDesignerPage';
 import { DatabaseService, supabase } from './lib/supabase';
 import Diagnostics from './components/Diagnostics';
 import { DarkModeToggle } from './components/DarkModeToggle';
@@ -56,24 +54,12 @@ function App() {
         return <ProvidersPage initialFilter={pageFilter} />;
       case 'actions':
         return <ActionsPage organizationId={organizationId} />;
+      case 'action-templates':
+        return <ActionTemplatesPage organizationId={organizationId} />;
       case 'locations':
         return <LocationsPage initialFilter={pageFilter} />;
       case 'payers':
         return <PayersPage initialFilter={pageFilter} onNavigate={handlePageChange} />;
-      case 'workflows':
-        return <WorkflowsPage initialFilter={pageFilter} />;
-      case 'workflow-designer':
-        return (
-          <WorkflowDesignerPage
-            payerId={pageFilter?.value}
-            subflowId={pageFilter?.subflowId}
-            editMode={pageFilter?.editMode as 'payer' | 'subflow'}
-            mode={pageFilter?.mode as 'view' | 'edit'}
-            onBack={() => handlePageChange(pageFilter?.editMode === 'subflow' ? 'subflows' : 'payers')}
-          />
-        );
-      case 'subflows':
-        return <SubflowsPage onNavigate={handlePageChange} />;
       case 'tasks':
         return <TasksPage initialFilter={pageFilter} />;
       case 'admin':
