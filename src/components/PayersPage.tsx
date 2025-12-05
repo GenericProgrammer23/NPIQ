@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePayers, useProviders, useProviderPayerApplications } from '../hooks/useDatabase';
-import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle, Eye, Edit3 } from 'lucide-react';
-import { Payer, DatabaseService } from '../lib/supabase';
+import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle, Eye, Edit3, GitBranch, ChevronDown, ChevronUp } from 'lucide-react';
+import { Payer, DatabaseService, supabase } from '../lib/supabase';
 
 interface PayersPageProps {
   initialFilter?: { type: string; value: string } | null;
   onNavigate?: (page: string, filter?: any) => void;
+}
+
+interface ActionTemplate {
+  id: string;
+  name: string;
+  category: 'credentialing' | 'change' | 'renewal' | 'custom';
 }
 
 export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigate }) => {
@@ -19,6 +25,8 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
   const [showBulkAssign, setShowBulkAssign] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [actionTemplates, setActionTemplates] = useState<ActionTemplate[]>([]);
+  const [expandedPayerWorkflows, setExpandedPayerWorkflows] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -46,7 +54,11 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
     addToWorkflows: false
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
+    loadActionTemplates();
+  }, []);
+
+  useEffect(() => {
     if (initialFilter) {
       if (initialFilter.type === 'action' && initialFilter.value === 'add') {
         setShowAddForm(true);
@@ -55,6 +67,40 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
       }
     }
   }, [initialFilter]);
+
+  const loadActionTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('action_templates')
+        .select('id, name, category')
+        .order('category', { ascending: true })
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setActionTemplates(data || []);
+    } catch (err) {
+      console.error('Error loading action templates:', err);
+    }
+  };
+
+  const getActionCategoriesWithTemplates = () => {
+    const categories = new Set(actionTemplates.map(t => t.category));
+    return Array.from(categories).sort();
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      credentialing: 'Initial Credentialing',
+      change: 'Changes',
+      renewal: 'Re-credentialing',
+      custom: 'Custom Actions'
+    };
+    return labels[category] || category;
+  };
+
+  const toggleWorkflowExpansion = (payerId: string) => {
+    setExpandedPayerWorkflows(expandedPayerWorkflows === payerId ? null : payerId);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,33 +369,73 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => onNavigate?.('workflow-designer', { type: 'payer', value: payer.id, mode: 'view' })}
+                  onClick={() => toggleWorkflowExpansion(payer.id)}
                   className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded transition-colors"
-                  title="View Credentialing Flow (Read-only)"
+                  title="Configure Workflows"
                 >
-                  <Eye className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => onNavigate?.('workflow-designer', { type: 'payer', value: payer.id, mode: 'edit' })}
-                  className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors"
-                  title="Design Credentialing Flow"
-                >
-                  <Edit3 className="h-4 w-4" />
+                  <GitBranch className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => openEditForm(payer)}
                   className="p-2 text-dark-cyan dark:text-dark-cyan hover:bg-dark-cyan/10 dark:hover:bg-dark-cyan/20 rounded transition-colors"
+                  title="Edit Payer"
                 >
                   <Edit className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(payer.id)}
                   className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                  title="Delete Payer"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
+
+            {expandedPayerWorkflows === payer.id && (
+              <div className="mb-4 p-4 bg-gray-50 dark:bg-navy-dark rounded-lg border border-gray-200 dark:border-dark-cyan/30">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-navy dark:text-white">Configure Workflows by Action Type</h4>
+                  <button
+                    onClick={() => toggleWorkflowExpansion(payer.id)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {getActionCategoriesWithTemplates().length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                      No action templates found. Create action templates first.
+                    </p>
+                  ) : (
+                    getActionCategoriesWithTemplates().map((category) => (
+                      <div key={category} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-dark-cyan/20 last:border-0">
+                        <span className="text-sm font-medium text-navy dark:text-white">
+                          {getCategoryLabel(category)}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => onNavigate?.('workflow-designer', { payerId: payer.id, actionCategory: category, mode: 'view' })}
+                            className="flex items-center gap-1 px-3 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
+                          >
+                            <Eye className="h-3 w-3" />
+                            View
+                          </button>
+                          <button
+                            onClick={() => onNavigate?.('workflow-designer', { payerId: payer.id, actionCategory: category, mode: 'edit' })}
+                            className="flex items-center gap-1 px-3 py-1 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
 
             {payer.description && (
               <p className="text-sm text-navy/70 dark:text-gray-400 mb-4">{payer.description}</p>
