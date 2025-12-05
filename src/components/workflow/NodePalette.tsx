@@ -10,7 +10,7 @@ interface NodePaletteProps {
 export const NodePalette: React.FC<NodePaletteProps> = ({ onDragStart }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['flow', 'prerequisites', 'tasks', 'dates', 'data', 'components'])
+    new Set(['flow', 'prerequisites', 'tasks', 'dates', 'data'])
   );
 
   const categories = {
@@ -18,8 +18,7 @@ export const NodePalette: React.FC<NodePaletteProps> = ({ onDragStart }) => {
     prerequisites: 'Prerequisites',
     tasks: 'Task Generation',
     dates: 'Date Operations',
-    data: 'Data Operations',
-    components: 'Reusable Components'
+    data: 'Data Operations'
   };
 
   const nodesByCategory = Object.entries(NODE_TYPE_DEFINITIONS).reduce((acc, [key, def]) => {

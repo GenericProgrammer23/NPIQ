@@ -9,9 +9,6 @@ import {
   AutoCompleteTaskConfig,
   UpdateProviderFieldConfig,
   CompleteNodeConfig,
-  ExecuteSubflowConfig,
-  CheckSubflowStatusConfig,
-  ExecuteWorkflowTemplateConfig,
   DependencyCheckConfig
 } from '../../types/workflow';
 import { supabase } from '../../lib/supabase';
@@ -83,12 +80,6 @@ export const NodeConfigPanel: React.FC<NodeConfigPanelProps> = ({
         return <CompleteNodeForm config={config} updateConfig={updateConfig} />;
       case 'dependency_check':
         return <DependencyCheckForm config={config} updateConfig={updateConfig} />;
-      case 'execute_subflow':
-        return <ExecuteSubflowForm config={config} updateConfig={updateConfig} onDiveIntoSubflow={onDiveIntoSubflow} />;
-      case 'check_subflow_status':
-        return <CheckSubflowStatusForm config={config} updateConfig={updateConfig} />;
-      case 'execute_workflow_template':
-        return <ExecuteWorkflowTemplateForm config={config} updateConfig={updateConfig} />;
       case 'start':
         return <div className="text-sm text-gray-600">Start node has no configuration options.</div>;
       default:
@@ -700,8 +691,6 @@ const UpdateProviderFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
 
 const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
   const [payers, setPayers] = React.useState<any[]>([]);
-  const [subflows, setSubflows] = React.useState<any[]>([]);
-  const [workflows, setWorkflows] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     loadResources();
@@ -709,12 +698,7 @@ const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => voi
 
   const loadResources = async () => {
     const { data: payersData } = await supabase.from('payers').select('id, name').eq('status', 'active');
-    const { data: subflowsData } = await supabase.from('subflows').select('id, name').eq('is_reusable', true);
-    const { data: workflowsData } = await supabase.from('workflows').select('id, name').eq('is_template', true);
-
     setPayers(payersData || []);
-    setSubflows(subflowsData || []);
-    setWorkflows(workflowsData || []);
   };
 
   const dependencyType = config.dependency_type || 'payer';
@@ -731,8 +715,6 @@ const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => voi
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
         >
           <option value="payer">Other Payers</option>
-          <option value="subflow">Subflows</option>
-          <option value="workflow_template">Workflow Templates</option>
           <option value="task">Tasks</option>
         </select>
       </div>
@@ -755,6 +737,9 @@ const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => voi
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Hold Ctrl/Cmd to select multiple payers
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -772,64 +757,6 @@ const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => voi
         </>
       )}
 
-      {dependencyType === 'subflow' && (
-        <>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Required Subflows
-            </label>
-            <select
-              multiple
-              value={config.required_subflows || []}
-              onChange={(e) => updateConfig({
-                required_subflows: Array.from(e.target.selectedOptions, option => option.value)
-              })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[100px]"
-            >
-              {subflows.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Required Status
-            </label>
-            <select
-              value={config.required_subflow_status || 'complete'}
-              onChange={(e) => updateConfig({ required_subflow_status: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            >
-              <option value="not_started">Not Started</option>
-              <option value="in_progress">In Progress</option>
-              <option value="complete">Complete</option>
-            </select>
-          </div>
-        </>
-      )}
-
-      {dependencyType === 'workflow_template' && (
-        <>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Required Workflow Templates
-            </label>
-            <select
-              multiple
-              value={config.required_workflow_templates || []}
-              onChange={(e) => updateConfig({
-                required_workflow_templates: Array.from(e.target.selectedOptions, option => option.value)
-              })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[100px]"
-            >
-              {workflows.map(w => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          </div>
-        </>
-      )}
-
       {dependencyType === 'task' && (
         <>
           <div>
@@ -841,10 +768,13 @@ const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => voi
               onChange={(e) => updateConfig({
                 required_task_titles: e.target.value.split('\n').filter(t => t.trim())
               })}
-              placeholder="Submit Application\nUpload Documents"
+              placeholder="Submit Application&#10;Upload Documents"
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter one task title per line
+            </p>
           </div>
         </>
       )}
@@ -873,272 +803,6 @@ const DependencyCheckForm: React.FC<{ config: any; updateConfig: (u: any) => voi
           />
           <span className="text-sm font-medium text-gray-700">
             Block workflow if not met
-          </span>
-        </label>
-      </div>
-    </div>
-  );
-};
-
-const ExecuteSubflowForm: React.FC<{ config: any; updateConfig: (u: any) => void; onDiveIntoSubflow?: (subflowId: string) => void }> = ({ config, updateConfig, onDiveIntoSubflow }) => {
-  const [subflows, setSubflows] = React.useState<any[]>([]);
-  const organizationId = 'default-org';
-
-  React.useEffect(() => {
-    loadSubflows();
-  }, []);
-
-  const loadSubflows = async () => {
-    const { data, error } = await supabase
-      .from('subflows')
-      .select('id, name, purpose, payer_id, payers(name), organization_id')
-      .or(`organization_id.eq.${organizationId},payer_id.not.is.null`)
-      .eq('is_reusable', true)
-      .order('name');
-
-    if (error) {
-      console.error('Error loading subflows:', error);
-      setSubflows([]);
-      return;
-    }
-    setSubflows(data || []);
-  };
-
-  const selectedSubflow = subflows.find(s => s.id === config.subflow_id);
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Select Subflow
-        </label>
-        <select
-          value={config.subflow_id || ''}
-          onChange={(e) => {
-            const subflow = subflows.find(s => s.id === e.target.value);
-            updateConfig({
-              subflow_id: e.target.value,
-              subflow_name: subflow?.name
-            });
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-        >
-          <option value="">-- Select a subflow --</option>
-          {subflows.map(s => (
-            <option key={s.id} value={s.id}>
-              {s.name} {s.payers?.name ? `(${s.payers.name})` : ''}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedSubflow && (
-        <div className="space-y-3">
-          <div className="p-3 bg-blue-50 rounded-lg text-sm">
-            <div className="font-medium text-blue-900 mb-1">Subflow Details</div>
-            <div className="text-blue-700">{selectedSubflow.purpose || 'No description'}</div>
-          </div>
-
-          {onDiveIntoSubflow && config.subflow_id && (
-            <button
-              type="button"
-              onClick={() => onDiveIntoSubflow(config.subflow_id)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-              </svg>
-              Dive Into Subflow
-            </button>
-          )}
-        </div>
-      )}
-
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={config.wait_for_completion !== false}
-            onChange={(e) => updateConfig({ wait_for_completion: e.target.checked })}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">
-            Wait for subflow completion
-          </span>
-        </label>
-      </div>
-
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={config.pass_context !== false}
-            onChange={(e) => updateConfig({ pass_context: e.target.checked })}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">
-            Pass context variables to subflow
-          </span>
-        </label>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Timeout (days)
-        </label>
-        <input
-          type="number"
-          value={config.timeout_days || ''}
-          onChange={(e) => updateConfig({ timeout_days: parseInt(e.target.value) || undefined })}
-          placeholder="Optional"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-        />
-      </div>
-    </div>
-  );
-};
-
-const CheckSubflowStatusForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
-  const [subflows, setSubflows] = React.useState<any[]>([]);
-  const organizationId = 'default-org';
-
-  React.useEffect(() => {
-    loadSubflows();
-  }, []);
-
-  const loadSubflows = async () => {
-    const { data, error } = await supabase
-      .from('subflows')
-      .select('id, name, payer_id, payers(name), organization_id')
-      .or(`organization_id.eq.${organizationId},payer_id.not.is.null`)
-      .eq('is_reusable', true)
-      .order('name');
-
-    if (error) {
-      console.error('Error loading subflows:', error);
-      setSubflows([]);
-      return;
-    }
-    setSubflows(data || []);
-  };
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Select Subflows to Check
-        </label>
-        <select
-          multiple
-          value={config.required_subflows || []}
-          onChange={(e) => updateConfig({
-            required_subflows: Array.from(e.target.selectedOptions, option => option.value)
-          })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[120px]"
-        >
-          {subflows.map(s => (
-            <option key={s.id} value={s.id}>
-              {s.name} {s.payers?.name ? `(${s.payers.name})` : ''}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Required Status
-        </label>
-        <select
-          value={config.required_status || 'complete'}
-          onChange={(e) => updateConfig({ required_status: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-        >
-          <option value="not_started">Not Started</option>
-          <option value="in_progress">In Progress</option>
-          <option value="complete">Complete</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Check Type
-        </label>
-        <select
-          value={config.check_type || 'all'}
-          onChange={(e) => updateConfig({ check_type: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-        >
-          <option value="all">All subflows must match</option>
-          <option value="any">Any subflow must match</option>
-        </select>
-      </div>
-    </div>
-  );
-};
-
-const ExecuteWorkflowTemplateForm: React.FC<{ config: any; updateConfig: (u: any) => void }> = ({ config, updateConfig }) => {
-  const [workflows, setWorkflows] = React.useState<any[]>([]);
-
-  React.useEffect(() => {
-    loadWorkflows();
-  }, []);
-
-  const loadWorkflows = async () => {
-    const { data } = await supabase
-      .from('workflows')
-      .select('id, name, description, type')
-      .eq('is_template', true)
-      .eq('status', 'active')
-      .order('name');
-    setWorkflows(data || []);
-  };
-
-  const selectedWorkflow = workflows.find(w => w.id === config.workflow_template_id);
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Select Workflow Template
-        </label>
-        <select
-          value={config.workflow_template_id || ''}
-          onChange={(e) => {
-            const workflow = workflows.find(w => w.id === e.target.value);
-            updateConfig({
-              workflow_template_id: e.target.value,
-              workflow_template_name: workflow?.name
-            });
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-        >
-          <option value="">-- Select a workflow template --</option>
-          {workflows.map(w => (
-            <option key={w.id} value={w.id}>
-              {w.name} ({w.type})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedWorkflow && (
-        <div className="p-3 bg-blue-50 rounded-lg text-sm">
-          <div className="font-medium text-blue-900 mb-1">Template Details</div>
-          <div className="text-blue-700">{selectedWorkflow.description || 'No description'}</div>
-        </div>
-      )}
-
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={config.wait_for_completion !== false}
-            onChange={(e) => updateConfig({ wait_for_completion: e.target.checked })}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">
-            Wait for workflow completion
           </span>
         </label>
       </div>
