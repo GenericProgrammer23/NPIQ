@@ -22,6 +22,8 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('pending');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [providerActions, setProviderActions] = useState<any[]>([]);
   const [customFields, setCustomFields] = useState<any[]>([]);
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
@@ -54,8 +56,29 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
   // Load custom fields and refresh tasks on component mount
   React.useEffect(() => {
     loadCustomFields();
+    loadProviderActions();
     refetch();
   }, []);
+
+  const loadProviderActions = async () => {
+    if (!supabase) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('provider_actions')
+        .select('id, action_name, action_type, provider_id, status')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to load provider actions:', error);
+        return;
+      }
+
+      setProviderActions(data || []);
+    } catch (err) {
+      console.error('Failed to load provider actions:', err);
+    }
+  };
 
   const loadCustomFields = async () => {
     if (!supabase) return;
@@ -331,8 +354,9 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
 
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
+    const matchesAction = actionFilter === 'all' || task.provider_action_id === actionFilter;
 
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesSearch && matchesStatus && matchesPriority && matchesAction;
   });
 
   // Sort tasks by computed priority
@@ -474,6 +498,18 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
+            </select>
+            <select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+              className="px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:border-dark-cyan bg-white dark:bg-navy-dark text-navy dark:text-cream"
+            >
+              <option value="all">All Actions</option>
+              {providerActions.map((action) => (
+                <option key={action.id} value={action.id}>
+                  {action.action_name} ({action.status})
+                </option>
+              ))}
             </select>
           </div>
         </div>

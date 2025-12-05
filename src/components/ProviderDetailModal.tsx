@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Provider, Payer, ProviderPayerApplication } from '../lib/supabase';
 import { useProviderPayerApplications, usePayers, useLocations } from '../hooks/useDatabase';
-import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save, FileText, Plus } from 'lucide-react';
+import { X, CheckCircle, Clock, AlertCircle, Ban, Edit2, Save, FileText, Plus, Play } from 'lucide-react';
 import { DatabaseService } from '../lib/supabase';
 import { DynamicTaskUpdateService } from '../services/DynamicTaskUpdateService';
 import { DocumentUpload } from './DocumentUpload';
 import { DocumentList } from './DocumentList';
 import { ProviderWorkflowStatus } from './ProviderWorkflowStatus';
+import { ProviderActionsTab } from './ProviderActionsTab';
+import { StartActionModalNew } from './StartActionModalNew';
 
 interface ProviderDetailModalProps {
   provider: Provider;
@@ -52,6 +54,9 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   const [availableWorkflows, setAvailableWorkflows] = useState<any[]>([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>('');
   const [assigningWorkflow, setAssigningWorkflow] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const [showStartActionModal, setShowStartActionModal] = useState(false);
+  const [actionRefresh, setActionRefresh] = useState(0);
 
   useEffect(() => {
     const loadWorkflows = async () => {
@@ -582,6 +587,41 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
 
           <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
             <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-navy dark:text-white flex items-center gap-2">
+                <Play className="w-6 h-6" />
+                Actions
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowStartActionModal(true)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Start New Action
+                </button>
+                <button
+                  onClick={() => setShowActions(!showActions)}
+                  className="px-4 py-2 bg-dark-cyan hover:bg-dark-cyan/90 text-white rounded-lg font-medium transition-colors"
+                >
+                  {showActions ? 'Hide Actions' : 'View Actions'}
+                </button>
+              </div>
+            </div>
+
+            {showActions && (
+              <div className="bg-gray-50 dark:bg-navy/50 rounded-lg p-4">
+                <ProviderActionsTab
+                  providerId={provider.id}
+                  providerName={`${provider.first_name} ${provider.last_name}`}
+                  organizationId={provider.organization_id}
+                  key={actionRefresh}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-navy dark:text-white">Assign Workflow</h3>
               <button
                 onClick={() => setShowAssignWorkflow(!showAssignWorkflow)}
@@ -656,6 +696,19 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
           </button>
         </div>
       </div>
+
+      {showStartActionModal && (
+        <StartActionModalNew
+          providerId={provider.id}
+          providerName={`${provider.first_name} ${provider.last_name}`}
+          organizationId={provider.organization_id}
+          onClose={() => setShowStartActionModal(false)}
+          onActionStarted={() => {
+            setActionRefresh(prev => prev + 1);
+            onUpdate();
+          }}
+        />
+      )}
     </div>
   );
 };

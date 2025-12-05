@@ -1,4 +1,6 @@
 import { DatabaseService, Payer, Provider, PayerTaskTemplate, ProviderPayerApplication } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import { ActionTemplate, TaskTemplate } from './ActionTemplateService';
 
 export class TaskGenerationService {
   static async generateTasksForProviderPayer(
@@ -219,6 +221,95 @@ export class TaskGenerationService {
         await this.generateTasksForProviderPayer(provider, application.payer, application);
       }
     }
+  }
+
+  /**
+   * Generate tasks for a provider action
+   */
+  static async generateTasksForAction(
+    actionId: string,
+    providerId: string,
+    organizationId: string,
+    payerIds: string[],
+    actionTemplate: ActionTemplate
+  ): Promise<number> {
+    try {
+      let tasksCreated = 0;
+
+      for (const payerId of payerIds) {
+        const { data: payer, error: payerError } = await supabase
+          .from('payers')
+          .select('*')
+          .eq('id', payerId)
+          .single();
+
+        if (payerError || !payer) {
+          console.error('Error fetching payer:', payerError);
+          continue;
+        }
+
+        for (const taskTemplate of (actionTemplate.task_templates as TaskTemplate[])) {
+          let taskTitle = taskTemplate.title;
+          if (taskTemplate.title.includes('{{payer_name}}')) {
+            taskTitle = taskTemplate.title.replace('{{payer_name}}', payer.name);
+          } else {
+            taskTitle = `${taskTemplate.title} - ${payer.name}`;
+          }
+
+          const computedPriority = this.calculateActionTaskPriority(
+            payer,
+            taskTemplate,
+            payerIds.length
+          );
+
+          const { error: taskError } = await supabase
+            .from('tasks')
+            .insert({
+              provider_id: providerId,
+              organization_id: organizationId,
+              provider_action_id: actionId,
+              payer_id: payerId,
+              title: taskTitle,
+              description: taskTemplate.description,
+              status: 'pending',
+              computed_priority: computedPriority,
+              priority: this.mapComputedToManualPriority(computedPriority),
+              auto_generated: true
+            });
+
+          if (taskError) {
+            console.error('Error creating task:', taskError);
+          } else {
+            tasksCreated++;
+          }
+        }
+      }
+
+      return tasksCreated;
+    } catch (error) {
+      console.error('Error generating tasks for action:', error);
+      return 0;
+    }
+  }
+
+  private static calculateActionTaskPriority(
+    payer: any,
+    taskTemplate: TaskTemplate,
+    totalPayers: number
+  ): number {
+    let priority = payer.priority_base || 100;
+
+    priority += (taskTemplate.priority - 1) * 20;
+
+    if (payer.is_foundation_payer) {
+      priority = Math.min(priority, 10);
+    }
+
+    if (totalPayers > 3 && taskTemplate.type === 'document') {
+      priority = Math.max(1, priority - 10);
+    }
+
+    return priority;
   }
 
   /**
