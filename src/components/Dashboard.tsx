@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useDashboardStats, useWorkflowInstances, useWorkflows } from '../hooks/useDatabase';
-import { Users, MapPin, Workflow, CheckSquare, Plus, TrendingUp, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
+import { useDashboardStats } from '../hooks/useDatabase';
+import { Users, Play, CheckSquare, Plus, TrendingUp, CreditCard } from 'lucide-react';
 import { CalendarWidget } from './CalendarWidget';
-import { WorkflowInstanceDetailModal } from './WorkflowInstanceDetailModal';
-import { WorkflowInstance } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 
 interface DashboardProps {
@@ -12,9 +10,8 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
   const { stats, loading, error } = useDashboardStats();
-  const { instances, loading: instancesLoading } = useWorkflowInstances({ status: 'active' });
-  const [expandedWorkflows, setExpandedWorkflows] = useState<Set<string>>(new Set());
-  const [selectedInstance, setSelectedInstance] = useState<WorkflowInstance | null>(null);
+  const [activeActions, setActiveActions] = useState<any[]>([]);
+  const [actionsLoading, setActionsLoading] = useState(true);
 
   useEffect(() => {
     const autoAddUserToOrg = async () => {
@@ -25,43 +22,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
       }
     };
     autoAddUserToOrg();
+
+    const loadActiveActions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('provider_actions')
+          .select(`
+            *,
+            providers (first_name, last_name),
+            action_templates (name)
+          `)
+          .in('status', ['not_started', 'in_progress'])
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (!error && data) {
+          setActiveActions(data);
+        }
+      } catch (err) {
+        console.error('Error loading actions:', err);
+      } finally {
+        setActionsLoading(false);
+      }
+    };
+    loadActiveActions();
   }, []);
-
-  const toggleWorkflow = (workflowType: string) => {
-    setExpandedWorkflows(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(workflowType)) {
-        newSet.delete(workflowType);
-      } else {
-        newSet.add(workflowType);
-      }
-      return newSet;
-    });
-  };
-
-  const getEntityName = (instance: WorkflowInstance) => {
-    if (instance.entity_type === 'provider' && instance.provider) {
-      return `${instance.provider.first_name} ${instance.provider.last_name}`;
-    }
-    if (instance.entity_type === 'location' && instance.location) {
-      return instance.location.name;
-    }
-    return 'Unknown';
-  };
-
-  const groupInstancesByWorkflow = () => {
-    const grouped: Record<string, WorkflowInstance[]> = {};
-
-    instances.forEach(instance => {
-      const templateName = instance.workflow_template?.name || 'Unknown Workflow';
-      if (!grouped[templateName]) {
-        grouped[templateName] = [];
-      }
-      grouped[templateName].push(instance);
-    });
-
-    return grouped;
-  };
 
   if (loading) {
     return (
@@ -102,13 +87,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
       onClick: () => onPageChange('providers')
     },
     {
-      title: 'Active Workflow Instances',
-      value: instances.length,
-      icon: Workflow,
+      title: 'Active Actions',
+      value: activeActions.length,
+      icon: Play,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
-      onClick: () => {}
+      onClick: () => onPageChange('actions')
     },
     {
       title: 'Completed Tasks',
@@ -129,8 +114,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
       onClick: () => onPageChange('tasks', { type: 'status', value: 'pending' })
     }
   ];
-
-  const groupedInstances = groupInstancesByWorkflow();
 
   return (
     <div className="p-6 bg-page-bg dark:bg-navy min-h-screen">
@@ -157,14 +140,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
         ))}
       </div>
 
-      <div className="space-y-6 mb-6">
-        <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
-          <h2 className="text-xl font-semibold text-navy dark:text-white mb-4 flex items-center">
-            <Workflow className="h-5 w-5 mr-2" />
-            Active Workflow Instances
-          </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2">
+          <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6">
+            <h2 className="text-xl font-semibold text-navy dark:text-white mb-4 flex items-center">
+              <Play className="h-5 w-5 mr-2" />
+              Recent Actions
+            </h2>
 
-            {instancesLoading ? (
+            {actionsLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="animate-pulse">
@@ -172,106 +156,67 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
                   </div>
                 ))}
               </div>
-            ) : Object.keys(groupedInstances).length === 0 ? (
+            ) : activeActions.length === 0 ? (
               <div className="text-center py-12">
-                <Workflow className="h-16 w-16 text-navy/20 dark:text-cream/20 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No Active Workflows</h3>
+                <Play className="h-16 w-16 text-navy/20 dark:text-cream/20 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-navy dark:text-white mb-2">No Active Actions</h3>
                 <p className="text-navy/60 dark:text-cream/60 mb-4">
-                  Start a workflow from a provider or location to see it here
+                  Start an action from the Actions page to see it here
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {Object.entries(groupedInstances).map(([workflowName, workflowInstances]) => {
-                  const isExpanded = expandedWorkflows.has(workflowName);
-
-                  return (
-                    <div
-                      key={workflowName}
-                      className="border border-navy/10 dark:border-dark-cyan/30 rounded-lg overflow-hidden"
-                    >
-                      <button
-                        onClick={() => toggleWorkflow(workflowName)}
-                        className="w-full flex items-center justify-between p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Workflow className="h-5 w-5 text-dark-cyan" />
-                          <span className="font-semibold text-navy dark:text-white">{workflowName}</span>
-                          <span className="px-2 py-1 rounded-full bg-goldenrod/20 text-goldenrod text-xs font-medium">
-                            {workflowInstances.length} {workflowInstances.length === 1 ? 'instance' : 'instances'}
-                          </span>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronUp className="h-5 w-5 text-navy dark:text-cream" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-navy dark:text-cream" />
-                        )}
-                      </button>
-
-                      {isExpanded && (
-                        <div className="p-4 space-y-2 bg-white dark:bg-navy-light">
-                          {workflowInstances.map((instance) => (
-                            <div
-                              key={instance.id}
-                              onClick={() => setSelectedInstance(instance)}
-                              className="flex items-center justify-between p-3 bg-navy/5 dark:bg-navy-dark rounded-lg hover:bg-navy/10 dark:hover:bg-navy cursor-pointer transition-colors"
-                            >
-                              <div className="flex items-center gap-3 flex-1">
-                                {instance.entity_type === 'provider' ? (
-                                  <Users className="h-4 w-4 text-navy/50 dark:text-cream/50" />
-                                ) : (
-                                  <MapPin className="h-4 w-4 text-navy/50 dark:text-cream/50" />
-                                )}
-                                <div className="flex-1">
-                                  <p className="font-medium text-navy dark:text-white">{getEntityName(instance)}</p>
-                                  <p className="text-xs text-navy/60 dark:text-cream/60">
-                                    Started {new Date(instance.started_at).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                  <div className="text-sm font-semibold text-navy dark:text-white">
-                                    {instance.progress_percentage}%
-                                  </div>
-                                  <div className="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-1">
-                                    <div
-                                      className="bg-goldenrod h-2 rounded-full transition-all duration-300"
-                                      style={{ width: `${instance.progress_percentage}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+              <div className="space-y-2">
+                {activeActions.map((action) => (
+                  <div
+                    key={action.id}
+                    onClick={() => onPageChange('actions')}
+                    className="flex items-center justify-between p-3 bg-navy/5 dark:bg-navy-dark rounded-lg hover:bg-navy/10 dark:hover:bg-navy cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <Users className="h-4 w-4 text-navy/50 dark:text-cream/50" />
+                      <div className="flex-1">
+                        <p className="font-medium text-navy dark:text-white">
+                          {action.providers?.first_name} {action.providers?.last_name}
+                        </p>
+                        <p className="text-xs text-navy/60 dark:text-cream/60">
+                          {action.action_templates?.name || action.action_name}
+                        </p>
+                      </div>
                     </div>
-                  );
-                })}
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-navy dark:text-white">
+                          {Math.round((action.completed_tasks / Math.max(action.total_tasks, 1)) * 100)}%
+                        </div>
+                        <div className="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-1">
+                          <div
+                            className="bg-goldenrod h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.round((action.completed_tasks / Math.max(action.total_tasks, 1)) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
+          </div>
         </div>
 
-        <CalendarWidget />
+        <div className="lg:col-span-1">
+          <CalendarWidget />
+        </div>
       </div>
 
       <div className="bg-white dark:bg-navy-light rounded-lg border border-navy/10 dark:border-dark-cyan/30 p-6 mb-6">
         <h2 className="text-xl font-semibold text-navy dark:text-white mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <button
             onClick={() => onPageChange('providers', { type: 'action', value: 'add' })}
             className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
           >
             <Plus className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Provider</span>
-          </button>
-          <button
-            onClick={() => onPageChange('locations', { type: 'action', value: 'add' })}
-            className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
-          >
-            <MapPin className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Location</span>
           </button>
           <button
             onClick={() => onPageChange('payers', { type: 'action', value: 'add' })}
@@ -281,11 +226,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
             <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Add Payer</span>
           </button>
           <button
-            onClick={() => onPageChange('workflows', { type: 'action', value: 'add' })}
+            onClick={() => onPageChange('action-templates', { type: 'action', value: 'add' })}
             className="flex items-center p-4 bg-navy/5 dark:bg-navy-dark hover:bg-navy/10 dark:hover:bg-navy-dark/80 rounded-lg transition-colors group"
           >
-            <Workflow className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
-            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Create Workflow Template</span>
+            <Play className="h-5 w-5 text-navy dark:text-white mr-3 group-hover:text-dark-cyan" />
+            <span className="text-navy dark:text-white group-hover:text-dark-cyan font-medium">Create Action Template</span>
           </button>
         </div>
       </div>
@@ -300,10 +245,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
                 <span className="text-navy dark:text-white">System initialized with {stats.totalProviders} providers</span>
                 <span className="text-navy/50 dark:text-cream/50 text-sm ml-auto">Today</span>
               </div>
-              {instances.length > 0 && (
+              {activeActions.length > 0 && (
                 <div className="flex items-center p-3 bg-navy/5 dark:bg-navy-dark rounded-lg">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-navy dark:text-white">{instances.length} active workflow instances in progress</span>
+                  <span className="text-navy dark:text-white">{activeActions.length} active actions in progress</span>
                   <span className="text-navy/50 dark:text-cream/50 text-sm ml-auto">Today</span>
                 </div>
               )}
@@ -318,18 +263,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
           ) : (
             <div className="text-center py-8">
               <div className="w-2 h-2 bg-gray-400 rounded-full mx-auto mb-3"></div>
-              <span className="text-navy/60 dark:text-cream/60">No recent activity. Start by adding providers and creating workflows.</span>
+              <span className="text-navy/60 dark:text-cream/60">No recent activity. Start by adding providers and assigning actions.</span>
             </div>
           )}
         </div>
       </div>
-
-      {selectedInstance && (
-        <WorkflowInstanceDetailModal
-          instance={selectedInstance}
-          onClose={() => setSelectedInstance(null)}
-        />
-      )}
     </div>
   );
 };
