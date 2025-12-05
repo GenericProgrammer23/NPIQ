@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useProviders, useLocations, useProviderPayerApplications, usePayers } from '../hooks/useDatabase';
-import { Users, Plus, Search, Filter, CreditCard as Edit, Eye, MapPin, Mail, Phone, CheckCircle, Play } from 'lucide-react';
+import { Users, Plus, Search, Filter, CreditCard as Edit, Eye, MapPin, Mail, Phone, CheckCircle } from 'lucide-react';
 import { Provider, DatabaseService } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 import { formatters, validators } from '../utils/formatters';
 import { ProviderDetailModal } from './ProviderDetailModal';
 import { EditProviderModalContent } from './EditProviderModalContent';
-import { StartWorkflowModal } from './StartWorkflowModal';
 
 interface ProvidersPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -37,8 +36,6 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
   const [showEditForm, setShowEditForm] = useState(false);
   const [viewingProvider, setViewingProvider] = useState<Provider | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [workflowProvider, setWorkflowProvider] = useState<Provider | null>(null);
-  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
 
   // Handle initial filter from dashboard
   React.useEffect(() => {
@@ -442,16 +439,6 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
-                        setWorkflowProvider(provider);
-                        setShowWorkflowModal(true);
-                      }}
-                      className="p-2 text-goldenrod hover:text-goldenrod/80 hover:bg-goldenrod/10 rounded-lg transition-colors"
-                      title="Start Workflow"
-                    >
-                      <Play className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => {
                         setViewingProvider(provider);
                         setShowDetailModal(true);
                       }}
@@ -826,22 +813,6 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
             setViewingProvider(null);
           }}
           onUpdate={() => {
-            window.location.reload();
-          }}
-        />
-      )}
-
-      {/* Start Workflow Modal */}
-      {showWorkflowModal && workflowProvider && (
-        <StartWorkflowModal
-          entityType="provider"
-          entityId={workflowProvider.id}
-          entityName={`${workflowProvider.first_name} ${workflowProvider.last_name}`}
-          onClose={() => {
-            setShowWorkflowModal(false);
-            setWorkflowProvider(null);
-          }}
-          onSuccess={() => {
             window.location.reload();
           }}
         />

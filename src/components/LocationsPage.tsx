@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useLocations } from '../hooks/useDatabase';
-import { MapPin, Plus, Search, CreditCard as Edit, Eye, Building, Play } from 'lucide-react';
+import { MapPin, Plus, Search, CreditCard as Edit, Eye, Building } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { StartWorkflowModal } from './StartWorkflowModal';
 
 interface LocationsPageProps {
   initialFilter?: { type: string; value: string } | null;
@@ -15,8 +14,6 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
   const [editingLocation, setEditingLocation] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [customFields, setCustomFields] = useState<any[]>([]);
-  const [workflowLocation, setWorkflowLocation] = useState<any>(null);
-  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -339,16 +336,6 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setWorkflowLocation(location);
-                        setShowWorkflowModal(true);
-                      }}
-                      className="p-2 text-goldenrod hover:text-goldenrod/80 hover:bg-goldenrod/10 rounded-lg transition-colors"
-                      title="Start Workflow"
-                    >
-                      <Play className="h-4 w-4" />
-                    </button>
                     <button className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors">
                       <Eye className="h-4 w-4" />
                     </button>
@@ -555,22 +542,6 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
             </form>
           </div>
         </div>
-      )}
-
-      {/* Start Workflow Modal */}
-      {showWorkflowModal && workflowLocation && (
-        <StartWorkflowModal
-          entityType="location"
-          entityId={workflowLocation.id}
-          entityName={workflowLocation.name}
-          onClose={() => {
-            setShowWorkflowModal(false);
-            setWorkflowLocation(null);
-          }}
-          onSuccess={() => {
-            window.location.reload();
-          }}
-        />
       )}
     </div>
   );

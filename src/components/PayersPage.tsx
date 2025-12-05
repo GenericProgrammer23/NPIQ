@@ -35,12 +35,9 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
     description: '',
     status: 'active' as const,
     application_fields: {},
-    requires_demographics: false,
-    dependent_on_payer_ids: [] as string[],
     days_to_approve: 30,
     days_to_load: 60,
     required_documents: [] as string[],
-    required_provider_fields: [] as string[],
     priority_base: 100,
     is_always_required: false
   });
@@ -222,12 +219,9 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
       description: payer.description || '',
       status: payer.status,
       application_fields: payer.application_fields || {},
-      requires_demographics: payer.requires_demographics || false,
-      dependent_on_payer_ids: payer.dependent_on_payer_ids || [],
       days_to_approve: payer.days_to_approve || 30,
       days_to_load: payer.days_to_load || 60,
       required_documents: payer.required_documents || [],
-      required_provider_fields: payer.required_provider_fields || [],
       priority_base: payer.priority_base || 100,
       is_always_required: payer.is_always_required || false
     });
@@ -242,12 +236,9 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
       description: '',
       status: 'active',
       application_fields: {},
-      requires_demographics: false,
-      dependent_on_payer_ids: [],
       days_to_approve: 30,
       days_to_load: 60,
       required_documents: [],
-      required_provider_fields: [],
       priority_base: 100,
       is_always_required: false
     });
@@ -641,52 +632,6 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-2">
-                  Required Provider Fields
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['email', 'phone', 'specialty', 'license_number'].map(field => (
-                    <label key={field} className="flex items-center gap-2 p-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg cursor-pointer hover:bg-navy/5 dark:hover:bg-dark-cyan/10">
-                      <input
-                        type="checkbox"
-                        checked={formData.required_provider_fields.includes(field)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData({ ...formData, required_provider_fields: [...formData.required_provider_fields, field] });
-                          } else {
-                            setFormData({ ...formData, required_provider_fields: formData.required_provider_fields.filter(f => f !== field) });
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <span className="text-sm text-navy dark:text-cream capitalize">{field.replace('_', ' ')}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-2">
-                  Dependent Payers
-                </label>
-                <select
-                  multiple
-                  value={formData.dependent_on_payer_ids}
-                  onChange={(e) => {
-                    const selected = Array.from(e.target.selectedOptions, option => option.value);
-                    setFormData({ ...formData, dependent_on_payer_ids: selected });
-                  }}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
-                  size={4}
-                >
-                  {payers.filter(p => !editingPayer || p.id !== editingPayer.id).map(payer => (
-                    <option key={payer.id} value={payer.id}>{payer.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-navy/60 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple. These payers must be approved first.</p>
-              </div>
-
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -812,44 +757,6 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
                   className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
                   rows={3}
                 />
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="requiresDemographics"
-                  checked={formData.requires_demographics}
-                  onChange={(e) => setFormData({ ...formData, requires_demographics: e.target.checked })}
-                  className="mr-2 h-4 w-4 text-dark-cyan focus:ring-dark-cyan border-navy/20 dark:border-dark-cyan/30 rounded"
-                />
-                <label htmlFor="requiresDemographics" className="text-sm text-navy dark:text-gray-300">
-                  Requires demographic information
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-navy dark:text-gray-300 mb-1">
-                  Dependent on Other Applications
-                </label>
-                <select
-                  multiple
-                  value={formData.dependent_on_payer_ids}
-                  onChange={(e) => {
-                    const selected = Array.from(e.target.selectedOptions, option => option.value);
-                    setFormData({ ...formData, dependent_on_payer_ids: selected });
-                  }}
-                  className="w-full px-3 py-2 border border-navy/20 dark:border-dark-cyan/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-dark-cyan dark:bg-navy-dark dark:text-white"
-                  size={4}
-                >
-                  {payers.filter(p => p.id !== editingPayer?.id).map(payer => (
-                    <option key={payer.id} value={payer.id}>
-                      {payer.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-navy/60 dark:text-gray-400 mt-1">
-                  Hold Ctrl/Cmd to select multiple. Applications for this payer will be blocked until selected payers are approved.
-                </p>
               </div>
 
               <div className="flex gap-3 pt-4">
