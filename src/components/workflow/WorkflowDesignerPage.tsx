@@ -31,6 +31,7 @@ interface BreadcrumbItem {
 interface WorkflowDesignerPageProps {
   payerId?: string;
   subflowId?: string;
+  actionCategory?: 'credentialing' | 'change' | 'renewal' | 'custom';
   mode?: 'view' | 'edit';
   editMode?: 'payer' | 'subflow';
   onBack?: () => void;
@@ -40,6 +41,7 @@ interface WorkflowDesignerPageProps {
 export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
   payerId: initialPayerId,
   subflowId: initialSubflowId,
+  actionCategory: initialActionCategory = 'credentialing',
   mode: initialMode = 'edit',
   editMode: initialEditMode = 'payer',
   onBack,
@@ -47,6 +49,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
 }) => {
   const [payerId, setPayerId] = useState(initialPayerId);
   const [subflowId, setSubflowId] = useState(initialSubflowId);
+  const [actionCategory, setActionCategory] = useState(initialActionCategory);
   const [editMode, setEditMode] = useState(initialEditMode);
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
 
@@ -113,7 +116,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
     if (!payerId) return;
 
     try {
-      const workflow = await WorkflowDatabaseService.getActiveWorkflowForPayer(payerId);
+      const workflow = await WorkflowDatabaseService.getActiveWorkflowForPayer(payerId, actionCategory);
 
       if (workflow && workflow.workflow_data) {
         setNodes(workflow.workflow_data.nodes || []);
@@ -127,7 +130,8 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
         }, 0);
         nodeIdCounter.current = maxId + 1;
       } else {
-        setWorkflowName(`${payerName} Workflow`);
+        const categoryLabel = actionCategory.charAt(0).toUpperCase() + actionCategory.slice(1);
+        setWorkflowName(`${payerName} - ${categoryLabel} Workflow`);
         setNodes([]);
         setEdges([]);
       }
@@ -433,13 +437,24 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
         if (error) throw error;
         alert('Subflow saved successfully!');
       } else if (editMode === 'payer' && payerId) {
-        const { DatabaseService } = await import('../../lib/supabase');
-        const organizationId = 'default-org';
+        const { DatabaseService, supabase } = await import('../../lib/supabase');
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .single();
+
+        const organizationId = orgMember?.organization_id || 'default-org';
 
         if (workflowId) {
           await WorkflowDatabaseService.updateWorkflowDefinition(workflowId, {
             workflow_data: workflowData,
             name: workflowName,
+            action_category: actionCategory,
             updated_at: new Date().toISOString()
           });
         } else {
@@ -448,6 +463,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
             organization_id: organizationId,
             name: workflowName || `${payerName} Workflow`,
             workflow_data: workflowData,
+            action_category: actionCategory,
             version: 1,
             effective_from_date: new Date().toISOString().split('T')[0],
             is_active: true

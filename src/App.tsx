@@ -12,6 +12,7 @@ import { ActionTemplatesPage } from './components/ActionTemplatesPage';
 import { AdminSettingsPage } from './components/AdminSettingsPage';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowEngine } from './components/WorkflowEngine';
+import { WorkflowDesignerPage } from './components/workflow/WorkflowDesignerPage';
 import { DatabaseService, supabase } from './lib/supabase';
 import Diagnostics from './components/Diagnostics';
 import { DarkModeToggle } from './components/DarkModeToggle';
@@ -60,6 +61,15 @@ function App() {
         return <LocationsPage initialFilter={pageFilter} />;
       case 'payers':
         return <PayersPage initialFilter={pageFilter} onNavigate={handlePageChange} />;
+      case 'workflow-designer':
+        return (
+          <WorkflowDesignerPage
+            payerId={pageFilter?.payerId}
+            actionCategory={pageFilter?.actionCategory || 'credentialing'}
+            mode={pageFilter?.mode || 'edit'}
+            onBack={() => handlePageChange('payers')}
+          />
+        );
       case 'tasks':
         return <TasksPage initialFilter={pageFilter} />;
       case 'admin':

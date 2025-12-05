@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Copy, Save, X, Layers, FileText, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy, Save, X, Layers, AlertCircle, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { ActionTemplateService, ActionTemplate } from '../services/ActionTemplateService';
 
-interface ActionTemplatesPageProps {
-  organizationId: string;
+interface ActionTemplate {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  category: 'credentialing' | 'change' | 'renewal' | 'custom';
+  applies_to_payer_ids: string[];
+  required_documents: string[];
+  required_fields: string[];
+  task_templates: any[];
+  is_system_template: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Payer {
   id: string;
   name: string;
+}
+
+interface ActionTemplatesPageProps {
+  organizationId: string;
 }
 
 export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organizationId }) => {
@@ -18,7 +32,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
   const [loading, setLoading] = useState(true);
   const [editingTemplate, setEditingTemplate] = useState<Partial<ActionTemplate> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedPayerId, setSelectedPayerId] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
     loadData();
@@ -45,7 +59,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
       .from('action_templates')
       .select('*')
       .eq('organization_id', organizationId)
-      .order('action_type');
+      .order('name');
 
     if (error) {
       console.error('Error loading templates:', error);
@@ -73,14 +87,14 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
   const handleCreateTemplate = () => {
     setEditingTemplate({
       organization_id: organizationId,
-      action_type: 'custom',
-      action_name: '',
+      name: '',
       description: '',
-      payer_id: null,
-      task_definitions: [],
-      estimated_duration_days: 30,
+      category: 'credentialing',
+      applies_to_payer_ids: [],
       required_documents: [],
-      is_active: true
+      required_fields: [],
+      task_templates: [],
+      is_system_template: false
     });
     setIsCreating(true);
   };
@@ -93,7 +107,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
   const handleSaveTemplate = async () => {
     if (!editingTemplate) return;
 
-    if (!editingTemplate.action_name || !editingTemplate.action_type) {
+    if (!editingTemplate.name || !editingTemplate.category) {
       alert('Please fill in all required fields');
       return;
     }
@@ -144,10 +158,11 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
   const handleDuplicateTemplate = async (template: ActionTemplate) => {
     const duplicate = {
       ...template,
-      action_name: `${template.action_name} (Copy)`,
+      name: `${template.name} (Copy)`,
       id: undefined,
       created_at: undefined,
-      updated_at: undefined
+      updated_at: undefined,
+      is_system_template: false
     };
 
     try {
@@ -164,24 +179,21 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
     }
   };
 
-  const getPayerName = (payerId: string | null) => {
-    if (!payerId) return 'All Payers';
-    return payers.find(p => p.id === payerId)?.name || 'Unknown Payer';
+  const getPayerNames = (payerIds: string[]) => {
+    if (!payerIds || payerIds.length === 0) return 'All Payers';
+    return payerIds.map(id => payers.find(p => p.id === id)?.name || 'Unknown').join(', ');
   };
 
   const filteredTemplates = templates.filter(template => {
-    if (selectedPayerId === 'all') return true;
-    if (selectedPayerId === 'global') return template.payer_id === null;
-    return template.payer_id === selectedPayerId;
+    if (selectedCategory === 'all') return true;
+    return template.category === selectedCategory;
   });
 
-  const actionTypeOptions = [
-    { value: 'initial_credentialing', label: 'Initial Credentialing' },
-    { value: 'name_change', label: 'Name Change' },
-    { value: 'address_change', label: 'Address Change' },
-    { value: 're_credentialing', label: 'Re-credentialing' },
-    { value: 'add_single_payer', label: 'Add Single Payer' },
-    { value: 'custom', label: 'Custom Action' }
+  const categoryOptions = [
+    { value: 'credentialing', label: 'Credentialing' },
+    { value: 'change', label: 'Change' },
+    { value: 'renewal', label: 'Renewal' },
+    { value: 'custom', label: 'Custom' }
   ];
 
   if (loading) {
@@ -198,7 +210,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
         <div>
           <h1 className="text-3xl font-bold text-navy dark:text-white mb-2">Action Templates</h1>
           <p className="text-navy/70 dark:text-gray-400">
-            Configure what happens when you start different types of actions
+            Configure action types and their workflows for different payers
           </p>
         </div>
         <button
@@ -212,16 +224,15 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
 
       <div className="bg-white dark:bg-navy-dark rounded-lg shadow-sm border border-navy/10 dark:border-dark-cyan/30 p-4 mb-6">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Payer:</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Category:</label>
           <select
-            value={selectedPayerId}
-            onChange={(e) => setSelectedPayerId(e.target.value)}
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All Templates</option>
-            <option value="global">Global Templates</option>
-            {payers.map(payer => (
-              <option key={payer.id} value={payer.id}>{payer.name}</option>
+            <option value="all">All Categories</option>
+            {categoryOptions.map(cat => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
           </select>
           <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -251,27 +262,12 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Action Type *
-                </label>
-                <select
-                  value={editingTemplate.action_type}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, action_type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {actionTypeOptions.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Action Name *
+                  Template Name *
                 </label>
                 <input
                   type="text"
-                  value={editingTemplate.action_name}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, action_name: e.target.value })}
+                  value={editingTemplate.name}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Initial Credentialing - Standard"
                 />
@@ -282,7 +278,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
                   Description
                 </label>
                 <textarea
-                  value={editingTemplate.description || ''}
+                  value={editingTemplate.description}
                   onChange={(e) => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
@@ -292,59 +288,48 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Payer (Optional)
+                  Category *
                 </label>
                 <select
-                  value={editingTemplate.payer_id || ''}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, payer_id: e.target.value || null })}
+                  value={editingTemplate.category}
+                  onChange={(e) => setEditingTemplate({ ...editingTemplate, category: e.target.value as any })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Global (All Payers)</option>
+                  {categoryOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Applies to Payers (Optional)
+                </label>
+                <select
+                  multiple
+                  value={editingTemplate.applies_to_payer_ids || []}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setEditingTemplate({ ...editingTemplate, applies_to_payer_ids: selected });
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  size={5}
+                >
                   {payers.map(payer => (
                     <option key={payer.id} value={payer.id}>{payer.name}</option>
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Leave empty to make this template available for all payers
+                  Leave empty to make this template available for all payers. Hold Ctrl/Cmd to select multiple.
                 </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Estimated Duration (Days)
-                </label>
-                <input
-                  type="number"
-                  value={editingTemplate.estimated_duration_days}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, estimated_duration_days: parseInt(e.target.value) || 30 })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-cyan/30 rounded-lg bg-white dark:bg-navy text-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={editingTemplate.is_active}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, is_active: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Active (available for use)
-                </label>
               </div>
 
               <div className="bg-blue-50 dark:bg-navy-light p-4 rounded-lg">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-900 dark:text-blue-200">
-                    <p className="font-semibold mb-1">What happens when you save:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>This template becomes available when starting a new action</li>
-                      <li>Tasks will be automatically generated based on the payer's workflow configuration</li>
-                      <li>You can configure payer-specific workflows in the Payers page</li>
-                    </ul>
+                    <p className="font-semibold mb-1">Setting up workflows:</p>
+                    <p>After creating this template, configure the specific workflow for each payer by going to the <strong>Payers</strong> page and clicking <strong>Configure Workflow</strong> for the desired action type.</p>
                   </div>
                 </div>
               </div>
@@ -400,11 +385,11 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
-                      {template.action_name}
+                      {template.name}
                     </h3>
-                    {!template.is_active && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                        Inactive
+                    {template.is_system_template && (
+                      <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                        System
                       </span>
                     )}
                   </div>
@@ -415,13 +400,10 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
                   )}
                   <div className="flex items-center gap-4 text-sm">
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
-                      {actionTypeOptions.find(o => o.value === template.action_type)?.label}
+                      {categoryOptions.find(o => o.value === template.category)?.label}
                     </span>
                     <span className="text-gray-600 dark:text-gray-400">
-                      {getPayerName(template.payer_id)}
-                    </span>
-                    <span className="text-gray-600 dark:text-gray-400">
-                      ~{template.estimated_duration_days} days
+                      {getPayerNames(template.applies_to_payer_ids)}
                     </span>
                   </div>
                 </div>
@@ -440,13 +422,15 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
                   >
                     <Copy className="w-5 h-5" />
                   </button>
-                  <button
-                    onClick={() => handleDeleteTemplate(template.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-navy-light rounded-lg transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  {!template.is_system_template && (
+                    <button
+                      onClick={() => handleDeleteTemplate(template.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-navy-light rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

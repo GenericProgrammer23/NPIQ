@@ -33,15 +33,20 @@ export class WorkflowDatabaseService {
     return data;
   }
 
-  static async getActiveWorkflowForPayer(payerId: string): Promise<WorkflowDefinition | null> {
+  static async getActiveWorkflowForPayer(payerId: string, actionCategory?: string): Promise<WorkflowDefinition | null> {
     if (!supabase) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('workflow_definitions')
       .select('*')
       .eq('payer_id', payerId)
-      .eq('is_active', true)
-      .maybeSingle();
+      .eq('is_active', true);
+
+    if (actionCategory) {
+      query = query.eq('action_category', actionCategory);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw error;
     return data;
