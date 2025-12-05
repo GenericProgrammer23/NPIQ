@@ -61,6 +61,49 @@ export const formatters = {
     return value;
   },
 
+  // Format date to MM/DD/YYYY
+  date: (value: string): string => {
+    if (!value) return '';
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length === 8) {
+      return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+    }
+    return value;
+  },
+
+  // Format date to MM/YYYY (for education dates)
+  monthYear: (value: string): string => {
+    if (!value) return '';
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length >= 6) {
+      return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 6)}`;
+    }
+    return value;
+  },
+
+  // Format SSN as XXX-XX-XXXX
+  ssn: (value: string): string => {
+    if (!value) return '';
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length === 9) {
+      return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 5)}-${cleaned.slice(5)}`;
+    }
+    return value;
+  },
+
+  // Format zip code as XXXXX or XXXXX-XXXX
+  zipCode: (value: string): string => {
+    if (!value) return '';
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length === 5) {
+      return cleaned;
+    }
+    if (cleaned.length === 9) {
+      return `${cleaned.slice(0, 5)}-${cleaned.slice(5)}`;
+    }
+    return value;
+  },
+
   // Convert database field name to human-readable display name
   fieldName: (fieldName: string): string => {
     // Check if we have a specific mapping
@@ -97,6 +140,41 @@ export const validators = {
     if (!value) return true; // Optional field
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(value);
+  },
+
+  // Validate SSN (9 digits)
+  ssn: (value: string): boolean => {
+    if (!value) return true; // Optional field
+    const cleaned = value.replace(/\D/g, '');
+    return cleaned.length === 9;
+  },
+
+  // Validate date MM/DD/YYYY
+  date: (value: string): boolean => {
+    if (!value) return true; // Optional field
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length !== 8) return false;
+    const month = parseInt(cleaned.slice(0, 2));
+    const day = parseInt(cleaned.slice(2, 4));
+    const year = parseInt(cleaned.slice(4, 8));
+    return month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= 2100;
+  },
+
+  // Validate month/year MM/YYYY
+  monthYear: (value: string): boolean => {
+    if (!value) return true; // Optional field
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length !== 6) return false;
+    const month = parseInt(cleaned.slice(0, 2));
+    const year = parseInt(cleaned.slice(2, 6));
+    return month >= 1 && month <= 12 && year >= 1900 && year <= 2100;
+  },
+
+  // Validate zip code (5 or 9 digits)
+  zipCode: (value: string): boolean => {
+    if (!value) return true; // Optional field
+    const cleaned = value.replace(/\D/g, '');
+    return cleaned.length === 5 || cleaned.length === 9;
   },
 
   // Validate required field

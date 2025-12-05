@@ -8,6 +8,7 @@ import { DocumentUpload } from './DocumentUpload';
 import { DocumentList } from './DocumentList';
 import { ProviderActionsTab } from './ProviderActionsTab';
 import { StartActionModalNew } from './StartActionModalNew';
+import { DocumentStatusIndicator } from './DocumentStatusIndicator';
 
 interface ProviderDetailModalProps {
   provider: Provider;
@@ -174,11 +175,15 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-navy-light rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-navy/10 dark:border-dark-cyan/30">
-          <div>
-            <h2 className="text-2xl font-bold text-navy dark:text-white">
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-navy dark:text-white mb-2">
               {provider.first_name} {provider.last_name}
             </h2>
-            <p className="text-navy/60 dark:text-gray-400">{provider.specialty || 'No specialty'}</p>
+            <p className="text-navy/60 dark:text-gray-400 mb-3">{provider.specialty || 'No specialty'}</p>
+            <DocumentStatusIndicator
+              providerId={provider.id}
+              organizationId={provider.organization_id}
+            />
           </div>
           <div className="flex items-center gap-2">
             {!isEditingProvider ? (
