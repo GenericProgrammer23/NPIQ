@@ -15,6 +15,7 @@ import {
   DependencyCheckConfig
 } from '../../types/workflow';
 import { supabase } from '../../lib/supabase';
+import { formatters } from '../../utils/formatters';
 
 interface NodeConfigPanelProps {
   selectedNode: Node | null;
@@ -167,7 +168,7 @@ const PrerequisiteCheckForm: React.FC<{ config: any; updateConfig: (u: any) => v
                 }}
                 className="rounded border-gray-300"
               />
-              <span className="text-sm text-gray-700">{field}</span>
+              <span className="text-sm text-gray-700">{formatters.fieldName(field)}</span>
             </label>
           ))}
         </div>
@@ -1403,7 +1404,7 @@ const WaitForProfileFieldForm: React.FC<{ config: any; updateConfig: (u: any) =>
             return (
               <div key={index} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded">
                 <code className="text-sm flex-1">
-                  {fieldInfo ? `${fieldInfo.label} (${field})` : field}
+                  {fieldInfo ? `${fieldInfo.label} (${field})` : formatters.fieldName(field)}
                 </code>
                 <button
                   onClick={() => removeField(index)}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import * as Icons from 'lucide-react';
 import { WorkflowNodeType } from '../../types/workflow';
+import { formatters } from '../../utils/formatters';
 
 interface BaseWorkflowNodeProps extends NodeProps {
   icon: keyof typeof Icons;
@@ -82,11 +83,15 @@ export const BaseWorkflowNode: React.FC<BaseWorkflowNodeProps> = ({
 function getConfigSummary(config: any): string {
   switch (config.type) {
     case 'prerequisite_check':
-      return `Check ${config.required_fields?.length || 0} fields`;
+      const fieldCount = config.required_fields?.length || 0;
+      if (fieldCount > 0 && fieldCount <= 2) {
+        return `Check: ${config.required_fields.map((f: string) => formatters.fieldName(f)).join(', ')}`;
+      }
+      return `Check ${fieldCount} field${fieldCount !== 1 ? 's' : ''}`;
     case 'generate_task':
       return config.task_title || 'New task';
     case 'wait_for_date':
-      return `Wait for ${config.date_field || 'date'}`;
+      return `Wait for ${formatters.fieldName(config.date_field || 'date')}`;
     case 'dependency_check':
       const depType = config.dependency_type || 'payer';
       const count = config[`required_${depType === 'payer' ? 'payers' : depType === 'subflow' ? 'subflows' : depType === 'workflow_template' ? 'workflow_templates' : 'task_titles'}`]?.length || 0;
@@ -94,7 +99,7 @@ function getConfigSummary(config: any): string {
     case 'auto_complete_task':
       return config.task_title_pattern || 'Auto-complete';
     case 'update_provider_field':
-      return `Update ${config.field_name || 'field'}`;
+      return `Update ${formatters.fieldName(config.field_name || 'field')}`;
     case 'execute_subflow':
       return config.subflow_name || 'Execute subflow';
     case 'check_subflow_status':
