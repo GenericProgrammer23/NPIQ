@@ -78,12 +78,17 @@ export const AdminSettingsPage: React.FC = () => {
         showMessage('Storage bucket created successfully! Document uploads are now enabled.', 'success');
         setStorageStatus('ready');
       } else {
-        showMessage(result.error || 'Failed to setup storage', 'error');
+        if ((result as any).requiresManualSetup) {
+          showMessage('Please create the storage bucket manually in Supabase Dashboard. See instructions below.', 'error');
+        } else {
+          showMessage(result.error || 'Failed to setup storage', 'error');
+        }
       }
     } catch (err) {
       showMessage('Failed to setup storage bucket', 'error');
     } finally {
       setSettingUpStorage(false);
+      await checkStorageStatus();
     }
   };
 
@@ -477,15 +482,30 @@ export const AdminSettingsPage: React.FC = () => {
                 {storageStatus === 'unknown' && 'Checking storage configuration...'}
               </p>
               {storageStatus === 'not_ready' && (
-                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <p className="text-sm text-blue-800 dark:text-blue-400">
-                    Click the button to create the storage bucket. This will:
+                <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-900 dark:text-yellow-200 font-semibold mb-2">
+                    Manual Setup Required
                   </p>
-                  <ul className="text-sm text-blue-800 dark:text-blue-400 list-disc list-inside mt-2 space-y-1">
-                    <li>Create a private storage bucket for provider documents</li>
-                    <li>Configure file size limits (10MB max)</li>
-                    <li>Set allowed file types (PDF, DOC, DOCX, JPG, PNG)</li>
-                  </ul>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-3">
+                    Create the storage bucket in your Supabase Dashboard:
+                  </p>
+                  <ol className="text-sm text-yellow-800 dark:text-yellow-300 list-decimal list-inside space-y-2">
+                    <li>Go to your Supabase project dashboard</li>
+                    <li>Navigate to <strong>Storage</strong> in the left sidebar</li>
+                    <li>Click <strong>Create a new bucket</strong></li>
+                    <li>Name: <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">provider-documents</code></li>
+                    <li>Set as <strong>Private</strong> (not public)</li>
+                    <li>File size limit: <strong>10 MB</strong></li>
+                    <li>Allowed MIME types: PDF, DOC, DOCX, JPG, PNG</li>
+                    <li>Click <strong>Create bucket</strong></li>
+                    <li>Return here and refresh to verify</li>
+                  </ol>
+                  <button
+                    onClick={checkStorageStatus}
+                    className="mt-3 px-3 py-1.5 bg-yellow-200 dark:bg-yellow-900/60 text-yellow-900 dark:text-yellow-200 rounded text-sm font-medium hover:bg-yellow-300 dark:hover:bg-yellow-900/80"
+                  >
+                    Check Status Again
+                  </button>
                 </div>
               )}
             </div>

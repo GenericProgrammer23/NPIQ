@@ -2,6 +2,13 @@ import { supabase } from './supabase';
 
 export async function setupDocumentStorage() {
   try {
+    // First ensure user is in org_members
+    const { error: orgMemberError } = await supabase.rpc('ensure_user_in_org_members');
+
+    if (orgMemberError) {
+      console.error('Error ensuring user in org_members:', orgMemberError);
+    }
+
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
 
     if (listError) {
@@ -16,26 +23,13 @@ export async function setupDocumentStorage() {
       return { success: true, message: 'Bucket already exists' };
     }
 
-    const { data, error } = await supabase.storage.createBucket('provider-documents', {
-      public: false,
-      fileSizeLimit: 10485760,
-      allowedMimeTypes: [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'image/jpeg',
-        'image/png',
-        'image/jpg'
-      ]
-    });
-
-    if (error) {
-      console.error('Error creating bucket:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log('Successfully created storage bucket "provider-documents"');
-    return { success: true, message: 'Bucket created successfully' };
+    // Storage bucket creation requires admin/service role permissions
+    // Return instructions instead
+    return {
+      success: false,
+      error: 'Storage bucket must be created manually. Please follow the instructions in the admin panel.',
+      requiresManualSetup: true
+    };
   } catch (error: any) {
     console.error('Unexpected error:', error);
     return { success: false, error: error.message };

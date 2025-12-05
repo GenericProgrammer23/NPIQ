@@ -22,7 +22,7 @@ export const GuidePage: React.FC = () => {
         </h2>
       </button>
       {expandedSections[id] && (
-        <div className="p-6 pt-0 prose prose-sm max-w-none prose-headings:text-navy dark:prose-headings:text-white prose-p:text-navy/80 dark:prose-p:text-white/90 prose-li:text-navy/80 dark:prose-li:text-white/90 prose-strong:text-navy dark:prose-strong:text-white">
+        <div className="p-6 pt-0 [&_*]:text-navy/80 [&_*]:dark:text-white/90 [&_h3]:text-navy [&_h3]:dark:text-white [&_strong]:text-navy [&_strong]:dark:text-white [&_.text-blue-700]:dark:!text-blue-300 [&_.text-blue-800]:dark:!text-blue-200 [&_.text-navy\\/70]:dark:!text-cream/80">
           {children}
         </div>
       )}
