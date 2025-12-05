@@ -9,11 +9,12 @@ import { PayersPage } from './components/PayersPage';
 import { WorkflowsPage } from './components/WorkflowsPage';
 import { SubflowsPage } from './components/SubflowsPage';
 import { TasksPage } from './components/TasksPage';
+import { ActionsPage } from './components/ActionsPage';
 import { AdminSettingsPage } from './components/AdminSettingsPage';
 import { Sidebar } from './components/Sidebar';
 import { WorkflowEngine } from './components/WorkflowEngine';
 import { WorkflowDesignerPage } from './components/workflow/WorkflowDesignerPage';
-import { DatabaseService } from './lib/supabase';
+import { DatabaseService, supabase } from './lib/supabase';
 import Diagnostics from './components/Diagnostics';
 import { DarkModeToggle } from './components/DarkModeToggle';
 import { useProviders } from './hooks/useDatabase';
@@ -22,7 +23,25 @@ function App() {
   const [currentPage, setCurrentPage] = React.useState('dashboard');
   const [pageFilter, setPageFilter] = React.useState<any>(null);
   const [isOnline] = React.useState(DatabaseService.isConfigured());
+  const [organizationId, setOrganizationId] = React.useState<string>('');
   const { providers } = useProviders();
+
+  React.useEffect(() => {
+    const loadOrganizationId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('org_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .single();
+        if (data) {
+          setOrganizationId(data.organization_id);
+        }
+      }
+    };
+    loadOrganizationId();
+  }, []);
 
   const handlePageChange = (page: string, filter?: any) => {
     setCurrentPage(page);
@@ -35,6 +54,8 @@ function App() {
         return <GuidePage />;
       case 'providers':
         return <ProvidersPage initialFilter={pageFilter} />;
+      case 'actions':
+        return <ActionsPage organizationId={organizationId} />;
       case 'locations':
         return <LocationsPage initialFilter={pageFilter} />;
       case 'payers':
