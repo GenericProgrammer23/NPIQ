@@ -45,7 +45,23 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
     license_number: provider.license_number || '',
     license_expiry: provider.license_expiry || '',
     location_id: provider.location_id || '',
-    status: provider.status
+    status: provider.status,
+    caqh_id: (provider as any).caqh_id || '',
+    npi: (provider as any).npi || '',
+    ahcccs_number: (provider as any).ahcccs_number || '',
+    ahcccs_application_number: (provider as any).ahcccs_application_number || '',
+    medicare_ptan: (provider as any).medicare_ptan || '',
+    undergrad_school: (provider as any).undergrad_school || '',
+    undergrad_start_date: (provider as any).undergrad_start_date || '',
+    undergrad_end_date: (provider as any).undergrad_end_date || '',
+    undergrad_degree: (provider as any).undergrad_degree || '',
+    postgrad_school: (provider as any).postgrad_school || '',
+    postgrad_start_date: (provider as any).postgrad_start_date || '',
+    postgrad_end_date: (provider as any).postgrad_end_date || '',
+    postgrad_degree: (provider as any).postgrad_degree || '',
+    gender: (provider as any).gender || '',
+    provider_start_date: (provider as any).provider_start_date || '',
+    ssn: (provider as any).ssn || ''
   });
   const [savingProvider, setSavingProvider] = useState(false);
   const [documentRefresh, setDocumentRefresh] = useState(0);
@@ -166,7 +182,23 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
       license_number: provider.license_number || '',
       license_expiry: provider.license_expiry || '',
       location_id: provider.location_id || '',
-      status: provider.status
+      status: provider.status,
+      caqh_id: (provider as any).caqh_id || '',
+      npi: (provider as any).npi || '',
+      ahcccs_number: (provider as any).ahcccs_number || '',
+      ahcccs_application_number: (provider as any).ahcccs_application_number || '',
+      medicare_ptan: (provider as any).medicare_ptan || '',
+      undergrad_school: (provider as any).undergrad_school || '',
+      undergrad_start_date: (provider as any).undergrad_start_date || '',
+      undergrad_end_date: (provider as any).undergrad_end_date || '',
+      undergrad_degree: (provider as any).undergrad_degree || '',
+      postgrad_school: (provider as any).postgrad_school || '',
+      postgrad_start_date: (provider as any).postgrad_start_date || '',
+      postgrad_end_date: (provider as any).postgrad_end_date || '',
+      postgrad_degree: (provider as any).postgrad_degree || '',
+      gender: (provider as any).gender || '',
+      provider_start_date: (provider as any).provider_start_date || '',
+      ssn: (provider as any).ssn || ''
     });
     setIsEditingProvider(false);
   };
@@ -355,6 +387,102 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
               ) : (
                 <p className="text-navy dark:text-white capitalize">{provider.status}</p>
               )}
+            </div>
+          </div>
+
+          <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+            <h3 className="text-xl font-semibold text-navy dark:text-white mb-4">Credentialing Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">CAQH ID</label>
+                <p className="text-navy dark:text-white">{(provider as any).caqh_id || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">NPI</label>
+                <p className="text-navy dark:text-white">{(provider as any).npi || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">AHCCCS Number</label>
+                <p className="text-navy dark:text-white">{(provider as any).ahcccs_number || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">AHCCCS Application Number</label>
+                <p className="text-navy dark:text-white">{(provider as any).ahcccs_application_number || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Medicare PTAN</label>
+                <p className="text-navy dark:text-white">{(provider as any).medicare_ptan || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+            <h3 className="text-xl font-semibold text-navy dark:text-white mb-4">Education</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold text-navy dark:text-white mb-2">Undergraduate</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">School</label>
+                    <p className="text-navy dark:text-white">{(provider as any).undergrad_school || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Degree</label>
+                    <p className="text-navy dark:text-white">{(provider as any).undergrad_degree || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Start Date</label>
+                    <p className="text-navy dark:text-white">{(provider as any).undergrad_start_date || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">End Date</label>
+                    <p className="text-navy dark:text-white">{(provider as any).undergrad_end_date || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-navy dark:text-white mb-2">Postgraduate</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">School</label>
+                    <p className="text-navy dark:text-white">{(provider as any).postgrad_school || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Degree</label>
+                    <p className="text-navy dark:text-white">{(provider as any).postgrad_degree || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Start Date</label>
+                    <p className="text-navy dark:text-white">{(provider as any).postgrad_start_date || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-navy/70 dark:text-gray-400">End Date</label>
+                    <p className="text-navy dark:text-white">{(provider as any).postgrad_end_date || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-navy/10 dark:border-dark-cyan/30 pt-6 mt-6">
+            <h3 className="text-xl font-semibold text-navy dark:text-white mb-4">Demographics & Other Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Gender</label>
+                <p className="text-navy dark:text-white">{(provider as any).gender || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">Provider Start Date</label>
+                <p className="text-navy dark:text-white">
+                  {(provider as any).provider_start_date
+                    ? new Date((provider as any).provider_start_date).toLocaleDateString()
+                    : 'N/A'}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-navy/70 dark:text-gray-400">SSN</label>
+                <p className="text-navy dark:text-white">{(provider as any).ssn ? '•••-••-' + (provider as any).ssn.slice(-4) : 'N/A'}</p>
+              </div>
             </div>
           </div>
 
