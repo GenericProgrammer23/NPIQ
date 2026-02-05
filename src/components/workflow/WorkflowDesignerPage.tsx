@@ -86,8 +86,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
       const { DatabaseService } = await import('../../lib/supabase');
       const allPayers = await DatabaseService.getPayers();
       setPayers(allPayers);
-    } catch (error) {
-      console.error('Error loading payers:', error);
+    } catch {
     }
   };
 
@@ -99,8 +98,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
       if (payer) {
         setPayerName(payer.name);
       }
-    } catch (error) {
-      console.error('Error loading payer:', error);
+    } catch {
     }
   };
 
@@ -137,8 +135,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
       }
 
       updateBreadcrumbs();
-    } catch (error) {
-      console.error('Error loading workflow:', error);
+    } catch {
     }
   };
 
@@ -177,8 +174,7 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
       }
 
       updateBreadcrumbs();
-    } catch (error) {
-      console.error('Error loading subflow:', error);
+    } catch {
     }
   };
 
@@ -474,7 +470,6 @@ export const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({
         alert('Workflow saved successfully!');
       }
     } catch (error) {
-      console.error('Error saving workflow:', error);
       alert('Error saving workflow');
     } finally {
       setIsSaving(false);

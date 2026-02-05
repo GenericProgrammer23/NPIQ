@@ -50,10 +50,8 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
             'provider',
             provider.id
           );
-          console.log(`Created workflow instance for new provider: ${provider.first_name} ${provider.last_name}`);
         }
-      } catch (error) {
-        console.error('Failed to create new provider workflow instance:', error);
+      } catch {
       }
     }
   };
@@ -98,7 +96,6 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
           await DatabaseService.updateTask(existingTask.id, {
             description: newDescription
           });
-          console.log(`Updated task for provider ${provider.first_name} ${provider.last_name} with current missing fields`);
         }
         return;
       }
@@ -112,8 +109,7 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
         due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       });
 
-    } catch (error) {
-      console.error('Failed to create or update incomplete data tasks:', error);
+    } catch {
     }
   };
 
@@ -131,11 +127,9 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ providers }) => 
           completed_at: new Date().toISOString(),
           description: `${task.description}\n\nAuto-completed: All required provider information has been obtained.`
         });
-        console.log(`Auto-completed task: ${task.title} for provider ${provider.first_name} ${provider.last_name}`);
       }
 
-    } catch (error) {
-      console.error('Failed to auto-complete provider info task:', error);
+    } catch {
     }
   };
 

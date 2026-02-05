@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useProviders, useLocations, useProviderPayerApplications, usePayers } from '../hooks/useDatabase';
-import { Users, Plus, Search, Filter, CreditCard as Edit, Eye, MapPin, Mail, Phone, CheckCircle } from 'lucide-react';
-import { Provider, DatabaseService } from '../lib/supabase';
-import { supabase } from '../lib/supabase';
+import { Users, Plus, Search, Filter, Pencil, Eye, MapPin, Mail, Phone, CheckCircle } from 'lucide-react';
+import { Provider, DatabaseService, supabase } from '../lib/supabase';
 import { formatters, validators } from '../utils/formatters';
 import { ProviderDetailModal } from './ProviderDetailModal';
 import { EditProviderModalContent } from './EditProviderModalContent';
@@ -64,13 +63,11 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         .order('created_at');
 
       if (error && error.code !== 'PGRST116') { // Ignore "not found" errors
-        console.error('Failed to load custom fields:', error);
         return;
       }
 
       setCustomFields(data || []);
-    } catch (err) {
-      console.error('Failed to load custom fields:', err);
+    } catch {
     }
   };
 
@@ -122,8 +119,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         status: 'pending'
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to create provider:', err);
+    } catch {
     }
   };
 
@@ -189,8 +185,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
         status: 'pending'
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to update provider:', err);
+    } catch {
     }
   };
 
@@ -452,7 +447,7 @@ export const ProvidersPage: React.FC<ProvidersPageProps> = ({ initialFilter }) =
                       className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
                       title="Edit Provider"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Pencil className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

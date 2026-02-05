@@ -30,17 +30,14 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
       new Promise((_r, rej) => setTimeout(() => rej(new Error('Setup check timed out')), ms));
 
     try {
-      console.log('Checking setup status...');
       const hasOrgs = await Promise.race([
         (DatabaseService && typeof DatabaseService.hasUserOrganizations === 'function')
           ? DatabaseService.hasUserOrganizations()
           : Promise.resolve(true),
         timeout(10_000),
       ]);
-      console.log('Has organizations:', hasOrgs);
       setNeedsSetup(!hasOrgs as boolean);
-    } catch (err) {
-      console.error('Failed to check setup status:', err);
+    } catch {
       setNeedsSetup(true); // prefer showing setup over spinning forever
     } finally {
       setLoading(false);
@@ -53,7 +50,6 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     // global watchdog: force-exit "Initializing" after 10s no matter what
     if (initWatchdog.current == null) {
       initWatchdog.current = setTimeout(() => {
-        console.warn('Init watchdog fired – forcing UI out of initializing');
         setInitializing(false);
         setLoading(false);
       }, 10_000);
@@ -78,7 +74,6 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     // initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        console.error('Auth session error:', error);
         setAuthError(error.message);
         setUser(null);
         setLoading(false);
@@ -101,7 +96,6 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
 
     // auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('Auth state change:', _event, session?.user?.email);
       setUser(session?.user ?? null);
       setAuthError(null);
 
@@ -128,10 +122,8 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     if (!supabase) return;
     setLoading(true);
     setAuthError(null);
-    console.log('Attempting sign in for:', email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      console.error('Sign in error:', error);
       setAuthError(error.message);
       setLoading(false);
     }
@@ -141,14 +133,12 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
     if (!supabase) return;
     setLoading(true);
     setAuthError(null);
-    console.log('Attempting sign up for:', email);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: window.location.origin }
     });
     if (error) {
-      console.error('Sign up error:', error);
       setAuthError(error.message);
       setLoading(false);
     } else {
@@ -164,7 +154,6 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   };
 
   const handleSetupComplete = () => {
-    console.log('Setup completed');
     setNeedsSetup(false);
   };
 

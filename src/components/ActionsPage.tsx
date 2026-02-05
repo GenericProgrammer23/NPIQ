@@ -43,8 +43,7 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({ organizationId }) => {
       setActions(actionsData);
       setProviders(providersData);
       setPayers(payersData);
-    } catch (error) {
-      console.error('Error loading actions:', error);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -58,7 +57,6 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({ organizationId }) => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error loading actions:', error);
       return [];
     }
 
@@ -72,7 +70,6 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({ organizationId }) => {
       .eq('organization_id', organizationId);
 
     if (error) {
-      console.error('Error loading providers:', error);
       return new Map();
     }
 
@@ -88,7 +85,6 @@ export const ActionsPage: React.FC<ActionsPageProps> = ({ organizationId }) => {
       .eq('organization_id', organizationId);
 
     if (error) {
-      console.error('Error loading payers:', error);
       return new Map();
     }
 

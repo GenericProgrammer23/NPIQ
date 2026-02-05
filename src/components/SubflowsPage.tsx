@@ -45,8 +45,7 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ onNavigate }) => {
 
       if (error) throw error;
       setSubflows(data || []);
-    } catch (err) {
-      console.error('Error loading subflows:', err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -112,7 +111,6 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ onNavigate }) => {
         loadSubflows();
       }
     } catch (err) {
-      console.error('Error creating subflow:', err);
       alert('Failed to create subflow');
     }
   };
@@ -141,7 +139,6 @@ export const SubflowsPage: React.FC<SubflowsPageProps> = ({ onNavigate }) => {
       if (error) throw error;
       loadSubflows();
     } catch (err) {
-      console.error('Error deleting subflow:', err);
       alert('Failed to delete subflow');
     }
   };

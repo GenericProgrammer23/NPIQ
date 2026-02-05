@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2, CreditCard as Edit, HardDrive } from 'lucide-react';
+import { Settings, Plus, Database, AlertCircle, CheckCircle, Trash2, Pencil, HardDrive } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { setupDocumentStorage } from '../lib/setupStorage';
 
@@ -46,13 +46,11 @@ export const AdminSettingsPage: React.FC = () => {
         .order('created_at');
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Failed to load custom fields:', error);
         throw error;
       }
 
       setCustomFields(data || []);
     } catch (err) {
-      console.error('Failed to load custom fields:', err);
       setCustomFields([]);
     } finally {
       setLoading(false);
@@ -65,7 +63,6 @@ export const AdminSettingsPage: React.FC = () => {
       const bucketExists = buckets?.some(bucket => bucket.name === 'provider-documents');
       setStorageStatus(bucketExists ? 'ready' : 'not_ready');
     } catch (err) {
-      console.error('Failed to check storage status:', err);
       setStorageStatus('not_ready');
     }
   };
@@ -108,7 +105,6 @@ export const AdminSettingsPage: React.FC = () => {
             .eq('table_name', tableName);
           
           if (customError && customError.code !== 'PGRST116') {
-            console.error(`Failed to get custom fields for ${tableName}:`, customError);
             continue;
           }
           
@@ -138,14 +134,12 @@ export const AdminSettingsPage: React.FC = () => {
             } as CustomField & { is_core: boolean });
           });
         } catch (err) {
-          console.error(`Failed to load fields for ${tableName}:`, err);
           continue;
         }
       }
       
       setCustomFields(allFields);
-    } catch (err) {
-      console.error('Failed to load all table fields:', err);
+    } catch {
     }
   };
 
@@ -243,8 +237,7 @@ export const AdminSettingsPage: React.FC = () => {
             p_table_name: formData.table_name,
             p_column_name: columnName
           });
-        } catch (cleanupError) {
-          console.error('Failed to cleanup column after error:', cleanupError);
+        } catch {
         }
         throw fieldError;
       }
@@ -255,7 +248,6 @@ export const AdminSettingsPage: React.FC = () => {
       showMessage('Field added successfully! The new field will appear in forms immediately.', 'success');
 
     } catch (err) {
-      console.error('Failed to add field:', err);
       showMessage(err instanceof Error ? err.message : 'Failed to add field', 'error');
     } finally {
       setLoading(false);
@@ -309,7 +301,6 @@ export const AdminSettingsPage: React.FC = () => {
       showMessage('Field updated successfully!', 'success');
 
     } catch (err) {
-      console.error('Failed to update field:', err);
       showMessage(err instanceof Error ? err.message : 'Failed to update field', 'error');
     } finally {
       setLoading(false);
@@ -344,8 +335,6 @@ export const AdminSettingsPage: React.FC = () => {
         .eq('id', field.id);
 
       if (deleteError) {
-        // If config deletion fails, we should probably leave the column
-        console.error('Failed to delete field config, but column was removed:', deleteError);
         showMessage('Column was removed but configuration cleanup failed. Please refresh the page.', 'error');
         return;
       }
@@ -354,7 +343,6 @@ export const AdminSettingsPage: React.FC = () => {
       showMessage('Field deleted successfully! The field has been removed from all forms.', 'success');
 
     } catch (err) {
-      console.error('Failed to delete field:', err);
       showMessage(err instanceof Error ? err.message : 'Failed to delete field', 'error');
     } finally {
       setLoading(false);
@@ -604,7 +592,7 @@ export const AdminSettingsPage: React.FC = () => {
                             className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                             title="Edit Field"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </button>
                         )}
                         <button

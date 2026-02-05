@@ -33,7 +33,6 @@ export class ActionTemplateService {
       .order('name');
 
     if (error) {
-      console.error('Error fetching action templates:', error);
       throw error;
     }
 
@@ -48,7 +47,6 @@ export class ActionTemplateService {
       .single();
 
     if (error) {
-      console.error('Error fetching action template:', error);
       return null;
     }
 
@@ -65,7 +63,6 @@ export class ActionTemplateService {
       .single();
 
     if (error) {
-      console.error('Error creating action template:', error);
       throw error;
     }
 
@@ -84,7 +81,6 @@ export class ActionTemplateService {
       .single();
 
     if (error) {
-      console.error('Error updating action template:', error);
       throw error;
     }
 
@@ -98,7 +94,6 @@ export class ActionTemplateService {
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting action template:', error);
       throw error;
     }
   }

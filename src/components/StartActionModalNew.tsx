@@ -43,8 +43,7 @@ export const StartActionModalNew: React.FC<StartActionModalNewProps> = ({
     try {
       const templates = await ActionTemplateService.getActionTemplates(organizationId);
       setActionTemplates(templates);
-    } catch (err) {
-      console.error('Error loading action templates:', err);
+    } catch {
     }
   };
 
@@ -58,8 +57,7 @@ export const StartActionModalNew: React.FC<StartActionModalNewProps> = ({
 
       if (error) throw error;
       setPayers(data || []);
-    } catch (err) {
-      console.error('Error loading payers:', err);
+    } catch {
     }
   };
 
@@ -125,7 +123,6 @@ export const StartActionModalNew: React.FC<StartActionModalNewProps> = ({
       }
       onClose();
     } catch (err: any) {
-      console.error('Error starting action:', err);
       setError(err.message || 'Failed to start action');
     } finally {
       setIsStarting(false);

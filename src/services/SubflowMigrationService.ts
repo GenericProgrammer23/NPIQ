@@ -183,19 +183,15 @@ export class SubflowMigrationService {
             .eq('id', subflow.id);
 
           if (updateError) {
-            console.error(`Error migrating subflow ${subflow.id}:`, updateError);
             errors++;
           } else {
-            console.log(`Migrated subflow: ${subflow.name}`);
             migrated++;
           }
-        } catch (err) {
-          console.error(`Error processing subflow ${subflow.id}:`, err);
+        } catch {
           errors++;
         }
       }
-    } catch (err) {
-      console.error('Error fetching subflows:', err);
+    } catch {
       errors++;
     }
 
@@ -211,12 +207,10 @@ export class SubflowMigrationService {
         .single();
 
       if (error || !subflow) {
-        console.error('Error fetching subflow:', error);
         return false;
       }
 
       if (subflow.workflow_data) {
-        console.log('Subflow already has visual workflow data, skipping migration');
         return true;
       }
 
@@ -235,13 +229,11 @@ export class SubflowMigrationService {
         .eq('id', subflowId);
 
       if (updateError) {
-        console.error('Error updating subflow:', updateError);
         return false;
       }
 
       return true;
-    } catch (err) {
-      console.error('Error migrating subflow:', err);
+    } catch {
       return false;
     }
   }

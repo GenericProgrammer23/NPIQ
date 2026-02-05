@@ -115,7 +115,6 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
       setAppUpdates({});
       onUpdate();
     } catch (err) {
-      console.error('Failed to update application:', err);
       alert('Failed to update application');
     }
   };
@@ -165,7 +164,6 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
         }, 300);
       }
     } catch (err) {
-      console.error('Failed to update provider:', err);
       alert('Failed to update provider information');
     } finally {
       setSavingProvider(false);

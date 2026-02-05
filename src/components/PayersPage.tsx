@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePayers, useProviders, useProviderPayerApplications } from '../hooks/useDatabase';
-import { CreditCard, Plus, Search, CreditCard as Edit, Trash2, DollarSign, CheckCircle, XCircle, Eye, Edit3, GitBranch, ChevronDown, ChevronUp } from 'lucide-react';
+import { CreditCard, Plus, Search, Pencil, Trash2, DollarSign, CheckCircle, XCircle, Eye, Edit3, GitBranch, ChevronDown, ChevronUp } from 'lucide-react';
 import { Payer, DatabaseService, supabase } from '../lib/supabase';
 
 interface PayersPageProps {
@@ -75,8 +75,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
 
       if (error) throw error;
       setActionTemplates(data || []);
-    } catch (err) {
-      console.error('Error loading action templates:', err);
+    } catch {
     }
   };
 
@@ -119,8 +118,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
       if (bulkAssignData.addToWorkflows) {
         setShowBulkAssign(newPayer.id);
       }
-    } catch (err) {
-      console.error('Failed to create payer:', err);
+    } catch {
       alert('Failed to create payer. Please try again.');
     }
   };
@@ -135,8 +133,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
       setShowEditForm(false);
       setEditingPayer(null);
       resetForm();
-    } catch (err) {
-      console.error('Failed to update payer:', err);
+    } catch {
       alert('Failed to update payer. Please try again.');
     }
   };
@@ -148,8 +145,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
 
     try {
       await deletePayer(id);
-    } catch (err) {
-      console.error('Failed to delete payer:', err);
+    } catch {
       alert('Failed to delete payer. Please try again.');
     }
   };
@@ -204,8 +200,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
         ? `Payer assigned to ${assignedCount} provider(s)${skippedCount > 0 ? ` (${skippedCount} already assigned)` : ''}`
         : `All selected providers already have this payer assigned`;
       alert(message);
-    } catch (err) {
-      console.error('Failed to bulk assign payer:', err);
+    } catch {
       alert('Failed to assign payer to providers. Please try again.');
     }
   };
@@ -371,7 +366,7 @@ export const PayersPage: React.FC<PayersPageProps> = ({ initialFilter, onNavigat
                   className="p-2 text-dark-cyan dark:text-dark-cyan hover:bg-dark-cyan/10 dark:hover:bg-dark-cyan/20 rounded transition-colors"
                   title="Edit Payer"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(payer.id)}

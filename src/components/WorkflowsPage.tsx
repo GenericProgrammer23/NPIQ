@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useWorkflows, useProviders } from '../hooks/useDatabase';
-import { Workflow, Plus, Search, CreditCard as Edit, Eye, Play, Archive } from 'lucide-react';
+import { Workflow, Plus, Search, Pencil, Eye, Play, Archive } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { WorkflowComposer } from './WorkflowComposer';
 
@@ -56,13 +56,11 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
         .order('created_at');
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Failed to load custom fields:', error);
         return;
       }
 
       setCustomFields(data || []);
-    } catch (err) {
-      console.error('Failed to load custom fields:', err);
+    } catch {
     }
   };
 
@@ -97,8 +95,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
         steps: []
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to create workflow:', err);
+    } catch {
     }
   };
 
@@ -155,8 +152,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
         steps: []
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to update workflow:', err);
+    } catch {
     }
   };
 
@@ -402,7 +398,7 @@ export const WorkflowsPage: React.FC<WorkflowsPageProps> = ({ initialFilter }) =
                       onClick={() => handleEdit(workflow)}
                       className="p-2 text-navy/60 hover:text-navy hover:bg-navy/10 rounded-lg transition-colors"
                     >
-                      <Edit className="h-4 w-4 dark:text-cream/60 dark:hover:text-cream" />
+                      <Pencil className="h-4 w-4 dark:text-cream/60 dark:hover:text-cream" />
                     </button>
                   </div>
                 </div>

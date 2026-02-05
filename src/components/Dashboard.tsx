@@ -17,8 +17,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
     const autoAddUserToOrg = async () => {
       try {
         await supabase.rpc('auto_add_user_to_provider_org');
-      } catch (err) {
-        console.log('Could not auto-add user to org:', err);
+      } catch {
       }
     };
     autoAddUserToOrg();
@@ -39,8 +38,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
         if (!error && data) {
           setActiveActions(data);
         }
-      } catch (err) {
-        console.error('Error loading actions:', err);
+      } catch {
       } finally {
         setActionsLoading(false);
       }

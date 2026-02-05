@@ -166,9 +166,7 @@ export class PriorityCalculationService {
             computed_priority: priority,
             priority_reason: reason
           });
-        } catch (err) {
-          console.error('Failed to update task priority:', err);
-        }
+        } catch { }
       }
 
       updatedTasks.push(updatedTask);

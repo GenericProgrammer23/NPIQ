@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocations } from '../hooks/useDatabase';
-import { MapPin, Plus, Search, CreditCard as Edit, Eye, Building } from 'lucide-react';
+import { MapPin, Plus, Search, Pencil, Eye, Building } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface LocationsPageProps {
@@ -48,13 +48,11 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
         .order('created_at');
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Failed to load custom fields:', error);
         return;
       }
 
       setCustomFields(data || []);
-    } catch (err) {
-      console.error('Failed to load custom fields:', err);
+    } catch {
     }
   };
 
@@ -88,8 +86,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
         status: 'active'
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to create location:', err);
+    } catch {
     }
   };
 
@@ -143,8 +140,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
         status: 'active'
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to update location:', err);
+    } catch {
     }
   };
 
@@ -343,7 +339,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ initialFilter }) =
                       onClick={() => handleEdit(location)}
                       className="p-2 text-navy/60 dark:text-cream/60 hover:text-navy dark:hover:text-cream hover:bg-navy/10 dark:hover:bg-navy-dark/50 rounded-lg transition-colors"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Pencil className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

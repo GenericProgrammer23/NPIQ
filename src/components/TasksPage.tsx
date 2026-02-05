@@ -70,13 +70,11 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Failed to load provider actions:', error);
         return;
       }
 
       setProviderActions(data || []);
-    } catch (err) {
-      console.error('Failed to load provider actions:', err);
+    } catch {
     }
   };
 
@@ -91,13 +89,11 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         .order('created_at');
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Failed to load custom fields:', error);
         return;
       }
 
       setCustomFields(data || []);
-    } catch (err) {
-      console.error('Failed to load custom fields:', err);
+    } catch {
     }
   };
 
@@ -140,8 +136,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         assigned_to: ''
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to create task:', err);
+    } catch {
     }
   };
 
@@ -249,8 +244,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
           alert(`✓ Task completed!\n\n${result.tasksCreated} new task(s) created:\n${result.taskTitles.join('\n')}`);
         }
       }
-    } catch (err) {
-      console.error('Failed to update task:', err);
+    } catch {
     }
   };
 
@@ -317,8 +311,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         assigned_to: ''
       });
       setCustomFieldData({});
-    } catch (err) {
-      console.error('Failed to update task:', err);
+    } catch {
       alert('Failed to update task. Please try again.');
     }
   };
@@ -340,8 +333,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ initialFilter }) => {
         // Refresh tasks list
         window.location.reload();
       }
-    } catch (err) {
-      console.error('Failed to delete task:', err);
+    } catch {
       alert('Failed to delete task. Please try again.');
     }
   };

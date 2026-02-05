@@ -50,8 +50,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
       if (data) {
         setUserRole(data.role);
       }
-    } catch (error) {
-      console.error('Error loading user role:', error);
+    } catch {
     }
   };
 
@@ -66,8 +65,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
 
       if (error) throw error;
       setDocuments(data || []);
-    } catch (error) {
-      console.error('Error loading documents:', error);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -89,8 +87,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading document:', error);
+    } catch {
       alert('Failed to download document');
     }
   };
@@ -113,12 +110,10 @@ export const DocumentList: React.FC<DocumentListProps> = ({
         .remove([doc.file_path]);
 
       if (storageError) {
-        console.error('Error deleting from storage:', storageError);
       }
 
       loadDocuments();
-    } catch (error) {
-      console.error('Error deleting document:', error);
+    } catch {
       alert('Failed to delete document');
     }
   };

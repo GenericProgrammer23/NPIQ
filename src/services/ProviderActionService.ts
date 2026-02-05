@@ -37,7 +37,6 @@ export class ProviderActionService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching provider actions:', error);
       throw error;
     }
 
@@ -52,7 +51,6 @@ export class ProviderActionService {
       .single();
 
     if (error) {
-      console.error('Error fetching provider action:', error);
       return null;
     }
 
@@ -73,7 +71,6 @@ export class ProviderActionService {
       .single();
 
     if (error) {
-      console.error('Error creating provider action:', error);
       throw error;
     }
 
@@ -92,7 +89,6 @@ export class ProviderActionService {
       .single();
 
     if (error) {
-      console.error('Error updating provider action:', error);
       throw error;
     }
 
@@ -119,7 +115,6 @@ export class ProviderActionService {
       .eq('provider_action_id', actionId);
 
     if (error) {
-      console.error('Error fetching action progress:', error);
       return { total: 0, completed: 0, percentage: 0 };
     }
 

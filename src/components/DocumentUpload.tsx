@@ -68,13 +68,11 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       // Ensure user is in org_members before uploading
       const { error: orgMemberError1 } = await supabase.rpc('ensure_user_in_org_members');
       if (orgMemberError1) {
-        console.warn('ensure_user_in_org_members failed:', orgMemberError1);
       }
 
       // Also try auto_add_user_to_provider_org as fallback
       const { error: orgMemberError2 } = await supabase.rpc('auto_add_user_to_provider_org');
       if (orgMemberError2) {
-        console.warn('auto_add_user_to_provider_org failed:', orgMemberError2);
       }
 
       const fileExt = selectedFile.name.split('.').pop();
@@ -130,7 +128,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       }, 2000);
 
     } catch (error: any) {
-      console.error('Upload error:', error);
       setErrorMessage(error.message || 'Failed to upload document');
       setUploadStatus('error');
     } finally {

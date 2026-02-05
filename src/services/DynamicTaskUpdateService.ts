@@ -71,8 +71,7 @@ export class DynamicTaskUpdateService {
       });
 
       return { updated: true, autoCompleted: false, stillMissing: missingFields };
-    } catch (error) {
-      console.error('Error updating provider info task:', error);
+    } catch {
       return { updated: false, autoCompleted: false, stillMissing: [] };
     }
   }
@@ -122,8 +121,7 @@ export class DynamicTaskUpdateService {
       }
 
       return { tasksUpdated, tasksCompleted, results };
-    } catch (error) {
-      console.error('Error updating related provider info tasks:', error);
+    } catch {
       return { tasksUpdated: 0, tasksCompleted: 0, results: [] };
     }
   }
@@ -159,8 +157,7 @@ export class DynamicTaskUpdateService {
       });
 
       return true;
-    } catch (error) {
-      console.error('Error auto-completing submit task:', error);
+    } catch {
       return false;
     }
   }
@@ -187,8 +184,7 @@ export class DynamicTaskUpdateService {
       });
 
       return true;
-    } catch (error) {
-      console.error('Error completing loading task:', error);
+    } catch {
       return false;
     }
   }

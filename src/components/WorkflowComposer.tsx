@@ -79,8 +79,7 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
 
       setWorkflowSubflows(subflows);
       analyzeRequirements(subflows);
-    } catch (error) {
-      console.error('Error loading workflow subflows:', error);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -97,8 +96,7 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
 
       if (error) throw error;
       setAvailableSubflows(data || []);
-    } catch (error) {
-      console.error('Error loading available subflows:', error);
+    } catch {
     }
   };
 
@@ -142,7 +140,6 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
       setShowAddModal(false);
       loadWorkflowSubflows();
     } catch (error) {
-      console.error('Error adding subflow:', error);
       alert('Failed to add subflow');
     }
   };
@@ -161,7 +158,6 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
 
       loadWorkflowSubflows();
     } catch (error) {
-      console.error('Error removing subflow:', error);
       alert('Failed to remove subflow');
     }
   };
@@ -197,7 +193,6 @@ export const WorkflowComposer: React.FC<WorkflowComposerProps> = ({
 
       loadWorkflowSubflows();
     } catch (error) {
-      console.error('Error reordering subflows:', error);
       alert('Failed to reorder subflows');
     }
   };

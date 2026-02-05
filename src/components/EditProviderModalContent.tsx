@@ -61,7 +61,6 @@ export const EditProviderModalContent: React.FC<EditProviderModalContentProps> =
       setEditingApp(null);
       setAppUpdates({});
     } catch (err) {
-      console.error('Failed to update application:', err);
       alert('Failed to update application');
     }
   };

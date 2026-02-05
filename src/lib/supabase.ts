@@ -22,8 +22,7 @@ try {
         db: { schema: supabaseSchema },
       })
     : null;
-} catch (error) {
-  console.error('Failed to initialize Supabase client:', error);
+} catch {
   supabase = null;
 }
 
@@ -312,8 +311,7 @@ export class DatabaseService {
         .limit(1);
       
       return !error;
-    } catch (error) {
-      console.error('Database connection test failed:', error);
+    } catch {
       return false;
     }
   }
@@ -321,17 +319,13 @@ export class DatabaseService {
   // Check if user has any organizations
   static async hasUserOrganizations(): Promise<boolean> {
     if (!supabase) {
-      console.log('hasUserOrganizations: No supabase client');
       return false;
     }
     try {
       const user = await this.getCurrentUser();
       if (!user) {
-        console.log('hasUserOrganizations: No user logged in');
         return false;
       }
-
-      console.log('hasUserOrganizations: Checking for user:', user.id);
 
       const { data: memberData, error: memberError } = await supabase
         .from('org_members')
@@ -339,48 +333,22 @@ export class DatabaseService {
         .eq('user_id', user.id)
         .limit(1);
 
-      console.log('hasUserOrganizations: org_members query result:', {
-        memberData,
-        memberError,
-        hasData: memberData && memberData.length > 0
-      });
-
-      if (memberError) {
-        console.error('hasUserOrganizations: Error querying org_members:', memberError);
-      }
-
       if (!memberError && memberData && memberData.length > 0) {
-        console.log('hasUserOrganizations: User found in org_members, returning true');
         return true;
       }
-
-      console.log('hasUserOrganizations: User not in org_members, checking organizations');
 
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('id')
         .limit(1);
 
-      console.log('hasUserOrganizations: organizations query result:', {
-        orgData,
-        orgError,
-        hasData: orgData && orgData.length > 0
-      });
-
-      if (orgError) {
-        console.error('hasUserOrganizations: Error querying organizations:', orgError);
-      }
-
       if (!orgError && orgData && orgData.length > 0) {
-        console.log('hasUserOrganizations: User has access to organizations, auto-adding to org_members');
         await supabase.rpc('auto_add_user_to_provider_org');
         return true;
       }
 
-      console.log('hasUserOrganizations: No organizations found, returning false');
       return false;
-    } catch (error) {
-      console.error('hasUserOrganizations: Exception caught:', error);
+    } catch {
       return false;
     }
   }
@@ -778,8 +746,7 @@ export class DatabaseService {
       }
 
       return true;
-    } catch (error) {
-      console.error('Error checking prerequisites:', error);
+    } catch {
       return false;
     }
   }
@@ -821,9 +788,7 @@ export class DatabaseService {
             null
         });
       }
-    } catch (error) {
-      console.error('Error emitting subflow tasks:', error);
-    }
+    } catch { }
   }
 
   // Get default tasks for a subflow
@@ -1459,7 +1424,6 @@ export class DatabaseService {
 
       return instance;
     } catch (error) {
-      console.error('Error instantiating workflow:', error);
       throw error;
     }
   }

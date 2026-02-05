@@ -83,7 +83,6 @@ export class TaskGenerationService {
         t.status !== 'completed'
       );
       if (duplicate) {
-        console.log(`Task already exists: ${template.title_template}`);
         return;
       }
     }
@@ -244,7 +243,6 @@ export class TaskGenerationService {
           .single();
 
         if (payerError || !payer) {
-          console.error('Error fetching payer:', payerError);
           continue;
         }
 
@@ -278,7 +276,6 @@ export class TaskGenerationService {
             });
 
           if (taskError) {
-            console.error('Error creating task:', taskError);
           } else {
             tasksCreated++;
           }
@@ -286,8 +283,7 @@ export class TaskGenerationService {
       }
 
       return tasksCreated;
-    } catch (error) {
-      console.error('Error generating tasks for action:', error);
+    } catch {
       return 0;
     }
   }
@@ -365,8 +361,7 @@ export class TaskGenerationService {
       }
 
       return { tasksCreated: createdTasks.length, taskTitles: createdTasks };
-    } catch (error) {
-      console.error('Error handling task completion:', error);
+    } catch {
       return { tasksCreated: 0, taskTitles: [] };
     }
   }
