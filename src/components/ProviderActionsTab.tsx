@@ -38,8 +38,7 @@ export const ProviderActionsTab: React.FC<ProviderActionsTabProps> = ({
 
       setActions(actionsData);
       setPayers(payersData);
-    } catch (error) {
-      console.error('Error loading provider actions:', error);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -57,8 +56,7 @@ export const ProviderActionsTab: React.FC<ProviderActionsTabProps> = ({
       const payerMap = new Map<string, Payer>();
       data?.forEach(payer => payerMap.set(payer.id, payer));
       return payerMap;
-    } catch (error) {
-      console.error('Error loading payers:', error);
+    } catch {
       return new Map();
     }
   };

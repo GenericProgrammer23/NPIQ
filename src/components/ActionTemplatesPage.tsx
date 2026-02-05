@@ -47,8 +47,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
       ]);
       setTemplates(templatesData);
       setPayers(payersData);
-    } catch (error) {
-      console.error('Error loading data:', error);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -62,7 +61,6 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
       .order('name');
 
     if (error) {
-      console.error('Error loading templates:', error);
       return [];
     }
 
@@ -77,7 +75,6 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
       .order('name');
 
     if (error) {
-      console.error('Error loading payers:', error);
       return [];
     }
 
@@ -131,8 +128,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
       await loadTemplates().then(setTemplates);
       setEditingTemplate(null);
       setIsCreating(false);
-    } catch (error) {
-      console.error('Error saving template:', error);
+    } catch {
       alert('Failed to save template');
     }
   };
@@ -149,8 +145,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
       if (error) throw error;
 
       setTemplates(templates.filter(t => t.id !== templateId));
-    } catch (error) {
-      console.error('Error deleting template:', error);
+    } catch {
       alert('Failed to delete template');
     }
   };
@@ -173,8 +168,7 @@ export const ActionTemplatesPage: React.FC<ActionTemplatesPageProps> = ({ organi
       if (error) throw error;
 
       await loadTemplates().then(setTemplates);
-    } catch (error) {
-      console.error('Error duplicating template:', error);
+    } catch {
       alert('Failed to duplicate template');
     }
   };

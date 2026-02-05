@@ -53,8 +53,7 @@ export const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = (
       }));
 
       setDocumentStatuses(statuses);
-    } catch (err) {
-      console.error('Error loading document status:', err);
+    } catch {
     } finally {
       setLoading(false);
     }

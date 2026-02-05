@@ -36,9 +36,6 @@ export const StartWorkflowModal: React.FC<StartWorkflowModalProps> = ({
       onSuccess?.();
       onClose();
     } catch (err) {
-      console.error('Failed to start workflow:', err);
-
-      // Provide detailed error message
       let errorMessage = 'Failed to start workflow';
 
       if (err instanceof Error) {

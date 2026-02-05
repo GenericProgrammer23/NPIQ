@@ -31,8 +31,7 @@ export const WorkflowInstanceDetailModal: React.FC<WorkflowInstanceDetailModalPr
       const instanceSubflows = subflowsData.filter(s => s.instance_id === instance.id);
       setSubflows(instanceSubflows);
       setTasks(tasksData);
-    } catch (error) {
-      console.error('Failed to load instance data:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

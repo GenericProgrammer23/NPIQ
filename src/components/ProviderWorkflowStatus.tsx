@@ -59,8 +59,7 @@ export const ProviderWorkflowStatus: React.FC<WorkflowStatusProps> = ({
 
       if (error) throw error;
       setProviderData(data);
-    } catch (error) {
-      console.error('Error loading provider data:', error);
+    } catch {
     }
   };
 
@@ -139,8 +138,7 @@ export const ProviderWorkflowStatus: React.FC<WorkflowStatusProps> = ({
                 }
               }
             }
-          } catch (error) {
-            console.error('Error parsing prerequisites:', error);
+          } catch {
           }
 
           if (subflow.status === 'complete') {
@@ -176,8 +174,7 @@ export const ProviderWorkflowStatus: React.FC<WorkflowStatusProps> = ({
         Array.from(bottleneckMap.values())
           .sort((a, b) => b.blockingCount - a.blockingCount)
       );
-    } catch (error) {
-      console.error('Error loading workflow status:', error);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -205,8 +202,7 @@ export const ProviderWorkflowStatus: React.FC<WorkflowStatusProps> = ({
       }
 
       return false;
-    } catch (error) {
-      console.error('Error checking requirement:', error);
+    } catch {
       return false;
     }
   };
